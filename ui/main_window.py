@@ -19,7 +19,7 @@ class SweetERPMainWindow(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("甘味平橫 SweetERP")
+        self.title("甘味平橫 ERP")
         self.geometry("1280x800")
 
         # 左側導航列與右側主畫面
