@@ -1,83 +1,139 @@
+# ui/pages/inbound_page.py
+
 import customtkinter as ctk
-from logic.inventory_logic import get_all_inventory
+from tkinter import ttk, messagebox
+
+from logic.raw_materials_logic import get_material_dropdown_list
+from logic.inbound_logic import add_inbound_record, get_all_inbound_records
 
 
-class InventoryPage(ctk.CTkFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
+class InboundPage(ctk.CTkFrame):
 
-        # Title
-        title = ctk.CTkLabel(self, text="庫存總覽", font=("Arial", 20))
-        title.pack(pady=10)
+    def __init__(self, master):
+        super().__init__(master)
 
-        # 搜尋列
-        search_frame = ctk.CTkFrame(self)
-        search_frame.pack(fill="x", padx=10)
+        title = ctk.CTkLabel(self, text="原料入庫", font=ctk.CTkFont(size=24, weight="bold"))
+        title.pack(pady=20)
 
-        ctk.CTkLabel(search_frame, text="搜尋品項：").pack(side="left", padx=5)
+        # ======== 表單區域 ========
+        form_frame = ctk.CTkFrame(self)
+        form_frame.pack(padx=20, pady=10, fill="x")
 
-        self.search_var = ctk.StringVar()
-        self.search_entry = ctk.CTkEntry(search_frame, textvariable=self.search_var, width=200)
-        self.search_entry.pack(side="left", padx=5)
-        self.search_entry.bind("<KeyRelease>", lambda e: self.load_inventory())
+        # 原料下拉式選單
+        ctk.CTkLabel(form_frame, text="原料：").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        self.material_values = get_material_dropdown_list()
 
-        # 表格區域
-        self.table_frame = ctk.CTkFrame(self)
-        self.table_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        self.material_dropdown = ctk.CTkComboBox(
+            form_frame,
+            values=[label for _, label in self.material_values],
+            width=250
+        )
+        self.material_dropdown.grid(row=0, column=1, padx=5, pady=5)
 
-        # 表頭
-        header = ctk.CTkFrame(self.table_frame)
-        header.pack(fill="x")
+        # 數量
+        ctk.CTkLabel(form_frame, text="數量：").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        self.entry_qty = ctk.CTkEntry(form_frame, width=150)
+        self.entry_qty.grid(row=1, column=1, padx=5, pady=5)
 
-        headers = ["代碼", "名稱", "分類", "庫存", "單位", "安全庫存"]
-        widths = [80, 200, 120, 80, 70, 100]
+        # 單價
+        ctk.CTkLabel(form_frame, text="單價：").grid(row=1, column=2, padx=5, pady=5, sticky="e")
+        self.entry_cost = ctk.CTkEntry(form_frame, width=150)
+        self.entry_cost.grid(row=1, column=3, padx=5, pady=5)
 
-        for i, (h, w) in enumerate(zip(headers, widths)):
-            lbl = ctk.CTkLabel(header, text=h, width=w)
-            lbl.grid(row=0, column=i, padx=3)
+        # 供應商
+        ctk.CTkLabel(form_frame, text="供應商：").grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        self.entry_supplier = ctk.CTkEntry(form_frame, width=250)
+        self.entry_supplier.grid(row=2, column=1, padx=5, pady=5)
 
-        # 內容表格
-        self.body = ctk.CTkFrame(self.table_frame)
-        self.body.pack(fill="both", expand=True, pady=5)
+        # 備註
+        ctk.CTkLabel(form_frame, text="備註：").grid(row=2, column=2, padx=5, pady=5, sticky="e")
+        self.entry_note = ctk.CTkEntry(form_frame, width=250)
+        self.entry_note.grid(row=2, column=3, padx=5, pady=5)
 
-        self.load_inventory()
+        # ======== 按鈕 ========
+        btn = ctk.CTkButton(form_frame, text="新增入庫", command=self.save_inbound)
+        btn.grid(row=3, column=0, columnspan=4, pady=15)
 
-    # ============================================================
-    # 載入庫存
-    # ============================================================
-    def load_inventory(self):
-        for w in self.body.winfo_children():
-            w.destroy()
+        # ======== 紀錄表格 ========
+        table_frame = ctk.CTkFrame(self)
+        table_frame.pack(expand=True, fill="both", padx=20, pady=10)
 
-        keyword = self.search_var.get().strip()
+        columns = ("id", "name", "qty", "unit_cost", "subtotal", "supplier", "note", "time")
+        self.table = ttk.Treeview(table_frame, columns=columns, show="headings", height=12)
 
-        inventory = get_all_inventory()
+        self.table.heading("id", text="ID")
+        self.table.heading("name", text="原料")
+        self.table.heading("qty", text="數量")
+        self.table.heading("unit_cost", text="單價")
+        self.table.heading("subtotal", text="小計")
+        self.table.heading("supplier", text="供應商")
+        self.table.heading("note", text="備註")
+        self.table.heading("time", text="時間")
 
-        # 過濾搜尋
-        if keyword:
-            inventory = [i for i in inventory if keyword in i["name"] or keyword in i["item_id"]]
+        self.table.pack(expand=True, fill="both")
 
-        # 顯示每一列
-        for row in inventory:
-            frame = ctk.CTkFrame(self.body)
-            frame.pack(fill="x", pady=2)
+        self.load_inbound_table()
 
-            # 庫存顯示濾色
-            stock_color = "red" if row["low_stock"] else "white"
+    # ---------------------------------------------------------
+    # 新增入庫紀錄
+    # ---------------------------------------------------------
+    def save_inbound(self):
+        # 抓 material_id
+        selected_label = self.material_dropdown.get()
+        mat_dict = dict(self.material_values)  # {id: label}
+        material_id = None
 
-            fields = [
-                row["item_id"],
-                row["name"],
-                row["category"],
-                row["stock"],
-                row["unit"],
-                row["safety_stock"] if row["safety_stock"] else "-"
-            ]
+        for mid, label in self.material_values:
+            if label == selected_label:
+                material_id = mid
+                break
 
-            widths = [80, 200, 120, 80, 70, 100]
+        if material_id is None:
+            messagebox.showerror("錯誤", "請選擇原料")
+            return
 
-            for i, (text, w) in enumerate(zip(fields, widths)):
-                lbl = ctk.CTkLabel(frame, text=str(text), width=w)
-                if i == 3:  # 庫存欄位
-                    lbl.configure(text_color=stock_color)
-                lbl.grid(row=0, column=i, padx=3)
+        qty = self.entry_qty.get()
+        cost = self.entry_cost.get()
+        supplier = self.entry_supplier.get()
+        note = self.entry_note.get()
+
+        ok, msg = add_inbound_record(material_id, qty, cost, supplier, note)
+        messagebox.showinfo("訊息", msg)
+
+        if ok:
+            self.reset_form()
+            self.load_inbound_table()
+
+    # ---------------------------------------------------------
+    # 重置表單
+    # ---------------------------------------------------------
+    def reset_form(self):
+        self.entry_qty.delete(0, "end")
+        self.entry_cost.delete(0, "end")
+        self.entry_supplier.delete(0, "end")
+        self.entry_note.delete(0, "end")
+
+    # ---------------------------------------------------------
+    # 載入入庫紀錄表格
+    # ---------------------------------------------------------
+    def load_inbound_table(self):
+        for row in self.table.get_children():
+            self.table.delete(row)
+
+        records = get_all_inbound_records()
+
+        for r in records:
+            self.table.insert(
+                "",
+                "end",
+                values=(
+                    r["id"],
+                    f"{r['name']}（{r['brand'] or ''}{r['spec'] or ''}）",
+                    r["qty"],
+                    r["unit_cost"],
+                    r["subtotal"],
+                    r["supplier"],
+                    r["note"],
+                    r["created_at"],
+                )
+            )
