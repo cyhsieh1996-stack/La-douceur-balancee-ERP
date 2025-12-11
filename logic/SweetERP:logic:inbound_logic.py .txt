@@ -1,0 +1,53 @@
+from database.db import get_connection
+
+
+# -----------------------------------------------------
+# 新增進貨紀錄（Purchase Movement）
+# -----------------------------------------------------
+def record_inbound(date, item_id, qty, cost_per_unit=None, notes=""):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # 寫入 stock_movements
+    cursor.execute(
+        """
+        INSERT INTO stock_movements
+        (date, item_id, type, qty_in, qty_out, reference_doc, notes)
+        VALUES (?, ?, 'Purchase', ?, 0, ?, ?)
+        """,
+        (date, item_id, qty, f"IN-{item_id}", notes)
+    )
+
+    # 如果有提供成本資訊 → 寫入 inbound_costs
+    if cost_per_unit is not None:
+        cursor.execute(
+            """
+            INSERT INTO inbound_costs (date, item_id, qty, cost_per_unit)
+            VALUES (?, ?, ?, ?)
+            """,
+            (date, item_id, qty, cost_per_unit)
+        )
+
+    conn.commit()
+    conn.close()
+
+
+# -----------------------------------------------------
+# 取得所有進貨紀錄
+# -----------------------------------------------------
+def list_inbound_records():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    rows = cursor.execute(
+        """
+        SELECT sm.*, items.name AS item_name, items.unit
+        FROM stock_movements sm
+        JOIN items ON items.item_id = sm.item_id
+        WHERE sm.type = 'Purchase'
+        ORDER BY date DESC, id DESC
+        """
+    ).fetchall()
+
+    conn.close()
+    return [dict(r) for r in rows]
