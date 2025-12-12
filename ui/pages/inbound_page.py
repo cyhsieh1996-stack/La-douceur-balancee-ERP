@@ -90,10 +90,23 @@ class InboundPage(ctk.CTkFrame):
         headers = ["入庫時間", "原料名稱", "廠牌", "數量", "單位", "批號", "有效期限", "備註"]
         widths = [140, 140, 100, 60, 50, 100, 100, 150]
 
+        # 設定 Treeview 樣式 (放大版)
         style = ttk.Style()
         style.theme_use("clam")
-        style.configure("Treeview", background="white", rowheight=30, font=("Microsoft JhengHei UI", 12))
-        style.configure("Treeview.Heading", font=("Microsoft JhengHei UI", 12, "bold"))
+        style.configure(
+            "Treeview", 
+            background="white", 
+            foreground=Color.TEXT_DARK,
+            rowheight=35,               # 修改：行高從 30 改為 35 或 40
+            fieldbackground="white",
+            font=Font.SMALL             # 修改：使用 theme 裡面的變大字體
+        )
+        style.configure(
+            "Treeview.Heading", 
+            font=Font.TABLE_HEADER,     # 修改：使用 theme 裡面的表頭字體
+            background="#F0F0F0",
+            foreground=Color.TEXT_DARK
+        )
         
         self.tree = ttk.Treeview(self.table_card, columns=columns, show="headings", height=15)
         

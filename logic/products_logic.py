@@ -1,81 +1,144 @@
-# logic/products_logic.py
+import sqlite3
+import pandas as pd
+from database.db import get_db
 
-from database.db import get_connection
+def add_product(name, category, price, shelf_life):
+    """新增產品"""
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO products (name, category, price, shelf_life, stock)
+            VALUES (?, ?, ?, ?, 0)
+        """, (name, category, price, shelf_life))
+        conn.commit()
+        return True, "新增成功"
+    except Exception as e:
+        return False, str(e)
+    finally:
+        conn.close()
 
+def update_product(product_id, name, category, price, shelf_life):
+    """更新產品"""
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            UPDATE products 
+            SET name = ?, category = ?, price = ?, shelf_life = ?
+            WHERE id = ?
+        """, (name, category, price, shelf_life, product_id))
+        conn.commit()
+        return True, "更新成功"
+    except Exception as e:
+        return False, str(e)
+    finally:
+        conn.close()
 
-# ------------------------------------------------------
-# 新增產品
-# ------------------------------------------------------
-def add_product(name, category, price):
-    conn = get_connection()
-    c = conn.cursor()
-
-    c.execute("""
-        INSERT INTO products (name, category, price)
-        VALUES (?, ?, ?);
-    """, (name, category, price))
-
-    conn.commit()
-    conn.close()
-    return True, "產品已新增"
-
-
-# ------------------------------------------------------
-# 查詢全部產品
-# ------------------------------------------------------
 def get_all_products():
-    conn = get_connection()
-    c = conn.cursor()
-
-    c.execute("""
-        SELECT id, name, category, price, active
-        FROM products
-        WHERE active = 1
-        ORDER BY name ASC;
-    """)
-
-    rows = c.fetchall()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products ORDER BY id ASC")
+    rows = cursor.fetchall()
     conn.close()
+    return rows
 
-    result = []
-    for r in rows:
-        result.append({
-            "id": r[0],
-            "name": r[1],
-            "category": r[2],
-            "price": r[3],
-            "active": r[4],
-        })
-    return result
-
-
-# ------------------------------------------------------
-# 更新產品資訊
-# ------------------------------------------------------
-def update_product(prod_id, name, category, price):
-    conn = get_connection()
-    c = conn.cursor()
-
-    c.execute("""
-        UPDATE products
-        SET name=?, category=?, price=?
-        WHERE id=?;
-    """, (name, category, price, prod_id))
-
-    conn.commit()
+def get_unique_product_categories():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != ''")
+    rows = cursor.fetchall()
     conn.close()
-    return True, "產品已更新"
+    return [row['category'] for row in rows]
 
-
-# ------------------------------------------------------
-# 刪除產品（停用）
-# ------------------------------------------------------
-def delete_product(prod_id):
-    conn = get_connection()
-    c = conn.cursor()
-
-    c.execute("UPDATE products SET active=0 WHERE id=?", (prod_id,))
-    conn.commit()
+def get_products_by_category(category):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM products WHERE category = ? ORDER BY id ASC", (category,))
+    rows = cursor.fetchall()
     conn.close()
+    return rows
 
-    return True, "產品已刪除"
+def delete_product(product_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM products WHERE id = ?", (product_id,))
+        conn.commit()
+        return True, "刪除成功"
+    except Exception as e:
+        return False, "刪除失敗"
+    finally:
+        conn.close()
+
+def get_product_dropdown_list():
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name FROM products ORDER BY id ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [f"{row['id']} - {row['name']}" for row in rows]
+
+def get_product_shelf_life(product_id):
+    """取得產品保存期限，若無則回傳 None"""
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT shelf_life FROM products WHERE id = ?", (product_id,))
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result and result[0] is not None:
+        try:
+            return int(result[0])
+        except:
+            return None
+    return None
+
+# ==========================================
+# 從 POS CSV 匯入產品
+# ==========================================
+def import_products_from_csv(file_path):
+    conn = get_db()
+    cursor = conn.cursor()
+    count_success = 0
+    count_skip = 0
+    try:
+        try:
+            df = pd.read_csv(file_path, encoding='utf-8')
+        except UnicodeDecodeError:
+            df = pd.read_csv(file_path, encoding='big5')
+
+        df.columns = [str(c).strip() for c in df.columns]
+        
+        for index, row in df.iterrows():
+            name = row.get('商品名稱') or row.get('Item Name') or row.get('名稱')
+            if not name or pd.isna(name): continue
+
+            category = row.get('商品管理') or row.get('商品類別') or row.get('Category') or row.get('類別')
+            if not category or pd.isna(category): category = "其他"
+
+            try:
+                qty = float(str(row.get('銷售數量', 0)).replace(',',''))
+                total = float(str(row.get('銷售總額', 0)).replace(',',''))
+                price = int(total / qty) if qty > 0 else 0
+            except:
+                price = 0
+
+            cursor.execute("SELECT id FROM products WHERE name = ?", (name,))
+            if cursor.fetchone():
+                count_skip += 1
+                continue
+
+            # 匯入時，保存期限預設為 NULL (None)
+            cursor.execute("""
+                INSERT INTO products (name, category, price, shelf_life, stock)
+                VALUES (?, ?, ?, NULL, 0)
+            """, (name, category, price))
+            count_success += 1
+
+        conn.commit()
+        return True, f"匯入完成！\n成功: {count_success}\n略過: {count_skip}"
+    except Exception as e:
+        return False, f"匯入失敗: {str(e)}"
+    finally:
+        conn.close()

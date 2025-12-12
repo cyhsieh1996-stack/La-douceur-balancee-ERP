@@ -20,12 +20,17 @@ class SweetERPMainApp(ctk.CTk):
         # ==============================
         # 1. 視窗基礎設定
         # ==============================
-        self.title("SweetERP ｜ 甘味平橫 ERP")
+        self.title("甘味平橫 ERP")
         self.geometry("1400x900")
         
         # 設定為淺色模式，並使用藍色主題
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
+
+        # ⚠️ 新增：設定 UI 縮放比例 (針對高解析螢幕)
+        # 1.0 是預設，1.2 代表放大 20%，您可以試試 1.1 或 1.2
+        ctk.set_widget_scaling(1.1)  # 讓按鈕和輸入框變大
+        ctk.set_window_scaling(1.1)  # 讓視窗整體內容變大
 
         # 設定視窗底色 (淺灰)
         self.configure(fg_color=Color.MAIN_BG)
@@ -44,7 +49,7 @@ class SweetERPMainApp(ctk.CTk):
         # 側邊欄標題 (Logo區)
         self.logo_label = ctk.CTkLabel(
             self.sidebar, 
-            text="SweetERP", 
+            text="甘味平橫ERP系統", 
             font=("Arial", 28, "bold"),
             text_color=Color.PRIMARY
         )
@@ -52,7 +57,7 @@ class SweetERPMainApp(ctk.CTk):
 
         self.subtitle_label = ctk.CTkLabel(
             self.sidebar, 
-            text="甘味平橫管理系統", 
+            text="原料產品進銷管理", 
             font=Font.SMALL,
             text_color=Color.TEXT_LIGHT
         )
@@ -80,14 +85,14 @@ class SweetERPMainApp(ctk.CTk):
         self.nav_buttons = {} # 用字典存起來，方便切換樣式
         
         menu_items = [
-            ("儀表板 Dashboard", DashboardPage),
-            ("原料管理 Raw Materials", RawMaterialsPage),
-            ("原料入庫 Inbound", InboundPage),
-            ("庫存狀態 Inventory", InventoryPage),
-            ("產品管理 Products", ProductsPage),
-            ("食譜設定 Recipes", RecipesPage),
-            ("產品生產 Production", ProductionPage),
-            ("POS 匯入 Import POS", POSImportPage),
+            ("主儀表板", DashboardPage),
+            ("原料管理", RawMaterialsPage),
+            ("原料入庫", InboundPage),
+            ("庫存調整", InventoryPage),
+            ("產品管理", ProductsPage),
+            ("食譜設定", RecipesPage),
+            ("生產登錄", ProductionPage),
+            ("POS 匯入", POSImportPage),
         ]
 
         for text, page in menu_items:
