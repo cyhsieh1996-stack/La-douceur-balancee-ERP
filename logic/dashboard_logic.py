@@ -1,57 +1,53 @@
-# logic/dashboard_logic.py
-
-from database.db import get_connection
-from logic.pos_logic import get_week_sales_kpi
+# dashboard_logic.py
+from database.db import get_db
 
 
-# ------------------------------------------------------
-# 原料數量
-# ------------------------------------------------------
-def get_total_materials():
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM raw_materials WHERE active=1;")
-    total = c.fetchone()[0]
-    conn.close()
-    return total
+# ======================================
+# 原料庫存總量
+# ======================================
+def get_total_material_stock():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT SUM(stock) FROM raw_materials;")
+    result = cur.fetchone()[0]
+
+    return result if result else 0
 
 
-# ------------------------------------------------------
-# 產品數量
-# ------------------------------------------------------
-def get_total_products():
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM products WHERE active=1;")
-    total = c.fetchone()[0]
-    conn.close()
-    return total
+# ======================================
+# 產品庫存總量
+# ======================================
+def get_total_product_stock():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT SUM(stock) FROM products;")
+    result = cur.fetchone()[0]
+
+    return result if result else 0
 
 
-# ------------------------------------------------------
-# 庫存不足清單
-# ------------------------------------------------------
-def get_low_stock_materials():
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("""
-        SELECT id, name, current_stock, safe_stock
+# ======================================
+# 低庫存原料（預警）
+# ======================================
+def get_low_stock_materials(threshold=50):
+    """
+    threshold：低於多少就列入警示（可之後做設定）
+    """
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT name, stock, unit 
         FROM raw_materials
-        WHERE current_stock < safe_stock AND active = 1;
-    """)
-    rows = c.fetchall()
-    conn.close()
+        WHERE stock < ?
+        ORDER BY stock ASC;
+    """, (threshold,))
 
-    return [{
-        "id": r[0],
-        "name": r[1],
-        "current_stock": r[2],
-        "safe_stock": r[3],
-    } for r in rows]
+    rows = cur.fetchall()
 
-
-# ------------------------------------------------------
-# 本週 POS 銷售
-# ------------------------------------------------------
-def get_weekly_sales():
-    return get_week_sales_kpi()
+    return [
+        {"name": r[0], "stock": r[1], "unit": r[2]}
+        for r in rows
+    ]
