@@ -1,140 +1,86 @@
+# main.py
 import customtkinter as ctk
 
-# ----------------------------
-#  分頁匯入
-# ----------------------------
+# 匯入所有頁面
 from ui.pages.dashboard_page import DashboardPage
-from ui.pages.inventory_page import InventoryPage
+from ui.pages.raw_materials_page import RawMaterialsPage
 from ui.pages.inbound_page import InboundPage
+from ui.pages.inventory_page import InventoryPage
 from ui.pages.products_page import ProductsPage
 from ui.pages.recipes_page import RecipesPage
+from ui.pages.production_page import ProductionPage
 from ui.pages.pos_import_page import POSImportPage
-from ui.pages.production_page import ProductionPage  # ★★★ 生產管理頁
 
 
-# ----------------------------
-#  全域 UI 設定
-# ----------------------------
-ctk.set_appearance_mode("light")
-ctk.set_default_color_theme("blue")
-
-
-class SweetERPMainWindow(ctk.CTk):
+# --------------------------------------------------
+# 主視窗
+# --------------------------------------------------
+class SweetERPMainApp(ctk.CTk):
 
     def __init__(self):
         super().__init__()
 
-        self.title("甘味平橫 SweetERP")
-        self.geometry("1250x800")
-        self.configure(fg_color="#F7F4EF")
+        self.title("SweetERP - 甘味平橫 ERP")
+        self.geometry("1200x750")
 
-        # -------------------------------------
-        # 左側 Sidebar
-        # -------------------------------------
-        self.sidebar = ctk.CTkFrame(self, width=230, corner_radius=0, fg_color="#FFFFFF")
+        ctk.set_appearance_mode("light")
+        ctk.set_default_color_theme("blue")
+
+        # 左側選單列
+        self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
         self.sidebar.pack(side="left", fill="y")
 
-        # Logo & Title
-        title_label = ctk.CTkLabel(
-            self.sidebar,
-            text="🍰 SweetERP",
-            font=ctk.CTkFont(size=24, weight="bold"),
-            text_color="#4A4A48",
-        )
-        title_label.pack(pady=25)
+        self.main_area = ctk.CTkFrame(self, corner_radius=10)
+        self.main_area.pack(side="right", fill="both", expand=True)
 
-        # 按鈕共同設定
-        btn_cfg = {
-            "width": 190,
-            "height": 45,
-            "corner_radius": 8,
-            "font": ctk.CTkFont(size=15),
-        }
+        # 建立按鈕
+        self.create_sidebar_buttons()
 
-        # Sidebar Buttons
-        self.create_sidebar_button("Dashboard 儀表板", "dashboard", btn_cfg)
-        self.create_sidebar_button("庫存總覽", "inventory", btn_cfg)
-        self.create_sidebar_button("原料入庫", "inbound", btn_cfg)
-        self.create_sidebar_button("商品管理", "products", btn_cfg)
-        self.create_sidebar_button("食譜管理", "recipes", btn_cfg)
-        self.create_sidebar_button("生產管理", "production", btn_cfg)     # ★★★ 新增
-        self.create_sidebar_button("POS 資料匯入", "pos_import", btn_cfg)
+        # 預設頁面：儀表板
+        self.show_page(DashboardPage)
 
-        # -------------------------------------
-        # 主內容 Frame
-        # -------------------------------------
-        self.main_frame = ctk.CTkFrame(self, fg_color="#F7F4EF")
-        self.main_frame.pack(side="right", expand=True, fill="both")
+    # --------------------------------------------------
+    # 建立左側選單
+    # --------------------------------------------------
+    def create_sidebar_buttons(self):
+        buttons = [
+            ("儀表板 Dashboard", DashboardPage),
+            ("原料管理 Raw Materials", RawMaterialsPage),
+            ("原料入庫 Inbound", InboundPage),
+            ("庫存狀態 Inventory", InventoryPage),
+            ("產品管理 Products", ProductsPage),
+            ("食譜設定 Recipes", RecipesPage),
+            ("產品生產 Production", ProductionPage),
+            ("POS 匯入 Import POS", POSImportPage),
+        ]
 
-        # 頁面快取
-        self.pages = {}
-        self.current_page = None
+        for label, page in buttons:
+            btn = ctk.CTkButton(
+                self.sidebar,
+                text=label,
+                fg_color="transparent",
+                text_color="black",
+                anchor="w",
+                command=lambda p=page: self.show_page(p)
+            )
+            btn.pack(fill="x", pady=5, padx=10)
 
-        # 預設開啟 Dashboard
-        self.show_page("dashboard")
-
-    # -------------------------------------
-    # 建立側邊按鈕（共用方法）
-    # -------------------------------------
-    def create_sidebar_button(self, text, page_name, cfg):
-        btn = ctk.CTkButton(
-            self.sidebar,
-            text=text,
-            command=lambda: self.show_page(page_name),
-            **cfg
-        )
-        btn.pack(pady=5)
-
-    # -------------------------------------
-    # 分頁切換邏輯
-    # -------------------------------------
-    def show_page(self, name: str):
-
-        # 隱藏目前頁面
-        if self.current_page is not None:
-            self.current_page.pack_forget()
-
-        # 建立頁面（若無 cache）
-        if name not in self.pages:
-
-            if name == "dashboard":
-                frame = DashboardPage(self.main_frame)
-
-            elif name == "inventory":
-                frame = InventoryPage(self.main_frame)
-
-            elif name == "inbound":
-                frame = InboundPage(self.main_frame)
-
-            elif name == "products":
-                frame = ProductsPage(self.main_frame)
-                if hasattr(frame, "refresh"):
-                    frame.refresh()
-
-            elif name == "recipes":
-                frame = RecipesPage(self.main_frame)
-                if hasattr(frame, "refresh"):
-                    frame.refresh()
-
-            elif name == "production":   # ★★★ 生產管理
-                frame = ProductionPage(self.main_frame)
-
-            elif name == "pos_import":
-                frame = POSImportPage(self.main_frame)
-
-            else:
-                return
-
-            self.pages[name] = frame
+    # --------------------------------------------------
+    # 切換主視窗頁面
+    # --------------------------------------------------
+    def show_page(self, page_class):
+        # 清除目前頁面
+        for widget in self.main_area.winfo_children():
+            widget.destroy()
 
         # 顯示新頁面
-        self.current_page = self.pages[name]
-        self.current_page.pack(expand=True, fill="both")
+        page = page_class(self.main_area)
+        page.pack(fill="both", expand=True)
 
 
-# -------------------------------------
-# Program Entry Point
-# -------------------------------------
+# --------------------------------------------------
+# 啟動主程式
+# --------------------------------------------------
 if __name__ == "__main__":
-    app = SweetERPMainWindow()
+    app = SweetERPMainApp()
     app.mainloop()
