@@ -1,116 +1,62 @@
 import customtkinter as ctk
-from tkinter import ttk
-from logic.dashboard_logic import (
-    get_total_material_stock,
-    get_total_product_stock,
-    get_low_stock_materials
-)
-
+from logic.dashboard_logic import get_total_material_stock
+from ui.theme import Color, Font  # 匯入主題
 
 class DashboardPage(ctk.CTkFrame):
-    """ SweetERP 儀表板（ACTgene 風格 + 適合甜點店配色） """
-
     def __init__(self, master):
-        super().__init__(master, fg_color="#F5F5F5")  # 整體背景
+        # 注意：這裡 fg_color設為透明，讓它透出主視窗的灰底
+        super().__init__(master, fg_color="transparent")
 
-        # ------------------------------------------------------
-        # 標題列
-        # ------------------------------------------------------
-        title_bar = ctk.CTkFrame(self, fg_color="#FFFFFF", corner_radius=6)
-        title_bar.pack(fill="x", padx=20, pady=(20, 10))
-
-        title_label = ctk.CTkLabel(
-            title_bar,
-            text="SweetERP 儀表板 Dashboard",
-            font=ctk.CTkFont(size=26, weight="bold"),
-            text_color="#333333"
+        # ==========================================
+        # 1. 標題區 (直接顯示在灰底上)
+        # ==========================================
+        title = ctk.CTkLabel(
+            self, 
+            text="儀表板 Dashboard", 
+            font=Font.TITLE, 
+            text_color=Color.TEXT_DARK
         )
-        title_label.pack(padx=20, pady=15)
+        title.pack(anchor="w", pady=(0, 20))
 
-        # ------------------------------------------------------
-        # 左右主區塊（仿 ACTgene）
-        # ------------------------------------------------------
-        main_area = ctk.CTkFrame(self, fg_color="#F5F5F5")
-        main_area.pack(fill="both", expand=True, padx=20, pady=10)
-
-        # 左區塊：KPI 模組
-        left_panel = ctk.CTkFrame(main_area, fg_color="#FFFFFF", corner_radius=6, border_width=1, border_color="#D6D6D6")
-        left_panel.pack(side="left", fill="both", expand=True, padx=(0, 10))
-
-        # 右區塊：低庫存提示
-        right_panel = ctk.CTkFrame(main_area, fg_color="#FFFFFF", corner_radius=6, border_width=1, border_color="#D6D6D6")
-        right_panel.pack(side="right", fill="both", expand=True, padx=(10, 0))
-
-        # ------------------------------------------------------
-        # 左區：KPI 區
-        # ------------------------------------------------------
-        kpi_title = ctk.CTkLabel(
-            left_panel, text="今日概況・KPI 指標",
-            font=ctk.CTkFont(size=20, weight="bold"),
-            text_color="#444444"
+        # ==========================================
+        # 2. 卡片區 (這就是參考圖那個白色的框框)
+        # ==========================================
+        # 建立一個大卡片容器
+        card_container = ctk.CTkFrame(
+            self, 
+            fg_color=Color.WHITE_CARD,  # 白色背景
+            corner_radius=15            # 圓角
         )
-        kpi_title.pack(pady=15)
+        card_container.pack(fill="both", expand=True)
 
-        # 取得資料
-        total_material = get_total_material_stock()
-        total_product = get_total_product_stock()
+        # 在卡片裡面放內容
+        self.create_content(card_container)
 
-        # KPI 卡片外框
-        kpi_frame = ctk.CTkFrame(left_panel, fg_color="#F5F5F5", corner_radius=6)
-        kpi_frame.pack(fill="x", padx=20, pady=10)
+    def create_content(self, parent):
+        # 模擬一個簡單的數據顯示
+        try:
+            total_material = get_total_material_stock()
+        except:
+            total_material = 0
 
-        # K1：原料總庫存
-        k1 = self.build_kpi_card(kpi_frame, "原料庫存容量", total_material, "#C9986C")
-        k1.grid(row=0, column=0, padx=10, pady=10)
+        # 資訊小方塊
+        info_box = ctk.CTkFrame(parent, fg_color="#F0F5F9", corner_radius=10)
+        info_box.pack(padx=30, pady=30, fill="x", anchor="n")
 
-        # K2：產品庫存容量
-        k2 = self.build_kpi_card(kpi_frame, "產品庫存容量", total_product, "#E8C7A3")
-        k2.grid(row=0, column=1, padx=10, pady=10)
-
-        # ------------------------------------------------------
-        # 右區：低庫存警示
-        # ------------------------------------------------------
-        warn_title = ctk.CTkLabel(
-            right_panel, text="⚠ 低庫存原料警示",
-            font=ctk.CTkFont(size=20, weight="bold"),
-            text_color="#C75C5C"
+        label = ctk.CTkLabel(
+            info_box, 
+            text="原料總庫存量", 
+            font=Font.SUBTITLE, 
+            text_color=Color.TEXT_LIGHT
         )
-        warn_title.pack(pady=15)
+        label.pack(padx=20, pady=(20, 5), anchor="w")
 
-        warn_frame = ctk.CTkFrame(right_panel, fg_color="#FFFFFF")
-        warn_frame.pack(fill="both", expand=True, padx=20, pady=10)
-
-        # Treeview
-        columns = ("name", "stock", "unit")
-        table = ttk.Treeview(warn_frame, columns=columns, show="headings", height=10)
-        table.heading("name", text="原料名稱")
-        table.heading("stock", text="目前庫存")
-        table.heading("unit", text="單位")
-        table.pack(fill="both", expand=True)
-
-        # 載入資料
-        low_list = get_low_stock_materials()
-        for m in low_list:
-            table.insert("", "end", values=(m["name"], m["stock"], m["unit"]))
-
-    # ------------------------------------------------------
-    # KPI 卡片
-    # ------------------------------------------------------
-    def build_kpi_card(self, master, title, value, color):
-        frame = ctk.CTkFrame(master, fg_color="#FFFFFF", corner_radius=8, border_width=1, border_color="#D6D6D6")
-
-        label_title = ctk.CTkLabel(
-            frame, text=title,
-            font=ctk.CTkFont(size=16, weight="bold"),
-            text_color="#555555"
+        value = ctk.CTkLabel(
+            info_box, 
+            text=f"{total_material:,.1f}", 
+            font=("Arial", 48, "bold"), 
+            text_color=Color.PRIMARY
         )
-        label_title.pack(pady=(10, 0))
+        value.pack(padx=20, pady=(0, 20), anchor="w")
 
-        label_value = ctk.CTkLabel(
-            frame, text=str(value),
-            font=ctk.CTkFont(size=30, weight="bold"),
-            text_color=color
-        )
-        label_value.pack(pady=(5, 15))
-
-        return frame
+        # 這裡可以繼續加更多圖表或清單...

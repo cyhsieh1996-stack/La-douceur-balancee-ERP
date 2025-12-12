@@ -8,19 +8,23 @@ DB_PATH = os.path.join(BASE_DIR, "sweet_erp.db")
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    # ⚠️ 重要修正：強制開啟外鍵約束，確保資料一致性
+    # 開啟 Foreign Key 外鍵約束
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
+
+# 建立別名，讓舊程式也能運作
+get_connection = get_db
 
 def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    # 1. 原料表 (Raw Materials)
+    # 1. 原料表 (已加入 category)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS raw_materials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
+            category TEXT,
             brand TEXT,
             unit TEXT,
             stock REAL DEFAULT 0,
@@ -28,7 +32,7 @@ def init_db():
         );
     """)
 
-    # 2. 產品表 (Products) - 例如：草莓蛋糕
+    # 2. 產品表
     cur.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +43,7 @@ def init_db():
         );
     """)
 
-    # 3. 食譜表 (Recipes) - 關聯產品與原料
+    # 3. 食譜表
     cur.execute("""
         CREATE TABLE IF NOT EXISTS recipes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -51,7 +55,7 @@ def init_db():
         );
     """)
 
-    # 4. 入庫紀錄 (Inbound Records)
+    # 4. 入庫紀錄
     cur.execute("""
         CREATE TABLE IF NOT EXISTS inbound_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +67,7 @@ def init_db():
         );
     """)
 
-    # 5. (新增) 生產紀錄 (Production Logs) - 為了支援 ProductionPage
+    # 5. 生產紀錄
     cur.execute("""
         CREATE TABLE IF NOT EXISTS production_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -75,11 +79,11 @@ def init_db():
         );
     """)
 
-    # 6. (新增) 銷售/POS紀錄 (Sales Records) - 為了支援 POSImportPage
+    # 6. 銷售紀錄
     cur.execute("""
         CREATE TABLE IF NOT EXISTS sales_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            product_name TEXT,  -- 這裡先存文字，因為 POS 匯入的名稱未必能對應到 ID
+            product_name TEXT,
             qty REAL,
             price REAL,
             amount REAL,
@@ -90,7 +94,7 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print("資料庫初始化完成 (Database initialized)")
+    print("資料庫初始化完成")
 
 if __name__ == "__main__":
     init_db()
