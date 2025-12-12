@@ -2,15 +2,15 @@ import sqlite3
 import pandas as pd
 from database.db import get_db
 
-def add_product(name, category, price, shelf_life):
-    """新增產品"""
+def add_product(name, category, price, cost, shelf_life):
+    """新增產品 (含成本)"""
     conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute("""
-            INSERT INTO products (name, category, price, shelf_life, stock)
-            VALUES (?, ?, ?, ?, 0)
-        """, (name, category, price, shelf_life))
+            INSERT INTO products (name, category, price, cost, shelf_life, stock)
+            VALUES (?, ?, ?, ?, ?, 0)
+        """, (name, category, price, cost, shelf_life))
         conn.commit()
         return True, "新增成功"
     except Exception as e:
@@ -18,16 +18,16 @@ def add_product(name, category, price, shelf_life):
     finally:
         conn.close()
 
-def update_product(product_id, name, category, price, shelf_life):
-    """更新產品"""
+def update_product(product_id, name, category, price, cost, shelf_life):
+    """更新產品 (含成本)"""
     conn = get_db()
     cursor = conn.cursor()
     try:
         cursor.execute("""
             UPDATE products 
-            SET name = ?, category = ?, price = ?, shelf_life = ?
+            SET name = ?, category = ?, price = ?, cost = ?, shelf_life = ?
             WHERE id = ?
-        """, (name, category, price, shelf_life, product_id))
+        """, (name, category, price, cost, shelf_life, product_id))
         conn.commit()
         return True, "更新成功"
     except Exception as e:
@@ -80,13 +80,11 @@ def get_product_dropdown_list():
     return [f"{row['id']} - {row['name']}" for row in rows]
 
 def get_product_shelf_life(product_id):
-    """取得產品保存期限，若無則回傳 None"""
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("SELECT shelf_life FROM products WHERE id = ?", (product_id,))
     result = cursor.fetchone()
     conn.close()
-    
     if result and result[0] is not None:
         try:
             return int(result[0])
@@ -129,10 +127,10 @@ def import_products_from_csv(file_path):
                 count_skip += 1
                 continue
 
-            # 匯入時，保存期限預設為 NULL (None)
+            # 匯入時，cost 預設 0
             cursor.execute("""
-                INSERT INTO products (name, category, price, shelf_life, stock)
-                VALUES (?, ?, ?, NULL, 0)
+                INSERT INTO products (name, category, price, cost, shelf_life, stock)
+                VALUES (?, ?, ?, 0, NULL, 0)
             """, (name, category, price))
             count_success += 1
 

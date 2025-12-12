@@ -1,128 +1,139 @@
 import customtkinter as ctk
 from tkinter import ttk
 from ui.theme import Color, Font
-from logic.dashboard_logic import get_low_stock_materials, get_expiring_batches, get_dashboard_summary
+from logic.dashboard_logic import (
+    get_low_stock_materials, 
+    get_expiring_products, 
+    get_expiring_raw_materials,
+    get_top_selling_products,
+    get_weekly_finance,
+    get_dashboard_summary
+)
 
 class DashboardPage(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
 
-        # 1. 標題
-        title = ctk.CTkLabel(
-            self, 
-            text="儀表板 Dashboard", 
-            font=Font.TITLE, 
-            text_color=Color.TEXT_DARK
-        )
-        title.pack(anchor="w", pady=(0, 20))
+        # 標題
+        title = ctk.CTkLabel(self, text="戰情中心 Dashboard", font=Font.TITLE, text_color=Color.TEXT_DARK)
+        title.pack(anchor="w", pady=(0, 10))
 
-        # 2. 頂部概況卡片區 (使用 Grid 排列三個小卡片)
+        # === 頂部統計列 ===
         self.stats_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.stats_frame.pack(fill="x", pady=(0, 20))
-        self.stats_frame.columnconfigure((0, 1, 2), weight=1)
+        self.stats_frame.pack(fill="x", pady=(0, 10))
+        self.stats_frame.columnconfigure((0, 1, 2, 3, 4), weight=1)
         
-        self.card_1 = self.create_stat_card(self.stats_frame, "📦 原料品項數", "--", 0)
-        self.card_2 = self.create_stat_card(self.stats_frame, "🍰 產品品項數", "--", 1)
-        self.card_3 = self.create_stat_card(self.stats_frame, "🚨 缺貨原料", "--", 2, text_color=Color.DANGER)
+        self.lbl_revenue = self.create_stat_card(self.stats_frame, "💰 本週營業額", "$0", 0, "#27AE60") # 綠
+        self.lbl_cost = self.create_stat_card(self.stats_frame, "💸 本週成本", "$0", 1, "#C0392B")    # 紅
+        self.lbl_profit = self.create_stat_card(self.stats_frame, "📈 本週淨利", "$0", 2, "#2980B9")  # 藍
+        self.lbl_mat_cnt = self.create_stat_card(self.stats_frame, "📦 原料總數", "0", 3, Color.TEXT_DARK)
+        self.lbl_prod_cnt = self.create_stat_card(self.stats_frame, "🍰 產品總數", "0", 4, Color.TEXT_DARK)
 
-        # 3. 下方兩大區塊 (左右分割)
-        self.bottom_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.bottom_frame.pack(fill="both", expand=True)
-        self.bottom_frame.columnconfigure((0, 1), weight=1)
+        # === 下方內容區 (三欄式) ===
+        self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.content_frame.pack(fill="both", expand=True)
+        self.content_frame.columnconfigure((0, 1, 2), weight=1)
 
-        # 左邊：缺貨警報
-        self.create_low_stock_panel(self.bottom_frame, 0)
+        # 左欄：原料警報
+        self.create_left_panel(self.content_frame)
         
-        # 右邊：效期警報
-        self.create_expiry_panel(self.bottom_frame, 1)
+        # 中欄：熱銷排行
+        self.create_center_panel(self.content_frame)
+        
+        # 右欄：成品效期
+        self.create_right_panel(self.content_frame)
 
-        # 載入資料
         self.refresh_dashboard()
 
-    def create_stat_card(self, parent, title, value, col_idx, text_color=Color.PRIMARY):
-        """建立上方的小統計卡片"""
+    def create_stat_card(self, parent, title, value, col, color):
         card = ctk.CTkFrame(parent, fg_color=Color.WHITE_CARD, corner_radius=10)
-        card.grid(row=0, column=col_idx, padx=10, sticky="ew")
-        
-        lbl_title = ctk.CTkLabel(card, text=title, font=Font.BODY, text_color=Color.TEXT_LIGHT)
-        lbl_title.pack(pady=(15, 0))
-        
-        lbl_val = ctk.CTkLabel(card, text=value, font=("Arial", 36, "bold"), text_color=text_color)
-        lbl_val.pack(pady=(5, 15))
-        
-        return lbl_val # 回傳 value label 以便後續更新
+        card.grid(row=0, column=col, padx=5, sticky="ew")
+        ctk.CTkLabel(card, text=title, font=Font.BODY, text_color=Color.TEXT_LIGHT).pack(pady=(10, 0))
+        lbl = ctk.CTkLabel(card, text=value, font=("Arial", 24, "bold"), text_color=color)
+        lbl.pack(pady=(0, 10))
+        return lbl
 
-    def create_low_stock_panel(self, parent, col_idx):
-        """左側：缺貨清單"""
-        frame = ctk.CTkFrame(parent, fg_color=Color.WHITE_CARD, corner_radius=10)
-        frame.grid(row=0, column=col_idx, padx=10, pady=10, sticky="nsew")
+    def create_left_panel(self, parent):
+        frame = ctk.CTkFrame(parent, fg_color="transparent")
+        frame.grid(row=0, column=0, padx=5, sticky="nsew")
         
-        # 標題列
-        header = ctk.CTkFrame(frame, fg_color="#FFEEEE", corner_radius=10) # 淡紅色背景
-        header.pack(fill="x", padx=5, pady=5)
-        ctk.CTkLabel(header, text="⚠️ 原料庫存不足 (需叫貨)", font=Font.SUBTITLE, text_color=Color.DANGER).pack(pady=10)
+        # 1. 缺貨原料
+        self.create_table_card(frame, "🚨 原料缺貨警報", 
+                               ["名稱", "目前", "安全"], [100, 50, 50], 
+                               "tree_low_stock", "#FFEBEE")
+        
+        # 2. 原料過期
+        self.create_table_card(frame, "⚠️ 原料即將過期 (30天內)", 
+                               ["效期", "名稱", "批號"], [80, 100, 80], 
+                               "tree_exp_mat", "#FFF3E0")
 
-        # 表格
-        columns = ("name", "stock", "safe", "unit", "vendor")
-        headers = ["原料名稱", "目前", "安全", "單位", "廠商"]
-        widths = [120, 60, 60, 50, 80]
+    def create_center_panel(self, parent):
+        frame = ctk.CTkFrame(parent, fg_color="transparent")
+        frame.grid(row=0, column=1, padx=5, sticky="nsew")
+        
+        # 熱銷排行
+        self.create_table_card(frame, "🏆 本週熱銷 Top 3", 
+                               ["排名", "產品名稱", "銷量"], [50, 150, 60], 
+                               "tree_top3", "#E8F8F5")
+
+    def create_right_panel(self, parent):
+        frame = ctk.CTkFrame(parent, fg_color="transparent")
+        frame.grid(row=0, column=2, padx=5, sticky="nsew")
+        
+        # 成品過期
+        self.create_table_card(frame, "⏳ 成品即將過期 (7天內)", 
+                               ["效期", "產品", "批號"], [80, 100, 100], 
+                               "tree_exp_prod", "#FFF8E1")
+
+    def create_table_card(self, parent, title, headers, widths, attr_name, bg_color):
+        card = ctk.CTkFrame(parent, fg_color=Color.WHITE_CARD, corner_radius=10)
+        card.pack(fill="x", pady=(0, 15))
+        
+        header = ctk.CTkFrame(card, fg_color=bg_color, corner_radius=10, height=30)
+        header.pack(fill="x", padx=2, pady=2)
+        ctk.CTkLabel(header, text=title, font=Font.SMALL, text_color=Color.TEXT_DARK).pack(pady=5)
         
         style = ttk.Style()
         style.theme_use("clam")
-        style.configure("Treeview", background="white", rowheight=30, font=Font.SMALL)
+        style.configure("Treeview", background="white", rowheight=25, font=("Arial", 11))
         
-        self.tree_stock = ttk.Treeview(frame, columns=columns, show="headings", height=10)
-        for col, h, w in zip(columns, headers, widths):
-            self.tree_stock.heading(col, text=h)
-            self.tree_stock.column(col, width=w, anchor="center")
-            
-        self.tree_stock.pack(fill="both", expand=True, padx=10, pady=10)
-
-    def create_expiry_panel(self, parent, col_idx):
-        """右側：即將過期清單"""
-        frame = ctk.CTkFrame(parent, fg_color=Color.WHITE_CARD, corner_radius=10)
-        frame.grid(row=0, column=col_idx, padx=10, pady=10, sticky="nsew")
+        tree = ttk.Treeview(card, columns=headers, show="headings", height=6)
+        for col, w in zip(headers, widths):
+            tree.heading(col, text=col)
+            tree.column(col, width=w, anchor="center")
+        tree.pack(fill="x", padx=5, pady=5)
         
-        # 標題列
-        header = ctk.CTkFrame(frame, fg_color="#FFF8E1", corner_radius=10) # 淡橘色背景
-        header.pack(fill="x", padx=5, pady=5)
-        ctk.CTkLabel(header, text="⏳ 即將過期批號 (7日內)", font=Font.SUBTITLE, text_color="#E67E22").pack(pady=10)
-
-        # 表格
-        columns = ("date", "batch", "name", "qty")
-        headers = ["有效日期", "批號", "產品", "生產量"]
-        widths = [100, 120, 120, 60]
-        
-        self.tree_expiry = ttk.Treeview(frame, columns=columns, show="headings", height=10)
-        for col, h, w in zip(columns, headers, widths):
-            self.tree_expiry.heading(col, text=h)
-            self.tree_expiry.column(col, width=w, anchor="center")
-            
-        self.tree_expiry.pack(fill="both", expand=True, padx=10, pady=10)
+        setattr(self, attr_name, tree)
 
     def refresh_dashboard(self):
-        # 1. 更新上方統計
-        summary = get_dashboard_summary()
-        self.card_1.configure(text=str(summary['material_count']))
-        self.card_2.configure(text=str(summary['product_count']))
-        self.card_3.configure(text=str(summary['low_stock_count']))
+        # 1. 財務
+        fin = get_weekly_finance()
+        self.lbl_revenue.configure(text=f"${fin['revenue']:,}")
+        self.lbl_cost.configure(text=f"${fin['cost']:,}")
+        self.lbl_profit.configure(text=f"${fin['profit']:,}")
         
-        # 2. 更新缺貨表格
-        for item in self.tree_stock.get_children():
-            self.tree_stock.delete(item)
+        # 2. 總數
+        summ = get_dashboard_summary()
+        self.lbl_mat_cnt.configure(text=str(summ['material_count']))
+        self.lbl_prod_cnt.configure(text=str(summ['product_count']))
         
-        low_stocks = get_low_stock_materials()
-        for row in low_stocks:
-            # name, stock, safe_stock, unit, vendor
-            self.tree_stock.insert("", "end", values=(row[0], row[1], row[2], row[3], row[4]))
-
-        # 3. 更新過期表格
-        for item in self.tree_expiry.get_children():
-            self.tree_expiry.delete(item)
+        # 3. 缺貨
+        self.update_tree(self.tree_low_stock, get_low_stock_materials(), [0, 1, 2])
+        
+        # 4. 原料過期
+        self.update_tree(self.tree_exp_mat, get_expiring_raw_materials(), [2, 0, 1])
+        
+        # 5. 熱銷
+        tops = get_top_selling_products()
+        for item in self.tree_top3.get_children(): self.tree_top3.delete(item)
+        for i, row in enumerate(tops):
+            self.tree_top3.insert("", "end", values=(f"No.{i+1}", row[0], int(row[1])))
             
-        expiring = get_expiring_batches()
-        for row in expiring:
-            # name, batch, expiry, qty (注意順序調整)
-            # SQL回傳: name, batch, expiry, qty
-            # 表格顯示: expiry, batch, name, qty
-            self.tree_expiry.insert("", "end", values=(row[2], row[1], row[0], row[3]))
+        # 6. 成品過期
+        self.update_tree(self.tree_exp_prod, get_expiring_products(), [2, 0, 1])
+
+    def update_tree(self, tree, data, indices):
+        for item in tree.get_children(): tree.delete(item)
+        for row in data:
+            vals = [row[i] for i in indices]
+            tree.insert("", "end", values=vals)

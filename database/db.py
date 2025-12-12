@@ -19,7 +19,7 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    # 1. 原料表
+    # 1. 原料表 (修改：新增 unit_price)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS raw_materials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,20 +28,22 @@ def init_db():
             brand TEXT,
             vendor TEXT,
             unit TEXT,
+            unit_price REAL DEFAULT 0, -- 新增：進貨單價 (估算用)
             stock REAL DEFAULT 0,
             safe_stock REAL DEFAULT 0
         );
     """)
 
-    # 2. 產品表 (修改：shelf_life 改為可空)
+    # 2. 產品表 (修改：新增 cost)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             category TEXT,
             price REAL,
+            cost REAL DEFAULT 0,       -- 新增：產品成本
             stock REAL DEFAULT 0,
-            shelf_life INTEGER  -- 修改：拿掉 DEFAULT 3，允許 NULL
+            shelf_life INTEGER
         );
     """)
 
