@@ -1,90 +1,51 @@
 import customtkinter as ctk
-from logic.products_logic import (
-    get_all_products,
-    add_product,
-    update_product,
-    delete_product,
-)
+from tkinter import ttk
+from logic.inventory_logic import get_inventory_list
 
-class ProductsPage(ctk.CTkFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
 
-        title = ctk.CTkLabel(self, text="商品管理", font=("Microsoft JhengHei", 24))
-        title.pack(pady=10)
+class InventoryPage(ctk.CTkFrame):
 
-        # 商品列表
-        self.product_listbox = ctk.CTkTextbox(self, height=400, width=600)
-        self.product_listbox.pack(pady=10)
+    def __init__(self, master):
+        super().__init__(master)
 
-        # 載入資料
-        self.load_products()
+        title = ctk.CTkLabel(self, text="庫存狀態",
+                             font=ctk.CTkFont(size=26, weight="bold"))
+        title.pack(pady=20)
 
-        # 操作按鈕
-        btn_frame = ctk.CTkFrame(self)
-        btn_frame.pack(pady=10)
+        frame = ctk.CTkFrame(self)
+        frame.pack(fill="both", expand=True, padx=20)
 
-        ctk.CTkButton(btn_frame, text="新增商品", command=self.open_add_window).grid(row=0, column=0, padx=10)
-        ctk.CTkButton(btn_frame, text="修改選取商品", command=self.open_edit_window).grid(row=0, column=1, padx=10)
-        ctk.CTkButton(btn_frame, text="刪除選取商品", command=self.delete_selected).grid(row=0, column=2, padx=10)
+        columns = ("id", "name", "brand", "spec",
+                   "unit", "current_stock", "safe_stock", "status")
 
-    # ========================
-    # 讀取商品資料
-    # ========================
-    def load_products(self):
-        self.product_listbox.delete("1.0", "end")
+        self.table = ttk.Treeview(frame, columns=columns, show="headings")
 
-        products = get_all_products()
-        for p in products:
-            self.product_listbox.insert(
-                "end",
-                f"{p['item_id']} | {p['name']} | {p['category']} | {p['unit']} | 成本:{p['cost']}\n"
-            )
+        headers = ["ID", "原料", "廠牌", "規格", "單位", "庫存量", "安全量", "狀態"]
+        for c, h in zip(columns, headers):
+            self.table.heading(c, text=h)
 
-    # ========================
-    # 新增商品窗口
-    # ========================
-    def open_add_window(self):
-        win = ctk.CTkToplevel(self)
-        win.title("新增商品")
+        self.table.pack(fill="both", expand=True)
 
-        fields = {
-            "item_id": ctk.CTkEntry(win),
-            "name": ctk.CTkEntry(win),
-            "category": ctk.CTkEntry(win),
-            "unit": ctk.CTkEntry(win),
-            "cost": ctk.CTkEntry(win),
-            "safety_stock": ctk.CTkEntry(win)
-        }
+        self.load_inventory()
 
-        row = 0
-        for label, widget in fields.items():
-            ctk.CTkLabel(win, text=label).grid(row=row, column=0, padx=5, pady=5)
-            widget.grid(row=row, column=1, padx=5, pady=5)
-            row += 1
+    def load_inventory(self):
+        for r in self.table.get_children():
+            self.table.delete(r)
 
-        def submit():
-            add_product(
-                fields["item_id"].get(),
-                fields["name"].get(),
-                fields["category"].get(),
-                fields["unit"].get(),
-                float(fields["cost"].get() or 0),
-                float(fields["safety_stock"].get() or 0),
-            )
-            win.destroy()
-            self.load_products()
+        data = get_inventory_list()
 
-        ctk.CTkButton(win, text="確認新增", command=submit).grid(row=row, column=0, columnspan=2, pady=10)
+        for m in data:
+            status = "正常"
+            if m["current_stock"] < m["safe_stock"]:
+                status = "⚠ 庫存不足"
 
-    # ========================
-    # 修改商品
-    # ========================
-    def open_edit_window(self):
-        pass  # 之後依需求補完
-
-    # ========================
-    # 刪除商品
-    # ========================
-    def delete_selected(self):
-        pass  # 之後依需求補完
+            self.table.insert("", "end", values=(
+                m["id"],
+                m["name"],
+                m["brand"],
+                m["spec"],
+                m["unit"],
+                m["current_stock"],
+                m["safe_stock"],
+                status,
+            ))

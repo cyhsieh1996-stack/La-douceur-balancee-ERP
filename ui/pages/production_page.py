@@ -1,98 +1,53 @@
 import customtkinter as ctk
 from tkinter import messagebox
 
-from logic.items_logic import list_finished_items
-from logic.production_logic import produce_product
+from logic.products_logic import get_all_products
+from logic.production_logic import check_production_capacity, produce
 
 
 class ProductionPage(ctk.CTkFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
 
-        title = ctk.CTkLabel(self, text="生產管理", font=("Arial", 22))
-        title.pack(pady=10)
+    def __init__(self, master):
+        super().__init__(master)
 
-        # ==============================
-        # 選擇成品
-        # ==============================
-        product_frame = ctk.CTkFrame(self)
-        product_frame.pack(pady=10)
+        title = ctk.CTkLabel(self, text="產品生產",
+                             font=ctk.CTkFont(size=26, weight="bold"))
+        title.pack(pady=20)
 
-        ctk.CTkLabel(product_frame, text="選擇成品：", width=100).grid(row=0, column=0, padx=5)
+        form = ctk.CTkFrame(self)
+        form.pack(pady=10)
 
-        self.product_var = ctk.StringVar()
+        # 產品選單
+        ctk.CTkLabel(form, text="產品：").grid(row=0, column=0, padx=5)
+        self.products = get_all_products()
+        names = [p["name"] for p in self.products]
 
-        product_list = self.get_product_list()
-        self.product_menu = ctk.CTkOptionMenu(
-            product_frame,
-            values=product_list,
-            variable=self.product_var,
-            width=250
-        )
-        self.product_menu.grid(row=0, column=1, padx=5)
+        self.prod_box = ctk.CTkComboBox(form, values=names, width=220)
+        self.prod_box.grid(row=0, column=1, padx=5)
 
-        # ==============================
-        # 生產數量
-        # ==============================
-        qty_frame = ctk.CTkFrame(self)
-        qty_frame.pack(pady=10)
+        # 批數
+        ctk.CTkLabel(form, text="批數：").grid(row=1, column=0, padx=5)
+        self.batch_entry = ctk.CTkEntry(form, width=120)
+        self.batch_entry.grid(row=1, column=1, padx=5)
 
-        ctk.CTkLabel(qty_frame, text="生產數量：", width=100).grid(row=0, column=0, padx=5)
+        ctk.CTkButton(form, text="執行生產",
+                      command=self.do_production).grid(row=2, column=0, columnspan=2, pady=10)
 
-        self.qty_entry = ctk.CTkEntry(qty_frame, width=100)
-        self.qty_entry.grid(row=0, column=1, padx=5)
+    # --------------------------------------------------
+    # 執行生產
+    # --------------------------------------------------
+    def do_production(self):
+        name = self.prod_box.get()
+        prod = next((p for p in self.products if p["name"] == name), None)
+        batch = int(self.batch_entry.get())
 
-        # ==============================
-        # 生產按鈕
-        # ==============================
-        produce_btn = ctk.CTkButton(
-            self,
-            text="開始生產",
-            font=("Arial", 16),
-            command=self.start_production
-        )
-        produce_btn.pack(pady=20)
-
-        # ==============================
-        # 生產結果（LOT顯示）
-        # ==============================
-        self.result_label = ctk.CTkLabel(self, text="", font=("Arial", 16))
-        self.result_label.pack(pady=10)
-
-    # =======================================================
-    # 取得成品列表（供選擇）
-    # =======================================================
-    def get_product_list(self):
-        products = list_finished_items()
-        return [f"{p['item_id']}｜{p['name']}" for p in products]
-
-    # =======================================================
-    # 生產流程
-    # =======================================================
-    def start_production(self):
-        data = self.product_var.get()
-        if not data:
-            messagebox.showerror("錯誤", "請先選擇成品")
+        lack = check_production_capacity(prod["id"], batch)
+        if lack:
+            msg = "庫存不足，無法生產：\n"
+            for item in lack:
+                msg += f"{item['name']}：需要 {item['required']}，現有 {item['current']}\n"
+            messagebox.showerror("錯誤", msg)
             return
 
-        product_id = data.split("｜")[0].strip()
-
-        qty_text = self.qty_entry.get()
-
-        try:
-            qty = float(qty_text)
-            if qty <= 0:
-                raise ValueError
-        except:
-            messagebox.showerror("錯誤", "請輸入正確的生產數量")
-            return
-
-        # 呼叫後端生產邏輯
-        lot = produce_product(product_id, qty)
-
-        # 顯示結果
-        self.result_label.configure(
-            text=f"生產成功！\nLOT 號：{lot}\n品項：{product_id}\n數量：{qty}"
-        )
-
-        self.qty_entry.delete(0, "end")
+        ok, msg = produce(prod["id"], batch)
+        messagebox.showinfo("生產完成", msg)
