@@ -1,63 +1,50 @@
-import pandas as pd
-from datetime import datetime, timedelta
-from database.db import get_db
-from .items_logic import get_item_by_name
+# logic/pos_logic.py
+
+import csv
+from database.db import get_connection
 
 
-# ============================================================
-# 取得上一週日期範圍 (週一 ～ 週日）
-# ============================================================
-def get_last_week_range():
-    today = datetime.now().date()
-    last_monday = today - timedelta(days=today.weekday() + 7)
-    last_sunday = last_monday + timedelta(days=6)
-    return last_monday, last_sunday
+# ------------------------------------------------------
+# 匯入 POS 銷售 CSV
+# 格式必須包含：日期, 商品名稱, 數量, 單價, 小計
+# ------------------------------------------------------
+def import_pos_csv(file_path):
+    conn = get_connection()
+    c = conn.cursor()
 
+    with open(file_path, "r", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
 
-# ============================================================
-# 匯入 POS 銷售報表：Item-Overview / Sales-Ranking
-# ============================================================
-def import_pos_item_overview(file_path):
-    df = pd.read_excel(file_path)
+        for row in reader:
+            date = row.get("日期")
+            name = row.get("商品名稱")
+            qty = int(row.get("數量"))
+            price = float(row.get("單價"))
+            subtotal = float(row.get("小計"))
 
-    conn = get_db()
-    cursor = conn.cursor()
-
-    last_mon, last_sun = get_last_week_range()
-
-    missing_products = []
-    imported_count = 0
-
-    for _, row in df.iterrows():
-        name = str(row.get("Name")).strip()
-        qty = row.get("QtySold", 0)
-        amount = row.get("Revenue", 0)
-
-        # 跳過空行或非甜點商品
-        if not name or qty == 0:
-            continue
-
-        # ERP 尋找對應商品
-        item = get_item_by_name(name)
-
-        if not item:
-            missing_products.append(name)
-            continue
-
-        item_id = item["item_id"]
-
-        # 建立 Sale movement
-        cursor.execute("""
-            INSERT INTO stock_movements (date, item_id, type, qty_in, qty_out, notes)
-            VALUES (?, ?, 'Sale', 0, ?, ?)
-        """, (str(last_sun), item_id, qty, f"Imported POS Revenue: {amount}"))
-
-        imported_count += 1
+            c.execute("""
+                INSERT INTO pos_sales (date, product_name, qty, price, subtotal)
+                VALUES (?, ?, ?, ?, ?);
+            """, (date, name, qty, price, subtotal))
 
     conn.commit()
+    conn.close()
+    return True, "POS資料已匯入完成"
 
-    return {
-        "imported": imported_count,
-        "missing": missing_products,
-        "week_range": (last_mon, last_sun)
-    }
+
+# ------------------------------------------------------
+# KPI：本週銷售總額
+# ------------------------------------------------------
+def get_week_sales_kpi():
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT SUM(subtotal)
+        FROM pos_sales
+        WHERE date >= date('now', '-6 days');
+    """)
+
+    val = c.fetchone()[0] or 0
+    conn.close()
+    return val

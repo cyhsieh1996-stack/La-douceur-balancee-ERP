@@ -1,73 +1,92 @@
-# logic/materials_logic.py
-from database.db import get_connection, now_str
+# logic/raw_materials_logic.py
+
+from database.db import get_connection
 
 
-def list_materials():
+# ------------------------------------------------------
+# 新增原料
+# ------------------------------------------------------
+def add_material(name, brand, spec, unit, safe_stock):
     conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM material_master ORDER BY id DESC")
-    rows = cur.fetchall()
-    conn.close()
-    return rows
+    c = conn.cursor()
 
-
-def add_material(data):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        INSERT INTO material_master
-        (code, name_zh, name_en, brand, vendor, vendor_code, spec, unit, note,
-         created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        data.get("code"),
-        data.get("name_zh"),
-        data.get("name_en"),
-        data.get("brand"),
-        data.get("vendor"),
-        data.get("vendor_code"),
-        data.get("spec"),
-        data.get("unit"),
-        data.get("note"),
-        now_str(),
-        now_str(),
-    ))
+    c.execute("""
+        INSERT INTO raw_materials (name, brand, spec, unit, safe_stock, current_stock)
+        VALUES (?, ?, ?, ?, ?, 0);
+    """, (name, brand, spec, unit, safe_stock))
 
     conn.commit()
     conn.close()
+    return True, "原料已新增"
 
 
-def update_material(id, data):
+# ------------------------------------------------------
+# 取得全部原料（完整資料）
+# ------------------------------------------------------
+def get_all_materials():
     conn = get_connection()
-    cur = conn.cursor()
+    c = conn.cursor()
 
-    cur.execute("""
-        UPDATE material_master
-        SET code=?, name_zh=?, name_en=?, brand=?, vendor=?, vendor_code=?,
-            spec=?, unit=?, note=?, updated_at=?
-        WHERE id=?
-    """, (
-        data.get("code"),
-        data.get("name_zh"),
-        data.get("name_en"),
-        data.get("brand"),
-        data.get("vendor"),
-        data.get("vendor_code"),
-        data.get("spec"),
-        data.get("unit"),
-        data.get("note"),
-        now_str(),
-        id
-    ))
+    c.execute("""
+        SELECT id, name, brand, spec, unit, safe_stock, current_stock, active
+        FROM raw_materials
+        WHERE active = 1
+        ORDER BY name ASC;
+    """)
+
+    rows = c.fetchall()
+    conn.close()
+
+    result = []
+    for r in rows:
+        result.append({
+            "id": r[0],
+            "name": r[1],
+            "brand": r[2],
+            "spec": r[3],
+            "unit": r[4],
+            "safe_stock": r[5],
+            "current_stock": r[6],
+            "active": r[7],
+        })
+    return result
+
+
+# ------------------------------------------------------
+# 下拉選單用資料
+# ------------------------------------------------------
+def get_material_dropdown_list():
+    materials = get_all_materials()
+    return [(m["id"], f"{m['name']} ({m['brand'] or ''}{m['spec'] or ''})") for m in materials]
+
+
+# ------------------------------------------------------
+# 更新原料資料
+# ------------------------------------------------------
+def update_material(mat_id, name, brand, spec, unit, safe_stock):
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("""
+        UPDATE raw_materials
+        SET name=?, brand=?, spec=?, unit=?, safe_stock=?
+        WHERE id=?;
+    """, (name, brand, spec, unit, safe_stock, mat_id))
 
     conn.commit()
     conn.close()
+    return True, "原料已更新"
 
 
-def delete_material(id):
+# ------------------------------------------------------
+# 刪除（停用）原料
+# ------------------------------------------------------
+def delete_material(mat_id):
     conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("DELETE FROM material_master WHERE id=?", (id,))
+    c = conn.cursor()
+
+    c.execute("UPDATE raw_materials SET active=0 WHERE id=?", (mat_id,))
     conn.commit()
     conn.close()
+
+    return True, "原料已刪除"

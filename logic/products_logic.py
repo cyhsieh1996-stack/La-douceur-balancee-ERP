@@ -1,96 +1,81 @@
-from database.db import get_db
+# logic/products_logic.py
 
-# =========================================================
-# 取得所有成品（type = 'finished'）
-# =========================================================
+from database.db import get_connection
+
+
+# ------------------------------------------------------
+# 新增產品
+# ------------------------------------------------------
+def add_product(name, category, price):
+    conn = get_connection()
+    c = conn.cursor()
+
+    c.execute("""
+        INSERT INTO products (name, category, price)
+        VALUES (?, ?, ?);
+    """, (name, category, price))
+
+    conn.commit()
+    conn.close()
+    return True, "產品已新增"
+
+
+# ------------------------------------------------------
+# 查詢全部產品
+# ------------------------------------------------------
 def get_all_products():
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_connection()
+    c = conn.cursor()
 
-    rows = cursor.execute("""
-        SELECT *
-        FROM items
-        WHERE type = 'finished'
-        ORDER BY category, name
-    """).fetchall()
+    c.execute("""
+        SELECT id, name, category, price, active
+        FROM products
+        WHERE active = 1
+        ORDER BY name ASC;
+    """)
 
-    return [dict(r) for r in rows]
+    rows = c.fetchall()
+    conn.close()
 
-
-# =========================================================
-# 新增成品
-# =========================================================
-def add_product(item_id, name, category, unit, notes="", safety_stock=None):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO items (item_id, name, category, unit, type, track_stock, notes, safety_stock)
-        VALUES (?, ?, ?, ?, 'finished', 1, ?, ?)
-    """, (item_id, name, category, unit, notes, safety_stock))
-
-    conn.commit()
+    result = []
+    for r in rows:
+        result.append({
+            "id": r[0],
+            "name": r[1],
+            "category": r[2],
+            "price": r[3],
+            "active": r[4],
+        })
+    return result
 
 
-# =========================================================
-# 更新成品
-# =========================================================
-def update_product(item_id, name, category, unit, notes="", safety_stock=None):
-    conn = get_db()
-    cursor = conn.cursor()
+# ------------------------------------------------------
+# 更新產品資訊
+# ------------------------------------------------------
+def update_product(prod_id, name, category, price):
+    conn = get_connection()
+    c = conn.cursor()
 
-    cursor.execute("""
-        UPDATE items
-        SET name=?, category=?, unit=?, notes=?, safety_stock=?
-        WHERE item_id=? AND type='finished'
-    """, (name, category, unit, notes, safety_stock, item_id))
+    c.execute("""
+        UPDATE products
+        SET name=?, category=?, price=?
+        WHERE id=?;
+    """, (name, category, price, prod_id))
 
     conn.commit()
+    conn.close()
+    return True, "產品已更新"
 
 
-# =========================================================
-# 刪除成品
-# =========================================================
-def delete_product(item_id):
-    conn = get_db()
-    cursor = conn.cursor()
+# ------------------------------------------------------
+# 刪除產品（停用）
+# ------------------------------------------------------
+def delete_product(prod_id):
+    conn = get_connection()
+    c = conn.cursor()
 
-    cursor.execute("""
-        DELETE FROM items
-        WHERE item_id=? AND type='finished'
-    """, (item_id,))
-
+    c.execute("UPDATE products SET active=0 WHERE id=?", (prod_id,))
     conn.commit()
+    conn.close()
 
-
-# =========================================================
-# 依分類取得成品
-# =========================================================
-def get_products_by_category(category):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    rows = cursor.execute("""
-        SELECT *
-        FROM items
-        WHERE type='finished' AND category=?
-        ORDER BY name
-    """, (category,)).fetchall()
-
-    return [dict(r) for r in rows]
-
-
-# =========================================================
-# 取得單一商品
-# =========================================================
-def get_product(item_id):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    row = cursor.execute("""
-        SELECT *
-        FROM items
-        WHERE item_id=? AND type='finished'
-    """, (item_id,)).fetchone()
-
-    return dict(row) if row else None
+    return True, "產品已刪除"

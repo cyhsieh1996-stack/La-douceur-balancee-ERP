@@ -1,87 +1,65 @@
-from database.db import get_db
+# logic/recipes_logic.py
 
-# =========================================================
-# 取得某成品的所有食譜項目（原料清單）
-# =========================================================
+from database.db import get_connection
+
+
+# ------------------------------------------------------
+# 取得某產品的食譜
+# ------------------------------------------------------
 def get_recipe(product_id):
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_connection()
+    c = conn.cursor()
 
-    rows = cursor.execute("""
-        SELECT r.id, r.material_id, i.name AS material_name, r.qty, r.unit
-        FROM recipes r
-        JOIN items i ON i.item_id = r.material_id
-        WHERE r.product_id = ?
-        ORDER BY i.category, material_name
-    """, (product_id,)).fetchall()
+    c.execute("""
+        SELECT ri.id, rm.name, ri.amount, rm.unit,
+               rm.id as material_id
+        FROM recipe_items ri
+        JOIN raw_materials rm ON rm.id = ri.material_id
+        WHERE ri.product_id = ?
+        ORDER BY rm.name ASC;
+    """, (product_id,))
 
-    return [dict(r) for r in rows]
+    rows = c.fetchall()
+    conn.close()
 
-
-# =========================================================
-# 新增一筆食譜項目
-# =========================================================
-def add_recipe_item(product_id, material_id, qty, unit):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO recipes (product_id, material_id, qty, unit)
-        VALUES (?, ?, ?, ?)
-    """, (product_id, material_id, qty, unit))
-
-    conn.commit()
+    result = []
+    for r in rows:
+        result.append({
+            "recipe_id": r[0],
+            "material_name": r[1],
+            "amount": r[2],
+            "unit": r[3],
+            "material_id": r[4],
+        })
+    return result
 
 
-# =========================================================
-# 修改食譜中的某個原料
-# =========================================================
-def update_recipe_item(recipe_id, qty, unit):
-    conn = get_db()
-    cursor = conn.cursor()
+# ------------------------------------------------------
+# 新增食譜項目
+# ------------------------------------------------------
+def add_recipe_item(product_id, material_id, amount):
+    conn = get_connection()
+    c = conn.cursor()
 
-    cursor.execute("""
-        UPDATE recipes
-        SET qty = ?, unit = ?
-        WHERE id = ?
-    """, (qty, unit, recipe_id))
+    c.execute("""
+        INSERT INTO recipe_items (product_id, material_id, amount)
+        VALUES (?, ?, ?);
+    """, (product_id, material_id, amount))
 
     conn.commit()
+    conn.close()
+    return True, "配方已新增"
 
 
-# =========================================================
-# 刪除食譜中的某個原料
-# =========================================================
+# ------------------------------------------------------
+# 刪除某項配方
+# ------------------------------------------------------
 def delete_recipe_item(recipe_id):
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_connection()
+    c = conn.cursor()
 
-    cursor.execute("""
-        DELETE FROM recipes
-        WHERE id = ?
-    """, (recipe_id,))
-
+    c.execute("DELETE FROM recipe_items WHERE id=?", (recipe_id,))
     conn.commit()
+    conn.close()
 
-
-# =========================================================
-# 生產扣料用：取得某成品的「原料 + 用量」
-# =========================================================
-def get_materials_for_production(product_id):
-    """
-    回傳格式：
-    [
-        { material_id: "BU01", qty: 15, unit: "g" },
-        ...
-    ]
-    """
-    conn = get_db()
-    cursor = conn.cursor()
-
-    rows = cursor.execute("""
-        SELECT material_id, qty, unit
-        FROM recipes
-        WHERE product_id = ?
-    """, (product_id,)).fetchall()
-
-    return [dict(r) for r in rows]
+    return True, "配方已刪除"

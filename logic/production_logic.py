@@ -1,53 +1,72 @@
-from datetime import datetime
-from database.db import get_db
-from .recipes_logic import get_materials_for_production
+# logic/production_logic.py
+
+from database.db import get_connection
 
 
-# =========================================================
-# LOT Number 產生邏輯
-# =========================================================
-def generate_lot_number(product_id):
-    today = datetime.now()
-    year = today.strftime("%y")
-    week = today.strftime("%V")   # ISO 週次
-    weekday = today.isoweekday()  # 1~7
+# ------------------------------------------------------
+# 檢查庫存是否足夠生產
+# ------------------------------------------------------
+def check_production_capacity(product_id, batch):
+    conn = get_connection()
+    c = conn.cursor()
 
-    return f"{year}{week}{weekday}{product_id}"
+    c.execute("""
+        SELECT rm.id, rm.name, rm.current_stock,
+               ri.amount
+        FROM recipe_items ri
+        JOIN raw_materials rm ON rm.id = ri.material_id
+        WHERE ri.product_id=?;
+    """, (product_id,))
+
+    rows = c.fetchall()
+    conn.close()
+
+    lack = []
+    for r in rows:
+        req = r[3] * batch
+        if r[2] < req:
+            lack.append({
+                "name": r[1],
+                "required": req,
+                "current": r[2],
+            })
+
+    return lack  # 空代表可以生產
 
 
-# =========================================================
-# 生產（建立成品 + 扣除原料自動化）
-# =========================================================
-def produce_product(product_id, qty_output):
-    """
-    qty_output = 生產的成品數量（個、份等）
-    """
+# ------------------------------------------------------
+# 執行生產（扣庫存）
+# ------------------------------------------------------
+def produce(product_id, batch):
+    lack = check_production_capacity(product_id, batch)
+    if lack:
+        return False, lack
 
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_connection()
+    c = conn.cursor()
 
-    # 產生 LOT 編號
-    lot_number = generate_lot_number(product_id)
+    # 扣庫存
+    c.execute("""
+        SELECT material_id, amount
+        FROM recipe_items
+        WHERE product_id=?;
+    """, (product_id,))
+    items = c.fetchall()
 
-    # 1️⃣ 成品入庫：Production_Output
-    cursor.execute("""
-        INSERT INTO stock_movements (date, item_id, type, qty_in, qty_out, lot_number)
-        VALUES (DATE('now'), ?, 'Production_Output', ?, 0, ?)
-    """, (product_id, qty_output, lot_number))
+    for mat_id, amount in items:
+        deduct = amount * batch
+        c.execute("""
+            UPDATE raw_materials
+            SET current_stock = current_stock - ?
+            WHERE id=?;
+        """, (deduct, mat_id))
 
-    # 2️⃣ 自動扣除原料
-    materials = get_materials_for_production(product_id)
-
-    for m in materials:
-        material_id = m["material_id"]
-        required_qty = m["qty"] * qty_output   # EX：每份 15g → 生產30份→450g
-        unit = m["unit"]
-
-        cursor.execute("""
-            INSERT INTO stock_movements (date, item_id, type, qty_in, qty_out, notes)
-            VALUES (DATE('now'), ?, 'Production_Consume', 0, ?, ?)
-        """, (material_id, required_qty, f"Used in LOT {lot_number}"))
+    # 紀錄生產
+    c.execute("""
+        INSERT INTO production_records (product_id, batch)
+        VALUES (?, ?);
+    """, (product_id, batch))
 
     conn.commit()
-
-    return lot_number
+    conn.close()
+    return True, "生產完成"
