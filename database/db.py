@@ -19,19 +19,19 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    # 1. 原料表 (已加入 category)
+    # 1. 原料表 (修改：新增 vendor, 移除 safe_stock 預設 50)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS raw_materials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             category TEXT,
-            brand TEXT,
+            brand TEXT,          -- 廠牌 (如：日本製粉)
+            vendor TEXT,         -- 新增：廠商 (如：苗林行)
             unit TEXT,
             stock REAL DEFAULT 0,
-            safe_stock REAL DEFAULT 50
+            safe_stock REAL DEFAULT 0  -- 修改：預設改為 0，介面上則不先填值
         );
     """)
-
     # 2. 產品表
     cur.execute("""
         CREATE TABLE IF NOT EXISTS products (
@@ -55,13 +55,15 @@ def init_db():
         );
     """)
 
-    # 4. 入庫紀錄
+    # 4. 入庫紀錄 (修改：新增 batch_number, expiry_date)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS inbound_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             material_id INTEGER NOT NULL,
             qty REAL NOT NULL,
             date TEXT DEFAULT CURRENT_TIMESTAMP,
+            batch_number TEXT,   -- 新增：批號
+            expiry_date TEXT,    -- 新增：有效期限 (格式建議 YYYY-MM-DD)
             note TEXT,
             FOREIGN KEY(material_id) REFERENCES raw_materials(id)
         );
