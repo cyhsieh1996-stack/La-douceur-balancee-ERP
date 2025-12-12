@@ -15,11 +15,11 @@ class Color:
     GRAY_BUTTON = "#E0E0E0"        # 次要按鈕底色 (淺灰)
     GRAY_BUTTON_HOVER = "#D6D6D6"  # 次要按鈕懸停
     
-    # --- 狀態顏色 (美化版) ---
-    DANGER = "#E74C3C"         # 質感紅
-    SUCCESS = "#16A085"        # 質感松石綠 (取代原本的螢光綠)
-    WARNING = "#F39C12"        # 質感橘黃
-    INFO = "#3B8ED0"           # 資訊藍
+    # --- 狀態顏色 ---
+    DANGER = "#E74C3C"         # 紅
+    SUCCESS = "#16A085"        # 松石綠
+    WARNING = "#F39C12"        # 橘黃
+    INFO = "#3B8ED0"           # 藍
 
     # --- 文字 ---
     TEXT_DARK = "#2D3436"      # 深灰
@@ -40,11 +40,12 @@ class Font:
     
     STAT_NUMBER = ("Arial", 30, "bold")
     STAT_LABEL = ("Microsoft JhengHei UI", 12)
+    
+    # ⚠️ 這裡就是缺少的關鍵變數，補上就不會報錯了
     TABLE_HEADER = ("Microsoft JhengHei UI", 14, "bold")
 
 class Layout:
     BTN_WIDTH = 120
     BTN_HEIGHT = 38
-    # 統一間距設定，讓所有頁面看起來一樣
     GRID_PADX = 15 
-    GRID_PADY = (5, 15) # 上少下多 (標籤跟輸入框近一點，跟下一行遠一點)
+    GRID_PADY = (5, 15)
