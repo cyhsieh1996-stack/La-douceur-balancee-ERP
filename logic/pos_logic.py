@@ -1,50 +1,175 @@
-# logic/pos_logic.py
+import pandas as pd
+import sqlite3
+import datetime
+from database.db import get_db
 
-import csv
-from database.db import get_connection
+def preview_pos_sales(file_path):
+    """
+    讀取 POS 報表，並預覽將要扣除的庫存 (含強力除錯功能)
+    """
+    debug_info = [] 
+    
+    try:
+        # 1. 嘗試讀取檔案
+        df_raw = None
+        try:
+            if file_path.lower().endswith('.csv'):
+                try:
+                    df_raw = pd.read_csv(file_path, header=None, encoding='utf-8')
+                except:
+                    try:
+                        df_raw = pd.read_csv(file_path, header=None, encoding='big5')
+                    except:
+                        df_raw = pd.read_csv(file_path, header=None, encoding='utf-8-sig')
+            else:
+                df_raw = pd.read_excel(file_path, header=None)
+        except Exception as e:
+            return False, f"檔案讀取失敗: {str(e)}"
 
+        if df_raw is None or df_raw.empty:
+            return False, "檔案是空的"
 
-# ------------------------------------------------------
-# 匯入 POS 銷售 CSV
-# 格式必須包含：日期, 商品名稱, 數量, 單價, 小計
-# ------------------------------------------------------
-def import_pos_csv(file_path):
-    conn = get_connection()
-    c = conn.cursor()
+        # 2. 尋找標題列
+        header_row_index = -1
+        name_keywords = ['商品名稱', 'Item Name', '名稱', '商品', 'Item', 'Product']
+        
+        for i, row in df_raw.head(20).iterrows():
+            row_str = [str(v).strip() for v in row.values]
+            if any(k in str(v) for v in row_str for k in name_keywords):
+                header_row_index = i
+                break
+        
+        if header_row_index == -1:
+            return False, f"找不到標題列。\n系統在前20行找不到包含 {name_keywords} 的列。"
 
-    with open(file_path, "r", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f)
+        # 3. 重新讀取正確的資料
+        if file_path.lower().endswith('.csv'):
+            try:
+                df = pd.read_csv(file_path, header=header_row_index, encoding='utf-8')
+            except:
+                try:
+                    df = pd.read_csv(file_path, header=header_row_index, encoding='big5')
+                except:
+                    df = pd.read_csv(file_path, header=header_row_index, encoding='utf-8-sig')
+        else:
+            df = pd.read_excel(file_path, header=header_row_index)
 
-        for row in reader:
-            date = row.get("日期")
-            name = row.get("商品名稱")
-            qty = int(row.get("數量"))
-            price = float(row.get("單價"))
-            subtotal = float(row.get("小計"))
+        df.columns = [str(c).strip().replace('\n', '') for c in df.columns]
+        debug_info.append(f"偵測到的所有欄位: {list(df.columns)}")
 
-            c.execute("""
-                INSERT INTO pos_sales (date, product_name, qty, price, subtotal)
-                VALUES (?, ?, ?, ?, ?);
-            """, (date, name, qty, price, subtotal))
+        # 4. 辨識欄位
+        col_name = None
+        col_qty = None
 
-    conn.commit()
-    conn.close()
-    return True, "POS資料已匯入完成"
+        for k in name_keywords:
+            for col in df.columns:
+                if k in col:
+                    col_name = col
+                    break
+            if col_name: break
+        
+        qty_priority = ['銷售量', '銷售數量', 'Qty', '數量', 'Quantity', 'Count', '銷量']
+        for k in qty_priority:
+            for col in df.columns:
+                if k in col and "占比" not in col and "退貨" not in col and "庫存" not in col:
+                    col_qty = col
+                    break
+            if col_qty: break
 
+        if not col_name or not col_qty:
+            return False, f"欄位對應失敗。\n名稱欄位: {col_name}\n數量欄位: {col_qty}\n\n所有欄位: {list(df.columns)}"
 
-# ------------------------------------------------------
-# KPI：本週銷售總額
-# ------------------------------------------------------
-def get_week_sales_kpi():
-    conn = get_connection()
-    c = conn.cursor()
+        # 5. 開始比對
+        conn = get_db()
+        cursor = conn.cursor()
+        preview_data = []
+        
+        for index, row in df.iterrows():
+            name = str(row[col_name]).strip()
+            if not name or name.lower() in ["nan", "總計", "total", "", "nat"]: continue
 
-    c.execute("""
-        SELECT SUM(subtotal)
-        FROM pos_sales
-        WHERE date >= date('now', '-6 days');
-    """)
+            try:
+                qty_val = str(row[col_qty]).replace(',', '')
+                qty = int(float(qty_val)) # 強制整數
+            except:
+                qty = 0
 
-    val = c.fetchone()[0] or 0
-    conn.close()
-    return val
+            if qty <= 0: continue
+
+            cursor.execute("SELECT id, stock FROM products WHERE name = ?", (name,))
+            db_prod = cursor.fetchone()
+            
+            if db_prod:
+                current_stock = int(db_prod['stock'])
+                stock_after = current_stock - qty
+                status = "⚠️ 庫存不足 (將變負數)" if stock_after < 0 else "✅ 正常"
+
+                preview_data.append({
+                    "id": db_prod['id'],
+                    "name": name,
+                    "sales_qty": qty,
+                    "current_stock": current_stock,
+                    "stock_after": stock_after,
+                    "status": status
+                })
+            else:
+                preview_data.append({
+                    "id": None,
+                    "name": name,
+                    "sales_qty": qty,
+                    "current_stock": 0,
+                    "stock_after": 0,
+                    "status": "❌ 未建檔 (略過)"
+                })
+
+        conn.close()
+        
+        if not preview_data:
+            return False, f"檔案讀取成功，但沒有找到有效資料。\n(抓取欄位: 名稱='{col_name}', 數量='{col_qty}')"
+            
+        return True, preview_data
+
+    except Exception as e:
+        return False, f"處理失敗: {str(e)}"
+
+def confirm_sales_deduction(data_list):
+    """
+    執行扣庫存，並計算金額寫入紀錄
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    today = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    count = 0
+    try:
+        for item in data_list:
+            if item['id'] is None: 
+                continue
+            
+            qty = int(item['sales_qty'])
+            prod_id = item['id']
+            
+            # 1. 查詢產品售價 (price) 以計算營業額
+            cursor.execute("SELECT price FROM products WHERE id = ?", (prod_id,))
+            res = cursor.fetchone()
+            price = res['price'] if res else 0
+            amount = price * qty # 計算總額
+
+            # 2. 扣除庫存
+            cursor.execute("UPDATE products SET stock = stock - ? WHERE id = ?", (qty, prod_id))
+            
+            # 3. 寫入銷售紀錄 (帶入 price 和 amount)
+            cursor.execute("""
+                INSERT INTO sales_records (product_name, qty, price, amount, date, order_id)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (item['name'], qty, price, amount, today, "POS_IMPORT"))
+            
+            count += 1
+            
+        conn.commit()
+        return True, f"成功扣除 {count} 項產品庫存！"
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+    finally:
+        conn.close()
