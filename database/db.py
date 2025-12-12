@@ -1,112 +1,96 @@
-# database/db.py
-
 import sqlite3
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "sweet_erp.db")
+# 資料庫所在資料夾
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "sweet_erp.db")
 
-
-# ------------------------------------------------------
-# 建立資料表
-# ------------------------------------------------------
-def initialize_database():
+def get_db():
     conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    conn.row_factory = sqlite3.Row
+    # ⚠️ 重要修正：強制開啟外鍵約束，確保資料一致性
+    conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
 
-    # ---------------------
-    # 原料
-    # ---------------------
-    c.execute("""
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    # 1. 原料表 (Raw Materials)
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS raw_materials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             brand TEXT,
-            spec TEXT,
-            unit TEXT NOT NULL DEFAULT 'g',
-            safe_stock REAL NOT NULL DEFAULT 0,
-            current_stock REAL NOT NULL DEFAULT 0,
-            active INTEGER NOT NULL DEFAULT 1
+            unit TEXT,
+            stock REAL DEFAULT 0,
+            safe_stock REAL DEFAULT 50
         );
     """)
 
-    # ---------------------
-    # 入庫紀錄
-    # ---------------------
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS inbound_records (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            material_id INTEGER NOT NULL,
-            qty REAL NOT NULL,
-            unit_cost REAL NOT NULL,
-            subtotal REAL NOT NULL,
-            supplier TEXT,
-            note TEXT,
-            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-            FOREIGN KEY(material_id) REFERENCES raw_materials(id)
-        );
-    """)
-
-    # ---------------------
-    # 產品資料
-    # ---------------------
-    c.execute("""
+    # 2. 產品表 (Products) - 例如：草莓蛋糕
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             category TEXT,
-            price REAL DEFAULT 0,
-            active INTEGER NOT NULL DEFAULT 1
+            price REAL,
+            stock REAL DEFAULT 0
         );
     """)
 
-    # ---------------------
-    # 食譜（產品配方）
-    # ---------------------
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS recipe_items (
+    # 3. 食譜表 (Recipes) - 關聯產品與原料
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS recipes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_id INTEGER NOT NULL,
             material_id INTEGER NOT NULL,
             amount REAL NOT NULL,
-            FOREIGN KEY(product_id) REFERENCES products(id),
+            FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE CASCADE,
+            FOREIGN KEY(material_id) REFERENCES raw_materials(id) ON DELETE RESTRICT
+        );
+    """)
+
+    # 4. 入庫紀錄 (Inbound Records)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS inbound_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            material_id INTEGER NOT NULL,
+            qty REAL NOT NULL,
+            date TEXT DEFAULT CURRENT_TIMESTAMP,
+            note TEXT,
             FOREIGN KEY(material_id) REFERENCES raw_materials(id)
         );
     """)
 
-    # ---------------------
-    # 生產紀錄
-    # ---------------------
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS production_records (
+    # 5. (新增) 生產紀錄 (Production Logs) - 為了支援 ProductionPage
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS production_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_id INTEGER NOT NULL,
-            batch INTEGER NOT NULL,
-            created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+            qty REAL NOT NULL,
+            date TEXT DEFAULT CURRENT_TIMESTAMP,
+            note TEXT,
             FOREIGN KEY(product_id) REFERENCES products(id)
         );
     """)
 
-    # ---------------------
-    # POS 銷售資料
-    # ---------------------
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS pos_sales (
+    # 6. (新增) 銷售/POS紀錄 (Sales Records) - 為了支援 POSImportPage
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS sales_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            product_name TEXT NOT NULL,
-            qty INTEGER NOT NULL,
-            price REAL NOT NULL,
-            subtotal REAL NOT NULL
+            product_name TEXT,  -- 這裡先存文字，因為 POS 匯入的名稱未必能對應到 ID
+            qty REAL,
+            price REAL,
+            amount REAL,
+            date TEXT,
+            order_id TEXT
         );
     """)
 
     conn.commit()
     conn.close()
+    print("資料庫初始化完成 (Database initialized)")
 
-
-# ------------------------------------------------------
-# 取得資料庫連線
-# ------------------------------------------------------
-def get_connection():
-    initialize_database()
-    return sqlite3.connect(DB_PATH)
+if __name__ == "__main__":
+    init_db()

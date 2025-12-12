@@ -1,73 +1,57 @@
-# logic/inbound_logic.py
+# inbound_logic.py
+from database.db import get_db
 
-from database.db import get_connection
 
+# ==========================================
+# 新增入庫紀錄（並更新原料庫存）
+# ==========================================
+def add_inbound_record(material_id, qty, date, note=""):
+    if not material_id or not qty:
+        return False, "請輸入完整資料"
 
-# ------------------------------------------------------
-# 新增入庫紀錄 + 更新庫存
-# ------------------------------------------------------
-def add_inbound_record(material_id, qty, cost, supplier, note):
-    try:
-        qty = float(qty)
-        cost = float(cost)
-    except:
-        return False, "數量與單價必須為數字"
-
-    subtotal = qty * cost
-
-    conn = get_connection()
-    c = conn.cursor()
+    conn = get_db()
+    cur = conn.cursor()
 
     # 新增入庫紀錄
-    c.execute("""
-        INSERT INTO inbound_records (material_id, qty, unit_cost, subtotal, supplier, note)
-        VALUES (?, ?, ?, ?, ?, ?);
-    """, (material_id, qty, cost, subtotal, supplier, note))
+    cur.execute("""
+        INSERT INTO inbound_records (material_id, qty, date, note)
+        VALUES (?, ?, ?, ?);
+    """, (material_id, qty, date, note))
 
-    # 更新庫存
-    c.execute("""
+    # 更新原料庫存
+    cur.execute("""
         UPDATE raw_materials
-        SET current_stock = current_stock + ?
-        WHERE id=?;
+        SET stock = stock + ?
+        WHERE id = ?;
     """, (qty, material_id))
 
     conn.commit()
-    conn.close()
-
-    return True, "入庫已完成"
+    return True, "入庫成功"
 
 
-# ------------------------------------------------------
-# 查詢全部入庫紀錄
-# ------------------------------------------------------
+# ==========================================
+# 取得所有入庫紀錄
+# ==========================================
 def get_all_inbound_records():
-    conn = get_connection()
-    c = conn.cursor()
+    conn = get_db()
+    cur = conn.cursor()
 
-    c.execute("""
-        SELECT ir.id, rm.name, rm.brand, rm.spec,
-               ir.qty, ir.unit_cost, ir.subtotal,
-               ir.supplier, ir.note, ir.created_at
+    cur.execute("""
+        SELECT ir.id, rm.name, ir.qty, ir.date, ir.note
         FROM inbound_records ir
-        JOIN raw_materials rm ON rm.id = ir.material_id
-        ORDER BY ir.created_at DESC;
+        JOIN raw_materials rm ON ir.material_id = rm.id
+        ORDER BY ir.date DESC;
     """)
 
-    rows = c.fetchall()
-    conn.close()
+    rows = cur.fetchall()
 
-    result = []
-    for r in rows:
-        result.append({
+    return [
+        {
             "id": r[0],
-            "name": r[1],
-            "brand": r[2],
-            "spec": r[3],
-            "qty": r[4],
-            "unit_cost": r[5],
-            "subtotal": r[6],
-            "supplier": r[7],
-            "note": r[8],
-            "created_at": r[9],
-        })
-    return result
+            "material_name": r[1],
+            "qty": r[2],
+            "date": r[3],
+            "note": r[4]
+        }
+        for r in rows
+    ]
