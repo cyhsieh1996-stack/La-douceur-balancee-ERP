@@ -1,20 +1,20 @@
 import sqlite3
 from database.db import get_db
 
-def add_inbound_record(material_id, qty, batch_number, expiry_date, note):
+def add_inbound_record(material_id, qty, unit_price, batch_number, expiry_date, note):
     """
-    新增入庫紀錄 (含批號與效期)，並同時增加原料庫存
+    新增入庫紀錄，並增加原料庫存
     """
     conn = get_db()
     cursor = conn.cursor()
     try:
-        # 1. 新增入庫紀錄
+        # 1. 寫入入庫紀錄 (新增 unit_price)
         cursor.execute("""
-            INSERT INTO inbound_records (material_id, qty, batch_number, expiry_date, note)
-            VALUES (?, ?, ?, ?, ?)
-        """, (material_id, qty, batch_number, expiry_date, note))
+            INSERT INTO inbound_records (material_id, qty, unit_price, batch_number, expiry_date, note)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (material_id, qty, unit_price, batch_number, expiry_date, note))
 
-        # 2. 同步更新原料庫存 (庫存 = 原本庫存 + 入庫量)
+        # 2. 增加原料庫存 (raw_materials table)
         cursor.execute("""
             UPDATE raw_materials
             SET stock = stock + ?
@@ -30,26 +30,24 @@ def add_inbound_record(material_id, qty, batch_number, expiry_date, note):
         conn.close()
 
 def get_inbound_history():
-    """
-    取得入庫歷史紀錄 (包含批號、效期)
-    """
+    """取得詳細的入庫歷史"""
     conn = get_db()
     cursor = conn.cursor()
-    
+    # 新增 unit_price
     sql = """
-    SELECT 
-        r.id,
-        r.date,
-        m.name,
-        m.brand,
-        r.qty,
-        m.unit,
-        r.batch_number,
-        r.expiry_date,
-        r.note
-    FROM inbound_records r
-    JOIN raw_materials m ON r.material_id = m.id
-    ORDER BY r.date DESC
+        SELECT 
+            r.date,
+            m.name,
+            m.brand,
+            r.qty,
+            m.unit,
+            r.unit_price, 
+            r.batch_number,
+            r.expiry_date,
+            r.note
+        FROM inbound_records r
+        JOIN raw_materials m ON r.material_id = m.id
+        ORDER BY r.date DESC
     """
     cursor.execute(sql)
     rows = cursor.fetchall()

@@ -1,12 +1,8 @@
 import sqlite3
 from database.db import get_db
 
-# ... (保留 add_material, update_material 不變) ...
-# ... (為了節省篇幅，請保留您原本的 add/update/delete 函式，只替換下面這區) ...
-
 def add_material(name, category, brand, vendor, unit, safe_stock):
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_db(); cursor = conn.cursor()
     try:
         cursor.execute("INSERT INTO raw_materials (name, category, brand, vendor, unit, unit_price, safe_stock, stock) VALUES (?, ?, ?, ?, ?, 0, ?, 0)", (name, category, brand, vendor, unit, safe_stock))
         conn.commit(); return True, "新增成功"
@@ -14,8 +10,7 @@ def add_material(name, category, brand, vendor, unit, safe_stock):
     finally: conn.close()
 
 def update_material(mat_id, name, category, brand, vendor, unit, safe_stock):
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_db(); cursor = conn.cursor()
     try:
         cursor.execute("UPDATE raw_materials SET name=?, category=?, brand=?, vendor=?, unit=?, safe_stock=? WHERE id=?", (name, category, brand, vendor, unit, safe_stock, mat_id))
         conn.commit(); return True, "更新成功"
@@ -23,8 +18,7 @@ def update_material(mat_id, name, category, brand, vendor, unit, safe_stock):
     finally: conn.close()
 
 def delete_material(material_id):
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_db(); cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM raw_materials WHERE id = ?", (material_id,))
         conn.commit(); return True, "刪除成功"
@@ -37,7 +31,7 @@ def get_all_materials():
     rows = cursor.fetchall(); conn.close()
     return rows
 
-# ⚠️ 新增：搜尋功能
+# ⚠️ 新增搜尋功能
 def search_materials(keyword):
     conn = get_db(); cursor = conn.cursor()
     search_term = f"%{keyword}%"

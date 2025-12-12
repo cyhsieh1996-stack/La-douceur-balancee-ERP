@@ -44,12 +44,13 @@ def init_db():
 
     # --- (原第3點 食譜表 已移除) ---
 
-    # 4. 入庫紀錄 (保留編號順序方便對照，實際是第3張表)
+    # 4. 入庫紀錄 (修改：新增 unit_price)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS inbound_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             material_id INTEGER NOT NULL,
             qty REAL NOT NULL,
+            unit_price REAL DEFAULT 0,  -- 新增這一行
             date TEXT DEFAULT CURRENT_TIMESTAMP,
             batch_number TEXT,
             expiry_date TEXT,
