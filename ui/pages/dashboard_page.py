@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, filedialog, messagebox
 from ui.theme import Color, Font
 from logic.dashboard_logic import (
     get_low_stock_materials, get_expiring_products, get_expiring_raw_materials,
@@ -11,20 +11,19 @@ class DashboardPage(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
 
-        # 1. 標題與匯出按鈕區
+        # 標題與匯出按鈕區
         header_frame = ctk.CTkFrame(self, fg_color="transparent")
         header_frame.pack(fill="x", pady=(0, 20))
         
         title = ctk.CTkLabel(header_frame, text="戰情中心 Dashboard", font=Font.TITLE, text_color=Color.TEXT_DARK)
         title.pack(side="left")
         
-        # 匯出按鈕 (放在右邊)
         btn_export = ctk.CTkButton(header_frame, text="📥 匯出資料備份", 
                                    fg_color=Color.INFO, width=120, height=35,
                                    command=self.handle_export)
         btn_export.pack(side="right")
 
-        # 2. 頂部統計卡片
+        # 頂部統計卡片
         self.stats_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.stats_frame.pack(fill="x", pady=(0, 20))
         self.stats_frame.columnconfigure((0, 1, 2, 3, 4), weight=1)
@@ -35,7 +34,7 @@ class DashboardPage(ctk.CTkFrame):
         self.lbl_mat_cnt = self.create_stat_card(self.stats_frame, "原料品項", "0", 3)
         self.lbl_prod_cnt = self.create_stat_card(self.stats_frame, "產品品項", "0", 4)
 
-        # 3. 下方資訊區
+        # 下方資訊區
         self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.content_frame.pack(fill="both", expand=True)
         self.content_frame.columnconfigure((0, 1, 2), weight=1)
@@ -50,14 +49,9 @@ class DashboardPage(ctk.CTkFrame):
         folder = filedialog.askdirectory(title="選擇匯出儲存位置")
         if not folder: return
         success, msg = export_all_data(folder)
-        if success:
-            messagebox.showinfo("成功", msg)
-        else:
-            messagebox.showerror("失敗", msg)
+        if success: messagebox.showinfo("成功", msg)
+        else: messagebox.showerror("失敗", msg)
 
-    # ... (以下 create_stat_card, create_left_panel 等介面程式碼完全不用動，為了節省篇幅，請保留原有的) ...
-    # 請確保剩下的 helper functions 都還在
-    
     def create_stat_card(self, parent, title, value, col, value_color=Color.TEXT_DARK):
         card = ctk.CTkFrame(parent, fg_color=Color.WHITE_CARD, corner_radius=8)
         card.grid(row=0, column=col, padx=5, sticky="ew")
@@ -86,13 +80,20 @@ class DashboardPage(ctk.CTkFrame):
         container = ctk.CTkFrame(parent, fg_color=Color.WHITE_CARD, corner_radius=10)
         container.pack(fill="both", expand=True, pady=(0, 15))
         ctk.CTkLabel(container, text=title, font=Font.BODY_BOLD, text_color=Color.TEXT_DARK).pack(anchor="w", padx=15, pady=(15, 5))
+        
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("Treeview", background="white", foreground=Color.TEXT_DARK, rowheight=Color.TABLE_ROW_HEIGHT, font=Font.SMALL, fieldbackground="white", borderwidth=0)
         style.configure("Treeview.Heading", font=Font.TABLE_HEADER, background=Color.TABLE_HEADER_BG, foreground=Color.TEXT_DARK, relief="flat")
+        
         tree = ttk.Treeview(container, columns=headers, show="headings", height=5)
         for col, w in zip(headers, widths):
             tree.heading(col, text=col); tree.column(col, width=w, anchor="center")
+        
+        # ⚠️ 斑馬紋
+        tree.tag_configure('odd', background='white')
+        tree.tag_configure('even', background=Color.TABLE_ROW_ALT)
+
         tree.pack(fill="both", expand=True, padx=10, pady=(0, 15))
         setattr(self, attr_name, tree)
 
@@ -113,11 +114,14 @@ class DashboardPage(ctk.CTkFrame):
     def update_tree(self, tree, data, indices):
         for item in tree.get_children(): tree.delete(item)
         if not data: return
-        for row in data:
+        for i, row in enumerate(data):
             vals = [row[i] for i in indices]
-            tree.insert("", "end", values=vals)
+            # ⚠️ 應用斑馬紋
+            tag = 'even' if i % 2 == 0 else 'odd'
+            tree.insert("", "end", values=vals, tags=(tag,))
 
     def update_tree_custom(self, tree, data):
         for item in tree.get_children(): tree.delete(item)
         for i, row in enumerate(data):
-            tree.insert("", "end", values=(f"No.{i+1}", row[0], int(row[1])))
+            tag = 'even' if i % 2 == 0 else 'odd'
+            tree.insert("", "end", values=(f"No.{i+1}", row[0], int(row[1])), tags=(tag,))

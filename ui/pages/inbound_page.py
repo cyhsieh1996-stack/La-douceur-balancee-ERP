@@ -1,6 +1,5 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-from tkcalendar import DateEntry  # ⚠️ 引入日曆套件
 from datetime import datetime
 from ui.theme import Color, Font, Layout
 from logic.inbound_logic import add_inbound_record, get_inbound_history
@@ -44,7 +43,7 @@ class InboundPage(ctk.CTkFrame):
         self.entry_qty = ctk.CTkEntry(content, placeholder_text="數字")
         self.entry_qty.grid(row=1, column=2, padx=10, pady=(0, 10), sticky="ew")
 
-        # 4. 進貨單價 (新增)
+        # 4. 進貨單價
         ctk.CTkLabel(content, text="進貨單價", font=Font.BODY, text_color=Color.TEXT_DARK).grid(row=0, column=3, padx=10, pady=5, sticky="w")
         self.entry_price = ctk.CTkEntry(content, placeholder_text="單價")
         self.entry_price.grid(row=1, column=3, padx=10, pady=(0, 10), sticky="ew")
@@ -55,15 +54,33 @@ class InboundPage(ctk.CTkFrame):
         self.entry_batch = ctk.CTkEntry(content, placeholder_text="例如：B20251212")
         self.entry_batch.grid(row=3, column=0, padx=10, pady=(0, 10), sticky="ew")
 
-        # 6. 有效期限 (改成日曆選單)
-        ctk.CTkLabel(content, text="有效期限", font=Font.BODY, text_color=Color.TEXT_DARK).grid(row=2, column=1, padx=10, pady=5, sticky="w")
-        # 由於 DateEntry 是 tk 元件，無法直接用 grid (會跑版)，需要包在一個 ctk Frame 裡
+        # 6. 有效期限 (改為 年/月/日 下拉選單)
+        ctk.CTkLabel(content, text="有效期限 (YYYY/MM/DD)", font=Font.BODY, text_color=Color.TEXT_DARK).grid(row=2, column=1, padx=10, pady=5, sticky="w")
+        
+        # 建立一個容器來放三個選單
         date_frame = ctk.CTkFrame(content, fg_color="transparent")
         date_frame.grid(row=3, column=1, padx=10, pady=(0, 10), sticky="ew")
         
-        self.date_entry = DateEntry(date_frame, width=12, background=Color.PRIMARY,
-                                    foreground='white', borderwidth=2, date_pattern='yyyy-mm-dd')
-        self.date_entry.pack(fill="x", expand=True) # 填滿 frame
+        # 準備資料
+        current_year = datetime.now().year
+        years = [str(y) for y in range(current_year, current_year + 10)] # 未來10年
+        months = [f"{m:02d}" for m in range(1, 13)]
+        days = [f"{d:02d}" for d in range(1, 32)]
+
+        # 年
+        self.combo_year = ctk.CTkComboBox(date_frame, values=years, width=70, state="readonly")
+        self.combo_year.set(str(current_year))
+        self.combo_year.pack(side="left", padx=(0, 5))
+        
+        # 月
+        self.combo_month = ctk.CTkComboBox(date_frame, values=months, width=60, state="readonly")
+        self.combo_month.set(datetime.now().strftime("%m"))
+        self.combo_month.pack(side="left", padx=5)
+        
+        # 日
+        self.combo_day = ctk.CTkComboBox(date_frame, values=days, width=60, state="readonly")
+        self.combo_day.set(datetime.now().strftime("%d"))
+        self.combo_day.pack(side="left", padx=5)
 
         # 7. 備註
         ctk.CTkLabel(content, text="備註", font=Font.BODY, text_color=Color.TEXT_DARK).grid(row=2, column=2, columnspan=2, padx=10, pady=5, sticky="w")
@@ -116,7 +133,13 @@ class InboundPage(ctk.CTkFrame):
 
     def handle_submit(self):
         selected_str = self.combo_material.get(); qty_str = self.entry_qty.get(); price_str = self.entry_price.get()
-        batch = self.entry_batch.get(); expiry = self.date_entry.get_date().strftime("%Y-%m-%d"); note = self.entry_note.get()
+        batch = self.entry_batch.get(); note = self.entry_note.get()
+        
+        # 組合日期字串
+        y = self.combo_year.get()
+        m = self.combo_month.get()
+        d = self.combo_day.get()
+        expiry = f"{y}-{m}-{d}"
 
         if not selected_str or "無原料" in selected_str or "請先選擇" in selected_str: messagebox.showwarning("警告", "請選擇有效的原料"); return
         if not qty_str: messagebox.showwarning("警告", "請輸入數量"); return
@@ -124,13 +147,10 @@ class InboundPage(ctk.CTkFrame):
         try:
             material_id = int(selected_str.split(" - ")[0])
             qty = float(qty_str)
-            # 單價我們暫時沒存到 inbound_records (因為資料庫還沒開這個欄位)，
-            # 但我們可以先寫進備註，或者之後再擴充 inbound 表格。
-            # 目前先檢查是不是數字就好
             if price_str: float(price_str) 
         except: messagebox.showerror("錯誤", "數量或價格格式錯誤"); return
 
-        # 如果有填單價，自動加到備註裡方便查看
+        # 單價寫入備註
         if price_str:
             note = f"[${price_str}] {note}"
 
