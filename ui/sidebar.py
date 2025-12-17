@@ -13,26 +13,37 @@ class Sidebar(ctk.CTkFrame):
         self.logo_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.logo_frame.pack(fill="x", pady=(30, 20), padx=20)
         
-        # 嘗試載入圖片 Logo (假設放在 assets/logo.png)
-        # 如果找不到圖片，就顯示文字 Logo
-        logo_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "assets", "logo.png")
+        # ⚠️ 路徑修正：只往上找一層 (ui -> root)，不是兩層
+        current_dir = os.path.dirname(os.path.abspath(__file__)) # .../ui
+        project_root = os.path.dirname(current_dir)              # .../SweetERP (根目錄)
+        logo_path = os.path.join(project_root, "assets", "logo.png")
         
+        # 除錯訊息 (如果成功顯示圖片，這行可以忽略)
+        print(f"正在尋找 Logo 路徑: {logo_path}")
+
         if os.path.exists(logo_path):
             try:
                 pil_image = Image.open(logo_path)
-                # 調整圖片大小 (例如寬 180)
-                ctk_image = ctk.CTkImage(light_image=pil_image, dark_image=pil_image, size=(180, 60))
+                # 調整圖片顯示比例 (這裡設為 寬180, 高60，可自行微調)
+                # 保持比例縮放
+                ratio = pil_image.height / pil_image.width
+                new_width = 180
+                new_height = int(new_width * ratio)
+                
+                ctk_image = ctk.CTkImage(light_image=pil_image, dark_image=pil_image, size=(new_width, new_height))
                 ctk.CTkLabel(self.logo_frame, text="", image=ctk_image).pack()
-            except:
+            except Exception as e:
+                print(f"圖片讀取失敗: {e}")
                 self.show_text_logo()
         else:
+            print("找不到 logo.png，顯示文字版")
             self.show_text_logo()
 
         # 導覽按鈕容器
         self.nav_container = ctk.CTkFrame(self, fg_color="transparent")
         self.nav_container.pack(fill="both", expand=True, padx=15, pady=10)
 
-        # 建立按鈕 (移除 Emoji，純文字)
+        # 建立按鈕
         self.create_nav_button("戰情中心", "dashboard")
         self.create_nav_button("原料管理", "raw_materials")
         self.create_nav_button("產品管理", "products")
@@ -42,7 +53,7 @@ class Sidebar(ctk.CTkFrame):
         self.create_nav_button("POS 匯入", "pos_import")
 
         # 版本號
-        version_label = ctk.CTkLabel(self, text="v2.3 Classic", font=Font.SMALL, text_color=Color.TEXT_LIGHT)
+        version_label = ctk.CTkLabel(self, text="v2.4 Logo Fixed", font=Font.SMALL, text_color=Color.TEXT_LIGHT)
         version_label.pack(side="bottom", pady=20)
         
         # 預設選中
@@ -56,7 +67,7 @@ class Sidebar(ctk.CTkFrame):
         btn = ctk.CTkButton(
             self.nav_container, 
             text=text, 
-            font=("Microsoft JhengHei UI", 16, "bold"), # 字體稍微加大一點點
+            font=("Microsoft JhengHei UI", 16, "bold"),
             
             # 樣式：實體膠囊按鈕
             fg_color=Color.SIDEBAR_BTN_DEFAULT,
@@ -64,8 +75,8 @@ class Sidebar(ctk.CTkFrame):
             hover_color=Color.SIDEBAR_BTN_HOVER,
             
             anchor="center", 
-            height=48,        # 高度微調，讓按鈕更有份量
-            corner_radius=12, # 圓角
+            height=48,
+            corner_radius=12,
             
             command=lambda: self.handle_click(page_name)
         )

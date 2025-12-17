@@ -9,20 +9,22 @@ from ui.pages.production_page import ProductionPage
 from ui.pages.pos_import_page import PosImportPage
 from ui.pages.inventory_page import InventoryPage
 from database.db import init_db
-# ⚠️ 新增備份邏輯
 from logic.backup_logic import perform_backup 
 
 class SweetERPApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("La Douceur Balancée - 甜點ERP系統")
-        self.geometry("1200x800")
+        
+    
+        self.geometry("1380x850")
+        
         ctk.set_appearance_mode("Light")
         
         # 初始化資料庫
         init_db()
         
-        # ⚠️ 啟動時執行自動備份
+        # 啟動時執行自動備份
         self.run_auto_backup()
 
         # 版面配置 (Grid)
