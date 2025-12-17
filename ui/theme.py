@@ -1,51 +1,39 @@
 import customtkinter as ctk
 
 class Color:
-    # --- 核心顏色 ---
-    PRIMARY = "#3B8ED0"        # 主色 (藍)
+    PRIMARY = "#3B8ED0"        
     PRIMARY_HOVER = "#36719F"
-    
-    # --- 背景 ---
-    MAIN_BG = "#E4E4E4"        # 視窗背景
-    BACKGROUND = "#E4E4E4"     # 相容變數
-    WHITE_CARD = "#FFFFFF"     # 卡片白
-    SIDEBAR_BG = "#FFFFFF"     # 側邊欄白
-    
-    # --- 按鈕專用 ---
-    GRAY_BUTTON = "#E0E0E0"        # 次要按鈕底色 (淺灰)
-    GRAY_BUTTON_HOVER = "#D6D6D6"  # 次要按鈕懸停
-    
-    # --- 狀態顏色 ---
-    DANGER = "#E74C3C"         # 紅
-    SUCCESS = "#16A085"        # 松石綠
-    WARNING = "#F39C12"        # 橘黃
-    INFO = "#3B8ED0"           # 藍
-
-    # --- 文字 ---
-    TEXT_DARK = "#2D3436"      # 深灰
-    TEXT_LIGHT = "#636E72"     # 淺灰
+    MAIN_BG = "#E4E4E4"        
+    BACKGROUND = "#E4E4E4"     
+    WHITE_CARD = "#FFFFFF"     
+    SIDEBAR_BG = "#FFFFFF"     
+    GRAY_BUTTON = "#AAAAAA"        
+    GRAY_BUTTON_HOVER = "#999999"  
+    DANGER = "#E74C3C"         
+    SUCCESS = "#16A085"        
+    WARNING = "#F39C12"        
+    INFO = "#3B8ED0"           
+    TEXT_DARK = "#2D3436"      
+    TEXT_LIGHT = "#636E72"     
     TEXT_BODY = "#2D3436"      
-
-    # --- 表格 ---
     TABLE_HEADER_BG = "#F1F2F6"
-    TABLE_ROW_HEIGHT = 40
-    TABLE_ROW_ALT = "#FAFAFA"  # 斑馬紋淺灰
+    TABLE_ROW_HEIGHT = 45 # 稍微加高一點，比較不擁擠
+    TABLE_ROW_ALT = "#FAFAFA"
 
 class Font:
     TITLE = ("Microsoft JhengHei UI", 26, "bold")
     SUBTITLE = ("Microsoft JhengHei UI", 18, "bold")
-    BODY = ("Microsoft JhengHei UI", 16)
-    BODY_BOLD = ("Microsoft JhengHei UI", 16, "bold")
-    SMALL = ("Microsoft JhengHei UI", 14)
-    
+    BODY = ("Microsoft JhengHei UI", 15) # 微調字體大小
+    BODY_BOLD = ("Microsoft JhengHei UI", 15, "bold")
+    SMALL = ("Microsoft JhengHei UI", 13)
     STAT_NUMBER = ("Arial", 30, "bold")
     STAT_LABEL = ("Microsoft JhengHei UI", 12)
-    
-    # ⚠️ 這裡就是缺少的關鍵變數，補上就不會報錯了
     TABLE_HEADER = ("Microsoft JhengHei UI", 14, "bold")
 
 class Layout:
-    BTN_WIDTH = 120
-    BTN_HEIGHT = 38
-    GRID_PADX = 15 
-    GRID_PADY = (5, 15)
+    BTN_WIDTH = 110
+    BTN_HEIGHT = 36
+    # ⚠️ 關鍵：定義統一的內距
+    CARD_PADDING = 20      # 卡片內邊距
+    GRID_GAP_X = 20        # 欄位左右間距
+    GRID_GAP_Y = 15        # 欄位上下間距 (含Label)

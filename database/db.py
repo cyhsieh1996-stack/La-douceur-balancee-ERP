@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # 修正路徑層級確保在根目錄
 DB_PATH = os.path.join(BASE_DIR, "sweet_erp.db")
 
 def get_db():
@@ -14,18 +14,18 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
 
-    # 1. 原料表
+    # 1. 原料表 (修正：補上 vendor 和 unit_price)
     cur.execute("""
         CREATE TABLE IF NOT EXISTS raw_materials (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             category TEXT,
             brand TEXT,
-            vendor TEXT,
+            vendor TEXT,               -- 新增：廠商
             unit TEXT,
-            unit_price REAL DEFAULT 0,
+            unit_price REAL DEFAULT 0, -- 新增：最新進貨單價 (用於計算庫存成本)
             stock REAL DEFAULT 0,
-            safe_stock REAL DEFAULT 0
+            safe_stock REAL DEFAULT 50
         );
     """)
 
@@ -42,15 +42,13 @@ def init_db():
         );
     """)
 
-    # --- (原第3點 食譜表 已移除) ---
-
-    # 4. 入庫紀錄 (修改：新增 unit_price)
+    # 4. 入庫紀錄
     cur.execute("""
         CREATE TABLE IF NOT EXISTS inbound_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             material_id INTEGER NOT NULL,
             qty REAL NOT NULL,
-            unit_price REAL DEFAULT 0,  -- 新增這一行
+            unit_price REAL DEFAULT 0,
             date TEXT DEFAULT CURRENT_TIMESTAMP,
             batch_number TEXT,
             expiry_date TEXT,

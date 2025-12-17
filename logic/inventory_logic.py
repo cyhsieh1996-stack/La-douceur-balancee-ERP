@@ -1,63 +1,32 @@
 import sqlite3
 from database.db import get_db
 
-def get_material_current_stock(material_id):
-    """查詢單一原料目前的庫存量"""
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT stock, unit FROM raw_materials WHERE id = ?", (material_id,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return row['stock'], row['unit']
-    return 0, ""
-
-def add_inventory_adjustment(material_id, change_qty, action_type, note):
-    """
-    新增庫存調整紀錄，並更新原料庫存
-    change_qty: 正數代表增加，負數代表減少
-    """
-    conn = get_db()
-    cursor = conn.cursor()
+def add_inventory_adjustment(material_id, qty, action_type, note):
+    conn = get_db(); cursor = conn.cursor()
     try:
-        # 1. 新增紀錄
-        cursor.execute("""
-            INSERT INTO inventory_adjustments (material_id, change_qty, action_type, note)
-            VALUES (?, ?, ?, ?)
-        """, (material_id, change_qty, action_type, note))
-
-        # 2. 更新即時庫存
-        cursor.execute("""
-            UPDATE raw_materials
-            SET stock = stock + ?
-            WHERE id = ?
-        """, (change_qty, material_id))
-
-        conn.commit()
-        return True, "庫存調整成功"
-    except Exception as e:
-        conn.rollback()
-        return False, str(e)
-    finally:
-        conn.close()
+        cursor.execute("INSERT INTO inventory_adjustments (material_id, action_type, change_qty, note) VALUES (?, ?, ?, ?)", (material_id, action_type, qty, note))
+        cursor.execute("UPDATE raw_materials SET stock = stock + ? WHERE id = ?", (qty, material_id))
+        conn.commit(); return True, "庫存調整成功"
+    except Exception as e: conn.rollback(); return False, str(e)
+    finally: conn.close()
 
 def get_adjustment_history():
-    """取得庫存調整歷史"""
-    conn = get_db()
-    cursor = conn.cursor()
+    conn = get_db(); cursor = conn.cursor()
+    # ⚠️ 明確指定順序: 0.date, 1.name, 2.action_type, 3.change_qty, 4.unit, 5.note
     sql = """
         SELECT 
-            adj.date,
-            m.name,
-            adj.action_type,
-            adj.change_qty,
-            m.unit,
-            adj.note
-        FROM inventory_adjustments adj
-        JOIN raw_materials m ON adj.material_id = m.id
-        ORDER BY adj.date DESC
+            r.date, m.name, r.action_type, r.change_qty, m.unit, r.note
+        FROM inventory_adjustments r
+        JOIN raw_materials m ON r.material_id = m.id
+        ORDER BY r.date DESC
     """
     cursor.execute(sql)
-    rows = cursor.fetchall()
-    conn.close()
+    rows = cursor.fetchall(); conn.close()
     return rows
+
+def get_material_current_stock(mat_id):
+    conn = get_db(); cursor = conn.cursor()
+    cursor.execute("SELECT stock, unit FROM raw_materials WHERE id = ?", (mat_id,))
+    row = cursor.fetchone(); conn.close()
+    if row: return row[0], row[1]
+    return 0, ""
