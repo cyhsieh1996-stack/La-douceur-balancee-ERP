@@ -34,43 +34,37 @@ def get_top_selling_products(limit=3):
 
 def get_monthly_finance():
     """
-    計算 [本月] 與 [上月] 的財務概況
+    計算 [本月] 與 [上月] 的財務概況 (強制回傳整數)
     """
     conn = get_db()
     cursor = conn.cursor()
     
-    # 計算日期範圍
     now = datetime.now()
     this_month_start = now.strftime("%Y-%m-01")
     
-    # 計算上個月的第一天和最後一天
     last_month_end = now.replace(day=1) - timedelta(days=1)
     last_month_start = last_month_end.replace(day=1).strftime("%Y-%m-%d")
     last_month_end_str = last_month_end.strftime("%Y-%m-%d")
 
     def query_stats(start_date, end_date=None):
-        # 查詢區間內的營業額
         if end_date:
             cursor.execute("SELECT SUM(amount) FROM sales_records WHERE date >= ? AND date <= ?", (start_date, end_date + " 23:59:59"))
         else:
             cursor.execute("SELECT SUM(amount) FROM sales_records WHERE date >= ?", (start_date,))
         revenue = cursor.fetchone()[0] or 0
         
-        # 查詢區間內的進貨成本 (qty * unit_price)
-        # 注意：這裡假設 inbound_records 有 unit_price 欄位
         if end_date:
             cursor.execute("SELECT SUM(qty * unit_price) FROM inbound_records WHERE date >= ? AND date <= ?", (start_date, end_date + " 23:59:59"))
         else:
             cursor.execute("SELECT SUM(qty * unit_price) FROM inbound_records WHERE date >= ?", (start_date,))
         cost = cursor.fetchone()[0] or 0
         
+        # ⚠️ 強制轉整數
         return int(revenue), int(cost)
 
-    # 本月數據
     rev_this, cost_this = query_stats(this_month_start)
     profit_this = rev_this - cost_this
     
-    # 上月數據
     rev_last, cost_last = query_stats(last_month_start, last_month_end_str)
     profit_last = rev_last - cost_last
     

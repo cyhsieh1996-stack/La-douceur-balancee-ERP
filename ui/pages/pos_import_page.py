@@ -1,123 +1,96 @@
 import customtkinter as ctk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, filedialog, messagebox
 from ui.theme import Color, Font, Layout
-from logic.pos_import_logic import preview_pos_sales, confirm_sales_deduction
+from logic.pos_import_logic import process_pos_file, get_sales_history
 
-class POSImportPage(ctk.CTkFrame):
+class PosImportPage(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
-        
-        self.preview_data = [] 
 
-        # 1. 頂部操作區 (白色卡片)
-        self.top_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=10)
-        self.top_card.pack(fill="x", pady=(20, 15))
-        
-        # 設定 Grid 權重
-        self.top_card.columnconfigure(1, weight=1)
-        
-        # ⚠️ 修改文字：明確指出需要 iCHEF 商品銷售分析報表
-        ctk.CTkLabel(self.top_card, text="匯入 iCHEF 商品銷售分析報表：", font=Font.BODY, text_color=Color.TEXT_DARK).grid(row=0, column=0, padx=(20, 10), pady=20, sticky="w")
-        
-        # 檔名顯示欄位
-        self.entry_filename = ctk.CTkEntry(self.top_card, placeholder_text="尚未選擇檔案", state="readonly")
-        self.entry_filename.grid(row=0, column=1, padx=10, sticky="ew")
-        
-        # 📂 藍色按鈕：選擇檔案
-        self.btn_select = ctk.CTkButton(
-            self.top_card, 
-            text="📂 選擇檔案", 
-            fg_color=Color.PRIMARY, 
-            width=120, 
-            height=35, 
-            command=self.select_file
-        )
-        self.btn_select.grid(row=0, column=2, padx=10)
+        # 1. 上傳區卡片
+        self.form_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=8)
+        self.form_card.pack(fill="x", pady=(10, 10))
+        self.create_upload_area()
 
-        # ✅ 綠色按鈕：確認扣除
-        self.btn_confirm = ctk.CTkButton(
-            self.top_card, 
-            text="✅ 確認扣除", 
-            fg_color=Color.SUCCESS,
-            hover_color="#148F77", 
-            width=120, 
-            height=35, 
-            state="disabled", 
-            command=self.confirm_import
-        )
-        self.btn_confirm.grid(row=0, column=3, padx=(0, 20))
-
-        # 2. 預覽表格區
-        self.table_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=10)
+        # 2. 歷史紀錄表格
+        self.table_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=8)
         self.table_card.pack(fill="both", expand=True)
         self.create_table()
+        
+        self.refresh_table()
+
+    def create_upload_area(self):
+        ctk.CTkLabel(self.form_card, text="POS 報表匯入", font=Font.SUBTITLE, text_color=Color.TEXT_DARK).pack(anchor="w", padx=Layout.CARD_PADDING, pady=(10, 5))
+        
+        content = ctk.CTkFrame(self.form_card, fg_color="transparent")
+        content.pack(fill="x", padx=Layout.CARD_PADDING, pady=(0, 10))
+        
+        # 說明文字
+        ctk.CTkLabel(content, text="支援格式：.xlsx, .csv (需包含品名、數量、金額)", font=Font.BODY, text_color=Color.TEXT_LIGHT).pack(anchor="w", pady=(0, 10))
+
+        # 按鈕區
+        btn_box = ctk.CTkFrame(content, fg_color="transparent")
+        btn_box.pack(fill="x")
+
+        self.btn_select = ctk.CTkButton(btn_box, text="📂 選擇檔案並匯入", fg_color=Color.PRIMARY, height=38, font=Font.BODY_BOLD, command=self.handle_import)
+        self.btn_select.pack(side="left")
+
+        self.lbl_status = ctk.CTkLabel(btn_box, text="", text_color=Color.INFO, font=Font.BODY)
+        self.lbl_status.pack(side="left", padx=15)
 
     def create_table(self):
-        columns = ("name", "sales", "current", "after", "status")
-        headers = ["產品名稱", "銷售數量", "目前庫存", "預計剩餘", "狀態"]
-        widths = [250, 100, 100, 100, 150]
-        
+        ctk.CTkLabel(self.table_card, text="最近匯入紀錄 (Latest 100)", font=Font.BODY_BOLD, text_color=Color.TEXT_DARK).pack(anchor="w", padx=15, pady=(10, 5))
+
+        columns = ("date", "order", "name", "qty", "price", "amount")
+        headers = ["銷售日期", "單號", "產品名稱", "數量", "單價", "總金額"]
+        widths = [120, 120, 200, 60, 80, 100]
+
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("Treeview", background="white", foreground=Color.TEXT_DARK, rowheight=Color.TABLE_ROW_HEIGHT, font=Font.SMALL, fieldbackground="white", borderwidth=0)
-        style.configure("Treeview.Heading", font=Font.TABLE_HEADER, background=Color.TABLE_HEADER_BG, foreground=Color.TEXT_DARK, relief="flat")
+        style.configure("Treeview.Heading", font=Font.TABLE_HEADER, background=Color.TABLE_HEADER_BG, foreground=Color.TEXT_DARK)
         
         self.tree = ttk.Treeview(self.table_card, columns=columns, show="headings")
-        for col, header, width in zip(columns, headers, widths):
-            self.tree.heading(col, text=header)
-            self.tree.column(col, width=width, anchor="center")
-        
+        for col, h, w in zip(columns, headers, widths):
+            self.tree.heading(col, text=h)
+            self.tree.column(col, width=w, anchor="center")
+
         self.tree.tag_configure('odd', background='white')
         self.tree.tag_configure('even', background=Color.TABLE_ROW_ALT)
-        
+
         scrollbar = ttk.Scrollbar(self.table_card, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
-        
         scrollbar.pack(side="right", fill="y", padx=(0, 5), pady=5)
         self.tree.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
-    def select_file(self):
-        file_path = filedialog.askopenfilename(title="選擇銷售報表", filetypes=[("Excel/CSV Files", "*.csv *.xlsx")])
-        if not file_path: return
-        
-        self.entry_filename.configure(state="normal")
-        self.entry_filename.delete(0, "end")
-        self.entry_filename.insert(0, file_path.split("/")[-1])
-        self.entry_filename.configure(state="readonly")
-        
-        success, result = preview_pos_sales(file_path)
-        if not success: 
-            messagebox.showerror("錯誤", result)
-            return
-            
-        self.preview_data = result
-        self.refresh_table()
-        
-        if self.preview_data: 
-            self.btn_confirm.configure(state="normal")
-        else: 
-            self.btn_confirm.configure(state="disabled")
-            messagebox.showinfo("提示", "檔案中沒有讀取到有效銷售資料，請確認是否為 iCHEF 商品銷售分析報表。")
-
     def refresh_table(self):
         for item in self.tree.get_children(): self.tree.delete(item)
-        for i, row in enumerate(self.preview_data):
-            values = (row['name'], row['sales_qty'], row['current_stock'], row['stock_after'], row['status'])
+        rows = get_sales_history()
+        for i, row in enumerate(rows):
+            # row: date, order_id, product_name, qty, price, amount
+            try: 
+                qty = int(row[3]) if float(row[3]).is_integer() else row[3]
+                amt = int(row[5])
+            except: 
+                qty, amt = row[3], row[5]
+                
+            values = (row[0], row[1], row[2], qty, row[4], amt)
             tag = 'even' if i % 2 == 0 else 'odd'
             self.tree.insert("", "end", values=values, tags=(tag,))
 
-    def confirm_import(self):
-        if not self.preview_data: return
-        if not messagebox.askyesno("確認", "確定要執行扣庫存嗎？\n此動作將無法復原。"): return
+    def handle_import(self):
+        file_path = filedialog.askopenfilename(filetypes=[("Excel Files", "*.xlsx *.xls"), ("CSV Files", "*.csv")])
+        if not file_path: return
         
-        success, msg = confirm_sales_deduction(self.preview_data)
+        self.lbl_status.configure(text="處理中...", text_color=Color.WARNING)
+        self.update_idletasks() # 強制刷新 UI
+        
+        success, msg = process_pos_file(file_path)
+        
         if success:
+            self.lbl_status.configure(text=msg, text_color=Color.SUCCESS)
             messagebox.showinfo("成功", msg)
-            self.preview_data = []
             self.refresh_table()
-            self.entry_filename.configure(state="normal")
-            self.entry_filename.delete(0, "end")
-            self.entry_filename.configure(state="readonly")
-            self.btn_confirm.configure(state="disabled")
         else:
-            messagebox.showerror("失敗", msg)
+            self.lbl_status.configure(text="匯入失敗", text_color=Color.DANGER)
+            messagebox.showerror("錯誤", msg)

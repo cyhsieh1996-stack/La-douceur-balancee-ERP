@@ -9,29 +9,29 @@ class ProductionPage(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
 
-        self.form_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=10)
-        self.form_card.pack(fill="x", pady=(20, 15))
+        self.form_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=8)
+        self.form_card.pack(fill="x", pady=(10, 10))
         self.create_form()
 
-        self.table_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=10)
+        self.table_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=8)
         self.table_card.pack(fill="both", expand=True)
         self.create_table()
         
         self.refresh_data()
 
     def create_form(self):
-        ctk.CTkLabel(self.form_card, text="生產作業登錄", font=Font.SUBTITLE, text_color=Color.TEXT_DARK).pack(anchor="w", padx=Layout.CARD_PADDING, pady=(Layout.CARD_PADDING, 10))
+        ctk.CTkLabel(self.form_card, text="生產作業登錄", font=Font.SUBTITLE, text_color=Color.TEXT_DARK).pack(anchor="w", padx=Layout.CARD_PADDING, pady=(10, 5))
         
         content = ctk.CTkFrame(self.form_card, fg_color="transparent")
-        content.pack(fill="x", padx=Layout.CARD_PADDING, pady=(0, Layout.CARD_PADDING))
+        content.pack(fill="x", padx=Layout.CARD_PADDING, pady=(0, 10))
         content.columnconfigure((0, 1, 2), weight=1)
 
         def create_field(parent, label, row, col):
             f = ctk.CTkFrame(parent, fg_color="transparent")
             f.grid(row=row, column=col, padx=(0, Layout.GRID_GAP_X), pady=(0, Layout.GRID_GAP_Y), sticky="ew")
             if col == 2: f.grid_configure(padx=(0, 0))
-            ctk.CTkLabel(f, text=label, font=Font.BODY, text_color=Color.TEXT_DARK).pack(anchor="w", pady=(0, 5))
-            e = ctk.CTkEntry(f, height=35)
+            ctk.CTkLabel(f, text=label, font=Font.BODY, text_color=Color.TEXT_DARK, height=20).pack(anchor="w", pady=(0, 2))
+            e = ctk.CTkEntry(f, height=Layout.BTN_HEIGHT)
             e.pack(fill="x")
             return e
         
@@ -39,15 +39,14 @@ class ProductionPage(ctk.CTkFrame):
             f = ctk.CTkFrame(parent, fg_color="transparent")
             f.grid(row=row, column=col, padx=(0, Layout.GRID_GAP_X), pady=(0, Layout.GRID_GAP_Y), sticky="ew")
             if col == 2: f.grid_configure(padx=(0, 0))
-            ctk.CTkLabel(f, text=label, font=Font.BODY, text_color=Color.TEXT_DARK).pack(anchor="w", pady=(0, 5))
-            c = ctk.CTkComboBox(f, height=35, state="readonly")
+            ctk.CTkLabel(f, text=label, font=Font.BODY, text_color=Color.TEXT_DARK, height=20).pack(anchor="w", pady=(0, 2))
+            c = ctk.CTkComboBox(f, height=Layout.BTN_HEIGHT, state="readonly")
             c.pack(fill="x")
             return c
 
         # Row 0
         self.combo_product = create_combo(content, "1. 選擇產品", 0, 0)
         self.combo_product.configure(command=self.on_product_selected)
-        
         self.entry_qty = create_field(content, "2. 生產數量", 0, 1)
         self.entry_note = create_field(content, "備註", 0, 2)
 
@@ -55,10 +54,10 @@ class ProductionPage(ctk.CTkFrame):
         self.entry_batch = create_field(content, "批號 (自動生成)", 1, 0)
         self.entry_expiry = create_field(content, "有效日期 (YYYY-MM-DD)", 1, 1)
 
-        # 按鈕 (Row 2)
+        # Btn (Row 2)
         btn_row = ctk.CTkFrame(content, fg_color="transparent")
-        btn_row.grid(row=2, column=0, columnspan=3, pady=(10, 0), sticky="e")
-        self.btn_submit = ctk.CTkButton(btn_row, text="確認生產", fg_color=Color.PRIMARY, width=140, height=38, command=self.handle_submit)
+        btn_row.grid(row=2, column=0, columnspan=3, pady=(5, 0), sticky="e")
+        self.btn_submit = ctk.CTkButton(btn_row, text="確認生產", fg_color=Color.PRIMARY, width=120, height=Layout.BTN_HEIGHT, command=self.handle_submit)
         self.btn_submit.pack(side="right")
 
     def create_table(self):
@@ -71,7 +70,7 @@ class ProductionPage(ctk.CTkFrame):
         self.tree = ttk.Treeview(self.table_card, columns=columns, show="headings")
         for col, h, w in zip(columns, headers, widths): self.tree.heading(col, text=h); self.tree.column(col, width=w, anchor="center")
         self.tree.tag_configure('odd', background='white'); self.tree.tag_configure('even', background=Color.TABLE_ROW_ALT)
-        scroll_y = ttk.Scrollbar(self.table_card, orient="vertical", command=self.tree.yview); self.tree.configure(yscrollcommand=scroll_y.set); scroll_y.pack(side="right", fill="y", padx=(0, 5), pady=5)
+        scroll_y = ttk.Scrollbar(self.table_card, orient="vertical", command=self.tree.yview); scroll_y.pack(side="right", fill="y", padx=(0, 5), pady=5); self.tree.configure(yscrollcommand=scroll_y.set)
         self.tree.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
     def refresh_data(self):
