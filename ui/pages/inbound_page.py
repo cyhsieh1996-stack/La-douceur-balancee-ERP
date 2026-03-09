@@ -1,173 +1,219 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
 from datetime import datetime
-from ui.theme import Color, Font, Layout
-from logic.inbound_logic import add_inbound_record, get_inbound_history
-from logic.raw_materials_logic import get_existing_categories, get_materials_by_category
+from ui.theme import Color, Font
+from logic.materials_logic import get_all_materials 
+from logic.inbound_logic import add_inbound_record, get_recent_inbound_records
+from ui.input_utils import clean_text, parse_non_negative_float, parse_positive_float, validate_date_yyyy_mm_dd
 
 class InboundPage(ctk.CTkFrame):
+    LAST_CATEGORY = ""
+    LAST_MATERIAL = ""
+
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
 
-        self.form_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=8)
-        self.form_card.pack(fill="x", pady=(10, 10))
+        # --- 1. 標題區 ---
+        ctk.CTkLabel(self, text="原料入庫登錄", font=Font.TITLE, text_color=Color.TEXT_DARK).pack(anchor="w", pady=(0, 20))
+
+        # --- 2. 表單區 (白色卡片) ---
+        self.form_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=10)
+        self.form_card.pack(fill="x", pady=(0, 20))
+        
         self.create_form()
 
-        self.table_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=8)
+        # --- 3. 歷史紀錄標題 ---
+        ctk.CTkLabel(self, text="最近入庫紀錄 (Latest 20)", font=Font.SUBTITLE, text_color=Color.TEXT_DARK).pack(anchor="w", pady=(10, 10))
+
+        # --- 4. 歷史紀錄表格 (白色卡片) ---
+        self.table_card = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD, corner_radius=10)
         self.table_card.pack(fill="both", expand=True)
-        self.create_table()
         
-        self.refresh_data()
+        self.create_history_table()
+        
+        # 初始載入
+        self.load_material_data()
+        self.refresh_table()
+        self.bind_submit_shortcuts()
+        self.qty_entry.focus_set()
 
     def create_form(self):
-        ctk.CTkLabel(self.form_card, text="入庫登錄", font=Font.SUBTITLE, text_color=Color.TEXT_DARK).pack(anchor="w", padx=Layout.CARD_PADDING, pady=(10, 5))
+        # 表單容器
+        form_container = ctk.CTkFrame(self.form_card, fg_color="transparent")
+        form_container.pack(fill="x", padx=20, pady=20)
         
-        content = ctk.CTkFrame(self.form_card, fg_color="transparent")
-        content.pack(fill="x", padx=Layout.CARD_PADDING, pady=(0, 10))
-        content.columnconfigure((0, 1, 2, 3), weight=1)
+        lbl_style = {"font": Font.BODY, "text_color": Color.TEXT_DARK, "anchor": "w"}
 
-        def create_field(parent, label, row, col):
-            f = ctk.CTkFrame(parent, fg_color="transparent")
-            f.grid(row=row, column=col, padx=(0, Layout.GRID_GAP_X), pady=(0, Layout.GRID_GAP_Y), sticky="ew")
-            if col == 3: f.grid_configure(padx=(0, 0))
-            ctk.CTkLabel(f, text=label, font=Font.BODY, text_color=Color.TEXT_DARK, height=20).pack(anchor="w", pady=(0, 2))
-            e = ctk.CTkEntry(f, height=Layout.BTN_HEIGHT)
-            e.pack(fill="x")
-            return e
+        # --- 第一排：類別、品項 ---
+        ctk.CTkLabel(form_container, text="類別", **lbl_style).grid(row=0, column=0, padx=10, pady=(0, 5), sticky="w")
+        ctk.CTkLabel(form_container, text="品項", **lbl_style).grid(row=0, column=1, padx=10, pady=(0, 5), sticky="w")
         
-        def create_combo(parent, label, row, col):
-            f = ctk.CTkFrame(parent, fg_color="transparent")
-            f.grid(row=row, column=col, padx=(0, Layout.GRID_GAP_X), pady=(0, Layout.GRID_GAP_Y), sticky="ew")
-            if col == 3: f.grid_configure(padx=(0, 0))
-            ctk.CTkLabel(f, text=label, font=Font.BODY, text_color=Color.TEXT_DARK, height=20).pack(anchor="w", pady=(0, 2))
-            c = ctk.CTkComboBox(f, height=Layout.BTN_HEIGHT, state="readonly")
-            c.pack(fill="x")
-            return c
+        self.category_cb = ctk.CTkComboBox(form_container, values=["請選擇類別"], width=180, command=self.on_category_change, state="readonly")
+        self.category_cb.grid(row=1, column=0, padx=10, pady=(0, 15), sticky="w")
+        
+        self.material_cb = ctk.CTkComboBox(form_container, values=[], width=250, state="readonly")
+        self.material_cb.grid(row=1, column=1, padx=10, pady=(0, 15), sticky="w")
 
-        # Row 0
-        self.combo_category = create_combo(content, "類別", 0, 0)
-        self.combo_category.configure(command=self.on_category_change)
+        # --- 第二排：入庫數量、進貨單價 ---
+        ctk.CTkLabel(form_container, text="入庫數量", **lbl_style).grid(row=0, column=2, padx=10, pady=(0, 5), sticky="w")
+        ctk.CTkLabel(form_container, text="進貨單價", **lbl_style).grid(row=0, column=3, padx=10, pady=(0, 5), sticky="w")
         
-        self.combo_material = create_combo(content, "品項", 0, 1)
-        self.entry_qty = create_field(content, "入庫數量", 0, 2)
-        self.entry_price = create_field(content, "進貨單價", 0, 3)
+        self.qty_entry = ctk.CTkEntry(form_container, width=120, placeholder_text="例如: 10")
+        self.qty_entry.grid(row=1, column=2, padx=10, pady=(0, 15), sticky="w")
+        
+        self.price_entry = ctk.CTkEntry(form_container, width=120, placeholder_text="單價")
+        self.price_entry.grid(row=1, column=3, padx=10, pady=(0, 15), sticky="w")
 
-        # Row 1
-        self.entry_batch = create_field(content, "批號 (選填)", 1, 0)
+        # --- 第三排：批號、有效期限 (加寬版) ---
+        ctk.CTkLabel(form_container, text="批號 (選填)", **lbl_style).grid(row=2, column=0, padx=10, pady=(0, 5), sticky="w")
+        ctk.CTkLabel(form_container, text="有效期限", **lbl_style).grid(row=2, column=1, padx=10, pady=(0, 5), sticky="w")
         
-        # Date
-        date_wrapper = ctk.CTkFrame(content, fg_color="transparent")
-        date_wrapper.grid(row=1, column=1, padx=(0, Layout.GRID_GAP_X), pady=(0, Layout.GRID_GAP_Y), sticky="ew")
-        ctk.CTkLabel(date_wrapper, text="有效期限", font=Font.BODY, text_color=Color.TEXT_DARK, height=20).pack(anchor="w", pady=(0, 2))
-        
-        d_box = ctk.CTkFrame(date_wrapper, fg_color="transparent")
-        d_box.pack(fill="x")
-        
-        current_year = datetime.now().year
-        self.combo_year = ctk.CTkComboBox(d_box, values=[str(y) for y in range(current_year, current_year+10)], width=75, height=Layout.BTN_HEIGHT)
-        self.combo_year.pack(side="left", padx=(0, 5))
-        self.combo_year.set(str(current_year))
-        
-        self.combo_month = ctk.CTkComboBox(d_box, values=[f"{m:02d}" for m in range(1, 13)], width=65, height=Layout.BTN_HEIGHT)
-        self.combo_month.pack(side="left", padx=5)
-        self.combo_month.set(datetime.now().strftime("%m"))
-        
-        self.combo_day = ctk.CTkComboBox(d_box, values=[f"{d:02d}" for d in range(1, 32)], width=65, height=Layout.BTN_HEIGHT)
-        self.combo_day.pack(side="left", padx=5)
-        self.combo_day.set(datetime.now().strftime("%d"))
+        self.batch_entry = ctk.CTkEntry(form_container, width=180)
+        self.batch_entry.grid(row=3, column=0, padx=10, pady=(0, 15), sticky="w")
 
-        # Note
-        note_wrapper = ctk.CTkFrame(content, fg_color="transparent")
-        note_wrapper.grid(row=1, column=2, columnspan=2, padx=(0, 0), pady=(0, Layout.GRID_GAP_Y), sticky="ew")
-        ctk.CTkLabel(note_wrapper, text="備註", font=Font.BODY, text_color=Color.TEXT_DARK, height=20).pack(anchor="w", pady=(0, 2))
-        self.entry_note = ctk.CTkEntry(note_wrapper, height=Layout.BTN_HEIGHT)
-        self.entry_note.pack(fill="x")
+        # 日期選擇容器
+        date_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        date_frame.grid(row=3, column=1, padx=10, pady=(0, 15), sticky="w")
+        
+        today = datetime.now()
+        years = [str(y) for y in range(today.year, today.year + 10)]
+        months = [str(m).zfill(2) for m in range(1, 13)]
+        days = [str(d).zfill(2) for d in range(1, 32)]
+        
+        self.year_cb = ctk.CTkComboBox(date_frame, values=years, width=100, state="readonly")
+        self.year_cb.pack(side="left", padx=(0, 5))
+        self.year_cb.set(str(today.year))
+        
+        self.month_cb = ctk.CTkComboBox(date_frame, values=months, width=80, state="readonly")
+        self.month_cb.pack(side="left", padx=5)
+        self.month_cb.set(str(today.month).zfill(2))
+        
+        self.day_cb = ctk.CTkComboBox(date_frame, values=days, width=80, state="readonly")
+        self.day_cb.pack(side="left", padx=5)
+        self.day_cb.set(str(today.day).zfill(2))
 
-        # Btn (Row 2)
-        btn_row = ctk.CTkFrame(content, fg_color="transparent")
-        btn_row.grid(row=2, column=0, columnspan=4, pady=(5, 0), sticky="e")
-        self.btn_submit = ctk.CTkButton(btn_row, text="確認入庫", fg_color=Color.PRIMARY, width=120, height=Layout.BTN_HEIGHT, command=self.handle_submit)
-        self.btn_submit.pack(side="right")
+        # --- 第四排：備註、按鈕 ---
+        ctk.CTkLabel(form_container, text="備註", **lbl_style).grid(row=2, column=2, columnspan=2, padx=10, pady=(0, 5), sticky="w")
+        
+        self.note_entry = ctk.CTkEntry(form_container, width=250)
+        self.note_entry.grid(row=3, column=2, columnspan=2, padx=10, pady=(0, 15), sticky="we")
 
-    def create_table(self):
-        columns = ("date", "name", "brand", "qty", "unit", "price", "batch", "expiry", "note")
-        headers = ["入庫時間", "原料名稱", "廠牌", "數量", "單位", "單價", "批號", "有效期限", "備註"]
-        widths = [140, 140, 100, 60, 50, 60, 100, 100, 150]
-        style = ttk.Style(); style.theme_use("clam")
-        style.configure("Treeview", background="white", foreground=Color.TEXT_DARK, rowheight=Color.TABLE_ROW_HEIGHT, font=Font.SMALL, fieldbackground="white", borderwidth=0)
-        style.configure("Treeview.Heading", font=Font.TABLE_HEADER, background=Color.TABLE_HEADER_BG, foreground=Color.TEXT_DARK)
-        self.tree = ttk.Treeview(self.table_card, columns=columns, show="headings")
-        for col, header, width in zip(columns, headers, widths):
-            self.tree.heading(col, text=header)
-            self.tree.column(col, width=width, anchor="center")
+        self.btn_submit = ctk.CTkButton(form_container, text="確認入庫", fg_color=Color.PRIMARY, width=120, height=38, command=self.submit)
+        self.btn_submit.grid(row=3, column=4, padx=10, pady=(0, 15), sticky="e")
+
+    def bind_submit_shortcuts(self):
+        self.qty_entry.bind("<Return>", lambda _e: self.price_entry.focus_set())
+        self.price_entry.bind("<Return>", lambda _e: self.batch_entry.focus_set())
+        self.batch_entry.bind("<Return>", lambda _e: self.note_entry.focus_set())
+        self.note_entry.bind("<Return>", lambda _e: self.submit())
+
+    def create_history_table(self):
+        # 表格容器
+        table_container = ctk.CTkFrame(self.table_card, fg_color="transparent")
+        table_container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        columns = ("date", "name", "qty", "unit", "batch", "expiry")
+        headers = ["入庫時間", "原料名稱", "入庫數量", "單位", "批號", "有效期限"]
+        widths = [140, 180, 80, 60, 120, 100]
+
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("Treeview", background="white", foreground=Color.TEXT_DARK, rowheight=35, font=Font.SMALL, fieldbackground="white", borderwidth=0)
+        style.configure("Treeview.Heading", font=Font.TABLE_HEADER, background=Color.TABLE_HEADER_BG, foreground=Color.TEXT_DARK, relief="flat")
+
+        self.tree = ttk.Treeview(table_container, columns=columns, show="headings", selectmode="none")
+        
+        for col, h, w in zip(columns, headers, widths):
+            self.tree.heading(col, text=h)
+            self.tree.column(col, width=w, anchor="center")
 
         self.tree.tag_configure('odd', background='white')
         self.tree.tag_configure('even', background=Color.TABLE_ROW_ALT)
 
-        scroll_y = ttk.Scrollbar(self.table_card, orient="vertical", command=self.tree.yview)
-        scroll_x = ttk.Scrollbar(self.table_card, orient="horizontal", command=self.tree.xview)
-        self.tree.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        scrollbar = ttk.Scrollbar(table_container, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
         
-        scroll_y.pack(side="right", fill="y", padx=(0, 5), pady=5)
-        scroll_x.pack(side="bottom", fill="x", padx=5, pady=(0, 5))
-        self.tree.pack(side="left", fill="both", expand=True, padx=5, pady=5)
+        scrollbar.pack(side="right", fill="y")
+        self.tree.pack(side="left", fill="both", expand=True)
 
-    def refresh_data(self):
-        cats = get_existing_categories()
-        if cats: self.combo_category.configure(values=cats); self.combo_category.set("請選擇類別")
-        else: self.combo_category.configure(values=["無資料"]); self.combo_category.set("無資料")
-        self.combo_material.set(""); self.combo_material.configure(values=[])
+    def load_material_data(self):
+        # 載入所有原料
+        self.materials = get_all_materials()
+        self.cat_map = {}
+        for m in self.materials:
+            cat = m.get('category', '未分類') or '未分類'
+            if cat not in self.cat_map:
+                self.cat_map[cat] = []
+            self.cat_map[cat].append(m['name'])
+            
+        cats = list(self.cat_map.keys())
+        self.category_cb.configure(values=cats)
+        if cats:
+            default_cat = self.LAST_CATEGORY if self.LAST_CATEGORY in cats else cats[0]
+            self.category_cb.set(default_cat)
+            self.on_category_change(None)
 
-        for item in self.tree.get_children(): self.tree.delete(item)
-        rows = get_inbound_history()
-        for i, row in enumerate(rows):
-            values = (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8])
+    def on_category_change(self, event):
+        cat = self.category_cb.get()
+        items = self.cat_map.get(cat, [])
+        self.material_cb.configure(values=items)
+        if items:
+            default_material = self.LAST_MATERIAL if self.LAST_MATERIAL in items else items[0]
+            self.material_cb.set(default_material)
+        else: self.material_cb.set("")
+
+    def refresh_table(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+            
+        records = get_recent_inbound_records(limit=20)
+        for i, row in enumerate(records):
+            # row: date, name, qty, unit, batch, expiry
+            date_str = row[0]
+            if len(date_str) > 16: date_str = date_str[:16]
+            
+            vals = (date_str, row[1], row[2], row[3], row[4], row[5])
             tag = 'even' if i % 2 == 0 else 'odd'
-            self.tree.insert("", "end", values=values, tags=(tag,))
+            self.tree.insert("", "end", values=vals, tags=(tag,))
 
-    def on_category_change(self, selected_category):
-        if not selected_category or selected_category == "請選擇類別": return
-        materials = get_materials_by_category(selected_category)
-        if materials: self.combo_material.configure(values=materials); self.combo_material.set(materials[0])
-        else: self.combo_material.configure(values=["此類別無原料"]); self.combo_material.set("此類別無原料")
+    def submit(self):
+        name = clean_text(self.material_cb.get())
+        qty = self.qty_entry.get()
+        price = self.price_entry.get()
+        batch = clean_text(self.batch_entry.get())
+        expiry = f"{self.year_cb.get()}-{self.month_cb.get()}-{self.day_cb.get()}"
+        note = clean_text(self.note_entry.get())
 
-    def handle_submit(self):
-        selected_str = self.combo_material.get()
-        qty_str = self.entry_qty.get()
-        price_str = self.entry_price.get()
-        batch = self.entry_batch.get()
-        note = self.entry_note.get()
+        if not name or not qty:
+            messagebox.showwarning("警告", "請選擇品項並填寫數量")
+            return
+        qty_val, err = parse_positive_float(qty, "入庫數量")
+        if err:
+            messagebox.showerror("錯誤", err)
+            return
+        price_val, err = parse_non_negative_float(price, "進貨單價")
+        if err:
+            messagebox.showerror("錯誤", err)
+            return
+        if not validate_date_yyyy_mm_dd(expiry):
+            messagebox.showerror("錯誤", "有效期限日期格式不正確")
+            return
         
-        y = self.combo_year.get()
-        m = self.combo_month.get()
-        d = self.combo_day.get()
-        expiry = f"{y}-{m}-{d}"
-
-        if not selected_str or "無原料" in selected_str or "請先選擇" in selected_str:
-            messagebox.showwarning("警告", "請選擇有效的原料")
-            return
-        if not qty_str:
-            messagebox.showwarning("警告", "請輸入數量")
-            return
-
-        unit_price = 0
-        try:
-            material_id = int(selected_str.split(" - ")[0])
-            qty = float(qty_str)
-            if price_str:
-                unit_price = float(price_str)
-        except:
-            messagebox.showerror("錯誤", "數量或價格格式錯誤")
-            return
-
-        success, msg = add_inbound_record(material_id, qty, unit_price, batch, expiry, note)
+        mat_id = next((m['id'] for m in self.materials if m['name'] == name), None)
         
-        if success:
-            self.entry_qty.delete(0, "end")
-            self.entry_price.delete(0, "end")
-            self.entry_batch.delete(0, "end")
-            self.entry_note.delete(0, "end")
-            self.refresh_data()
-            messagebox.showinfo("成功", f"成功入庫 {qty} 單位")
+        if mat_id:
+            success, msg = add_inbound_record(mat_id, qty_val, price_val, batch, expiry, note)
+            if success:
+                self.__class__.LAST_CATEGORY = self.category_cb.get()
+                self.__class__.LAST_MATERIAL = name
+                messagebox.showinfo("成功", msg)
+                self.qty_entry.delete(0, "end")
+                self.price_entry.delete(0, "end")
+                self.batch_entry.delete(0, "end")
+                self.note_entry.delete(0, "end")
+                self.qty_entry.focus_set()
+                self.refresh_table()
+            else:
+                messagebox.showerror("錯誤", msg)
         else:
-            messagebox.showerror("失敗", msg)
+            messagebox.showerror("錯誤", "系統錯誤：找不到原料 ID")

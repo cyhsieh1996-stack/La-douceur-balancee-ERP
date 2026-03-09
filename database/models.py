@@ -1,76 +1,34 @@
-from database.db import get_connection
+from logic.inventory_logic import adjust_stock
+from logic.raw_materials_logic import get_all_materials
 
-# ----------------------------------------
-# 新增原料
-# ----------------------------------------
+
 def insert_material(data):
-    conn = get_connection()
-    cur = conn.cursor()
+    from database.material_master import add_material
 
-    cur.execute("""
-        INSERT INTO materials 
-        (code, name_ch, name_en, brand, supplier, supplier_code, package_spec, weight_unit)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        data["原料編號（自訂）"],
-        data["品名（中文）"],
-        data["品名（英文，可留空）"],
-        data["廠牌"],
-        data["供應商"],
-        data["廠商料號"],
-        data["包裝規格（如 1000g / 罐）"],
-        data["重量單位（g / ml / pcs）"]
-    ))
+    payload = {
+        "name": data.get("原料名稱") or data.get("品名（中文）") or data.get("name", ""),
+        "category": data.get("類別", ""),
+        "brand": data.get("廠牌", ""),
+        "vendor": data.get("廠商") or data.get("供應商", ""),
+        "unit": data.get("單位") or data.get("重量單位（g / ml / pcs）", ""),
+        "unit_price": data.get("單價", 0),
+        "safe_stock": data.get("安全庫存", 0),
+    }
+    add_material(payload)
 
-    material_id = cur.lastrowid
-    cur.execute("INSERT INTO inventory (material_id, qty) VALUES (?, 0)", (material_id,))
-    conn.commit()
-    conn.close()
 
-# ----------------------------------------
-# 取得全部原料
-# ----------------------------------------
 def list_materials():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM materials ORDER BY id")
-    rows = [dict(row) for row in cur.fetchall()]
-    conn.close()
-    return rows
+    return get_all_materials()
 
-# ----------------------------------------
-# 庫存調整（盤點）
-# ----------------------------------------
+
 def adjust_inventory(material_id, new_qty):
-    conn = get_connection()
-    cur = conn.cursor()
+    return adjust_stock(material_id, new_qty, "盤點重設為實際量")
 
-    cur.execute("UPDATE inventory SET qty=? WHERE material_id=?", (new_qty, material_id))
-    cur.execute("""
-        INSERT INTO inventory_log (material_id, change, note)
-        VALUES (?, ?, ?)
-    """, (material_id, new_qty, "盤點重設為實際量"))
 
-    conn.commit()
-    conn.close()
-
-# ----------------------------------------
-# 記錄異動
-# ----------------------------------------
 def insert_inventory_log(material_id, change, note):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        INSERT INTO inventory_log (material_id, change, note)
-        VALUES (?, ?, ?)
-    """, (material_id, change, note))
-
-    cur.execute("""
-        UPDATE inventory 
-        SET qty = qty + ?
-        WHERE material_id = ?
-    """, (change, material_id))
-
-    conn.commit()
-    conn.close()
+    materials = get_all_materials()
+    material = next((m for m in materials if m["id"] == material_id), None)
+    if not material:
+        return False, "找不到原料"
+    new_qty = float(material["stock"]) + float(change)
+    return adjust_stock(material_id, new_qty, note)

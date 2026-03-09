@@ -1,3 +1,7 @@
+DEPRECATED SNAPSHOT
+這份檔案是舊的目錄快照，不保證反映目前專案結構。
+請以實際檔案系統與 README.md 為準。
+
 .
 ./ui
 ./ui/main_window.py

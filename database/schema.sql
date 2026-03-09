@@ -1,3 +1,8 @@
+-- DEPRECATED
+-- 這份 schema 屬於舊版 items / stock_movements 架構，
+-- 不再是目前桌面程式使用的正式資料模型。
+-- 目前請以 database/db.py 內的 init_db() 與根目錄 sweet_erp.db 為準。
+--
 -- ================================
 -- SweetERP v1.0 FINAL SCHEMA
 -- ================================

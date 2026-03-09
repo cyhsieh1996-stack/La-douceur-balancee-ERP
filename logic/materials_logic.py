@@ -31,7 +31,7 @@ def search_materials(keyword):
     query = f"%{keyword}%"
     sql = """
         SELECT * FROM raw_materials 
-        WHERE name_zh LIKE ? OR code LIKE ? OR vendor LIKE ?
+        WHERE name LIKE ? OR vendor LIKE ? OR brand LIKE ?
         ORDER BY id ASC
     """
     

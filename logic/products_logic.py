@@ -5,6 +5,12 @@ from database.db import get_db
 def add_product(name, category, price, cost, shelf_life):
     conn = get_db(); cursor = conn.cursor()
     try:
+        name = (name or "").strip()
+        if not name:
+            return False, "名稱不可空白"
+        cursor.execute("SELECT id FROM products WHERE LOWER(name)=LOWER(?)", (name,))
+        if cursor.fetchone():
+            return False, "已有同名產品"
         # 確保有寫入 cost
         cursor.execute("INSERT INTO products (name, category, price, cost, shelf_life, stock) VALUES (?, ?, ?, ?, ?, 0)", (name, category, price, cost, shelf_life))
         conn.commit(); return True, "新增成功"
@@ -14,6 +20,12 @@ def add_product(name, category, price, cost, shelf_life):
 def update_product(product_id, name, category, price, cost, shelf_life):
     conn = get_db(); cursor = conn.cursor()
     try:
+        name = (name or "").strip()
+        if not name:
+            return False, "名稱不可空白"
+        cursor.execute("SELECT id FROM products WHERE LOWER(name)=LOWER(?) AND id != ?", (name, product_id))
+        if cursor.fetchone():
+            return False, "已有同名產品"
         cursor.execute("UPDATE products SET name=?, category=?, price=?, cost=?, shelf_life=? WHERE id=?", (name, category, price, cost, shelf_life, product_id))
         conn.commit(); return True, "更新成功"
     except Exception as e: return False, str(e)

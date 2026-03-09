@@ -4,9 +4,9 @@ from datetime import date
 from logic.monthly_adjust_logic import (
     record_adjustment,
     list_adjustments,
-    get_system_inventory_dict
+    get_system_inventory_dict,
+    list_items,
 )
-from logic.items_logic import list_items
 
 
 class MonthlyAdjustPage(ctk.CTkFrame):
@@ -52,13 +52,16 @@ class MonthlyAdjustPage(ctk.CTkFrame):
 
         # 原料+成品皆可盤點
         items = list_items()
-        self.item_ids = [i["item_id"] for i in items]
+        self.item_map = {f'{i["id"]} - {i["name"]}': str(i["id"]) for i in items}
+        self.item_labels = list(self.item_map.keys())
 
         ctk.CTkLabel(form, text="品項：", text_color="#4A4A48").grid(
             row=1, column=0, sticky="w", padx=15, pady=5
         )
-        self.item_combo = ctk.CTkComboBox(form, values=self.item_ids)
+        self.item_combo = ctk.CTkComboBox(form, values=self.item_labels)
         self.item_combo.grid(row=1, column=1, sticky="ew", padx=15, pady=5)
+        if self.item_labels:
+            self.item_combo.set(self.item_labels[0])
 
         # 帳面數量（自動帶出）
         ctk.CTkLabel(form, text="帳面庫存：", text_color="#4A4A48").grid(
@@ -109,8 +112,9 @@ class MonthlyAdjustPage(ctk.CTkFrame):
         inventory = get_system_inventory_dict()
 
         def update_system_qty(choice):
-            item = self.item_combo.get().strip()
-            qty = inventory.get(item, 0)
+            item_label = self.item_combo.get().strip()
+            item_id = self.item_map.get(item_label, "")
+            qty = inventory.get(item_id, 0)
             self.system_entry.delete(0, "end")
             self.system_entry.insert(0, str(qty))
 
@@ -121,7 +125,10 @@ class MonthlyAdjustPage(ctk.CTkFrame):
     # 套用調整
     # ---------------------------------------------------------
     def apply_adjustment(self):
-        item_id = self.item_combo.get().strip()
+        item_label = self.item_combo.get().strip()
+        item_id = self.item_map.get(item_label)
+        if not item_id:
+            return
         system_qty = float(self.system_entry.get().strip() or "0")
         physical_qty = float(self.physical_entry.get().strip() or "0")
 

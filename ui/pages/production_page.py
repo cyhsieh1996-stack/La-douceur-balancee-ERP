@@ -4,8 +4,11 @@ from datetime import datetime, timedelta
 from ui.theme import Color, Font, Layout
 from logic.products_logic import get_product_dropdown_list, get_product_shelf_life
 from logic.production_logic import add_production_log, get_production_history, generate_batch_number
+from ui.input_utils import clean_text, parse_positive_float, validate_date_yyyy_mm_dd
 
 class ProductionPage(ctk.CTkFrame):
+    LAST_PRODUCT = ""
+
     def __init__(self, master):
         super().__init__(master, fg_color="transparent")
 
@@ -18,6 +21,8 @@ class ProductionPage(ctk.CTkFrame):
         self.create_table()
         
         self.refresh_data()
+        self.bind_submit_shortcuts()
+        self.entry_qty.focus_set()
 
     def create_form(self):
         ctk.CTkLabel(self.form_card, text="生產作業登錄", font=Font.SUBTITLE, text_color=Color.TEXT_DARK).pack(anchor="w", padx=Layout.CARD_PADDING, pady=(10, 5))
@@ -73,9 +78,20 @@ class ProductionPage(ctk.CTkFrame):
         scroll_y = ttk.Scrollbar(self.table_card, orient="vertical", command=self.tree.yview); scroll_y.pack(side="right", fill="y", padx=(0, 5), pady=5); self.tree.configure(yscrollcommand=scroll_y.set)
         self.tree.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
+    def bind_submit_shortcuts(self):
+        self.entry_qty.bind("<Return>", lambda _e: self.entry_expiry.focus_set())
+        self.entry_expiry.bind("<Return>", lambda _e: self.entry_note.focus_set())
+        self.entry_note.bind("<Return>", lambda _e: self.handle_submit())
+        self.entry_batch.bind("<Return>", lambda _e: self.handle_submit())
+
     def refresh_data(self):
         products = get_product_dropdown_list()
-        if products: self.combo_product.configure(values=products); self.combo_product.set("請選擇產品")
+        if products:
+            self.combo_product.configure(values=products)
+            default_product = self.LAST_PRODUCT if self.LAST_PRODUCT in products else "請選擇產品"
+            self.combo_product.set(default_product)
+            if default_product != "請選擇產品":
+                self.on_product_selected(default_product)
         else: self.combo_product.set("無產品資料")
         new_batch = generate_batch_number(None); self.entry_batch.delete(0, "end"); self.entry_batch.insert(0, new_batch)
         self.entry_expiry.delete(0, "end")
@@ -101,14 +117,22 @@ class ProductionPage(ctk.CTkFrame):
         except Exception as e: print(f"Error: {e}")
 
     def handle_submit(self):
-        prod_str = self.combo_product.get(); qty_str = self.entry_qty.get(); batch = self.entry_batch.get(); note = self.entry_note.get(); expiry = self.entry_expiry.get()
+        prod_str = clean_text(self.combo_product.get()); qty_str = self.entry_qty.get(); batch = clean_text(self.entry_batch.get()); note = clean_text(self.entry_note.get()); expiry = clean_text(self.entry_expiry.get())
         if "請選擇" in prod_str or not prod_str: messagebox.showwarning("警告", "請選擇產品"); return
         if not qty_str: messagebox.showwarning("警告", "請輸入數量"); return
         if not expiry: messagebox.showwarning("警告", "請填寫有效日期"); return
-        try: prod_id = int(prod_str.split(" - ")[0]); qty = float(qty_str)
+        if not validate_date_yyyy_mm_dd(expiry):
+            messagebox.showerror("錯誤", "有效日期格式需為 YYYY-MM-DD")
+            return
+        qty, err = parse_positive_float(qty_str, "生產數量")
+        if err:
+            messagebox.showerror("錯誤", err)
+            return
+        try: prod_id = int(prod_str.split(" - ")[0])
         except: messagebox.showerror("錯誤", "格式錯誤"); return
         success, msg = add_production_log(prod_id, qty, batch, expiry, note)
         if success:
+            self.__class__.LAST_PRODUCT = prod_str
             messagebox.showinfo("成功", f"生產登錄成功！\n批號: {batch}")
-            self.entry_qty.delete(0, "end"); self.entry_note.delete(0, "end"); self.refresh_data(); self.on_product_selected(prod_str)
+            self.entry_qty.delete(0, "end"); self.entry_note.delete(0, "end"); self.refresh_data(); self.on_product_selected(prod_str); self.entry_qty.focus_set()
         else: messagebox.showerror("失敗", msg)

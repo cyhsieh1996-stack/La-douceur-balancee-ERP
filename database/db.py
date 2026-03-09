@@ -10,6 +10,10 @@ def get_db():
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
+def get_connection():
+    # Backward-compatible alias for older modules.
+    return get_db()
+
 def init_db():
     conn = get_db()
     cur = conn.cursor()
@@ -89,10 +93,11 @@ def init_db():
         CREATE TABLE IF NOT EXISTS inventory_adjustments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             material_id INTEGER NOT NULL,
-            change_qty REAL NOT NULL,
-            action_type TEXT,
+            old_stock REAL NOT NULL,
+            new_stock REAL NOT NULL,
+            diff REAL NOT NULL,
+            reason TEXT,
             date TEXT DEFAULT CURRENT_TIMESTAMP,
-            note TEXT,
             FOREIGN KEY(material_id) REFERENCES raw_materials(id)
         );
     """)

@@ -1,100 +1,96 @@
-# ui/material_item_window.py
-from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox
-)
-from logic.materials_logic import add_material, update_material
+import customtkinter as ctk
+from ui.theme import Color, Font
+# 確保您已經建立了這個邏輯檔案
+from logic.materials_logic import add_material, update_material 
 
-
-class MaterialItemWindow(QDialog):
-
-    def __init__(self, parent=None, edit_data=None):
+class MaterialItemWindow(ctk.CTkToplevel):
+    def __init__(self, parent, edit_data=None, on_close_callback=None):
         super().__init__(parent)
-
         self.edit_data = edit_data
-        self.setWindowTitle("編輯原料" if edit_data else "新增原料")
-        self.setMinimumWidth(400)
+        self.on_close_callback = on_close_callback
+        
+        title = "編輯原料" if edit_data else "新增原料"
+        self.title(title)
+        self.geometry("500x650")
+        
+        # 設定視窗置頂
+        self.attributes("-topmost", True)
+        
+        # 主要容器
+        self.frame = ctk.CTkFrame(self, fg_color=Color.WHITE_CARD)
+        self.frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        layout = QVBoxLayout()
+        # 標題
+        ctk.CTkLabel(self.frame, text=title, font=Font.SUBTITLE, text_color=Color.TEXT_DARK).pack(pady=(20, 20))
 
-        # ------------ 欄位 ------------
-
-        self.code = QLineEdit()
-        self.name_zh = QLineEdit()
-        self.name_en = QLineEdit()
-        self.brand = QLineEdit()
-        self.vendor = QLineEdit()
-        self.vendor_code = QLineEdit()
-        self.spec = QLineEdit()
-
-        self.unit = QComboBox()
-        self.unit.addItems(["g", "ml", "顆", "包", "瓶"])
-
-        self.note = QLineEdit()
-
-        form = [
-            ("原料編號", self.code),
-            ("中文名稱", self.name_zh),
-            ("英文名稱", self.name_en),
-            ("廠牌", self.brand),
-            ("供應商", self.vendor),
-            ("供應商料號", self.vendor_code),
-            ("規格描述", self.spec),
-            ("單位", self.unit),
-            ("備註", self.note),
+        # --- 表單區 ---
+        self.entries = {}
+        
+        # 定義欄位 (Label 文字, 變數名稱)
+        fields = [
+            ("原料名稱", "name"),
+            ("類別", "category"),
+            ("廠牌", "brand"),
+            ("廠商", "vendor"),
+            ("單位", "unit"),
+            ("安全庫存", "safe_stock"),
         ]
 
-        for label, widget in form:
-            row = QHBoxLayout()
-            row.addWidget(QLabel(label))
-            row.addWidget(widget)
-            layout.addLayout(row)
+        for label_text, field_name in fields:
+            row = ctk.CTkFrame(self.frame, fg_color="transparent")
+            row.pack(fill="x", padx=30, pady=5)
+            
+            ctk.CTkLabel(row, text=label_text, width=80, anchor="w", font=Font.BODY, text_color=Color.TEXT_DARK).pack(side="left")
+            
+            entry = ctk.CTkEntry(row, height=35)
+            entry.pack(side="left", fill="x", expand=True)
+            self.entries[field_name] = entry
 
-        # ------------ 按鈕 ------------
-        btn_row = QHBoxLayout()
-        save_btn = QPushButton("儲存")
-        cancel_btn = QPushButton("取消")
-        btn_row.addWidget(save_btn)
-        btn_row.addWidget(cancel_btn)
+        # --- 按鈕區 ---
+        btn_row = ctk.CTkFrame(self.frame, fg_color="transparent")
+        btn_row.pack(pady=30)
 
-        layout.addLayout(btn_row)
-        self.setLayout(layout)
+        ctk.CTkButton(btn_row, text="儲存", fg_color=Color.PRIMARY, width=120, height=40, command=self.save).pack(side="left", padx=10)
+        ctk.CTkButton(btn_row, text="取消", fg_color=Color.GRAY_BUTTON, text_color=Color.TEXT_DARK, hover_color=Color.GRAY_BUTTON_HOVER, width=120, height=40, command=self.destroy).pack(side="left", padx=10)
 
-        save_btn.clicked.connect(self.save)
-        cancel_btn.clicked.connect(self.close)
-
-        if edit_data:
+        # 如果是編輯模式，載入舊資料
+        if self.edit_data:
             self.load_data()
 
-    # ------------------------
     def load_data(self):
         d = self.edit_data
-        self.code.setText(d["code"] or "")
-        self.name_zh.setText(d["name_zh"])
-        self.name_en.setText(d["name_en"] or "")
-        self.brand.setText(d["brand"] or "")
-        self.vendor.setText(d["vendor"] or "")
-        self.vendor_code.setText(d["vendor_code"] or "")
-        self.spec.setText(d["spec"] or "")
-        self.unit.setCurrentText(d["unit"] or "")
-        self.note.setText(d["note"] or "")
+        # 依序填入資料，若無資料則留空
+        for field, entry in self.entries.items():
+            val = d.get(field, "")
+            if val is None: val = ""
+            entry.insert(0, str(val))
 
-    # ------------------------
     def save(self):
-        data = {
-            "code": self.code.text(),
-            "name_zh": self.name_zh.text(),
-            "name_en": self.name_en.text(),
-            "brand": self.brand.text(),
-            "vendor": self.vendor.text(),
-            "vendor_code": self.vendor_code.text(),
-            "spec": self.spec.text(),
-            "unit": self.unit.currentText(),
-            "note": self.note.text(),
-        }
+        # 收集表單資料
+        data = {field: entry.get() for field, entry in self.entries.items()}
+
+        # 簡易驗證：名稱必填
+        if not data["name"]:
+            # 這裡可以加一個錯誤提示彈窗，或直接 return
+            print("錯誤：原料名稱為必填")
+            return
+
+        try:
+            data["safe_stock"] = float(data["safe_stock"]) if data["safe_stock"] else 0
+        except ValueError:
+            print("錯誤：安全庫存必須是數字")
+            return
 
         if self.edit_data:
-            update_material(self.edit_data["id"], data)
+            # 更新
+            success, msg = update_material(self.edit_data["id"], data)
         else:
-            add_material(data)
+            # 新增
+            success, msg = add_material(data)
 
-        self.accept()
+        if success:
+            if self.on_close_callback:
+                self.on_close_callback() # 通知上一頁刷新
+            self.destroy()
+        else:
+            print(f"儲存失敗: {msg}")

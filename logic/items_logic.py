@@ -1,113 +1,138 @@
 from database.db import get_db
 
-# ============================================================
-# 共用：取得所有 items
-# ============================================================
+
 def list_all_items():
     conn = get_db()
     cursor = conn.cursor()
-    rows = cursor.execute("""
-        SELECT item_id, name, category, unit, type, safety_stock
-        FROM items
+    rows = cursor.execute(
+        """
+        SELECT CAST(id AS TEXT) AS item_id, name, category, unit, 'raw' AS type, safe_stock AS safety_stock
+        FROM raw_materials
+        UNION ALL
+        SELECT CAST(id AS TEXT) AS item_id, name, category, '' AS unit, 'finished' AS type, NULL AS safety_stock
+        FROM products
         ORDER BY category, name
-    """).fetchall()
+        """
+    ).fetchall()
+    conn.close()
     return [dict(r) for r in rows]
 
 
-# ============================================================
-# 成品（Finished Products）
-# ============================================================
 def list_finished_items():
     conn = get_db()
     cursor = conn.cursor()
-    rows = cursor.execute("""
-        SELECT item_id, name, category, unit, safety_stock
-        FROM items
-        WHERE type='finished'
+    rows = cursor.execute(
+        """
+        SELECT CAST(id AS TEXT) AS item_id, name, category, '' AS unit, NULL AS safety_stock
+        FROM products
         ORDER BY category, name
-    """).fetchall()
+        """
+    ).fetchall()
+    conn.close()
     return [dict(r) for r in rows]
 
 
-# ============================================================
-# 原料（Raw Materials）
-# ============================================================
 def list_raw_materials():
     conn = get_db()
     cursor = conn.cursor()
-    rows = cursor.execute("""
-        SELECT item_id, name, category, unit, safety_stock
-        FROM items
-        WHERE type='raw'
+    rows = cursor.execute(
+        """
+        SELECT CAST(id AS TEXT) AS item_id, name, category, unit, safe_stock AS safety_stock
+        FROM raw_materials
         ORDER BY category, name
-    """).fetchall()
+        """
+    ).fetchall()
+    conn.close()
     return [dict(r) for r in rows]
 
 
-# ============================================================
-# 依名稱找 item（POS 匯入用）
-# ============================================================
 def get_item_by_name(name):
     conn = get_db()
     cursor = conn.cursor()
-    row = cursor.execute("""
-        SELECT *
-        FROM items
+    row = cursor.execute(
+        """
+        SELECT CAST(id AS TEXT) AS item_id, name, category, '' AS unit, 'finished' AS type
+        FROM products
         WHERE name = ?
-    """, (name,)).fetchone()
+        """,
+        (name,),
+    ).fetchone()
+    conn.close()
     return dict(row) if row else None
 
 
-# ============================================================
-# 依 item_id 找商品
-# ============================================================
 def get_item(item_id):
     conn = get_db()
     cursor = conn.cursor()
-    row = cursor.execute("""
-        SELECT *
-        FROM items
-        WHERE item_id = ?
-    """, (item_id,)).fetchone()
+    row = cursor.execute(
+        """
+        SELECT CAST(id AS TEXT) AS item_id, name, category, unit, 'raw' AS type
+        FROM raw_materials
+        WHERE id = ?
+        UNION ALL
+        SELECT CAST(id AS TEXT) AS item_id, name, category, '' AS unit, 'finished' AS type
+        FROM products
+        WHERE id = ?
+        LIMIT 1
+        """,
+        (item_id, item_id),
+    ).fetchone()
+    conn.close()
     return dict(row) if row else None
 
 
-# ============================================================
-# 新增 Item（包含原料或成品）
-# ============================================================
 def add_item(item_id, name, category, unit, type, safety_stock=None, notes=""):
     conn = get_db()
     cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO items (item_id, name, category, unit, type, safety_stock, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (item_id, name, category, unit, type, safety_stock, notes))
-
+    if type == "raw":
+        cursor.execute(
+            """
+            INSERT INTO raw_materials (name, category, unit, safe_stock)
+            VALUES (?, ?, ?, ?)
+            """,
+            (name, category, unit, safety_stock or 0),
+        )
+    else:
+        cursor.execute(
+            """
+            INSERT INTO products (name, category, price, cost, stock, shelf_life)
+            VALUES (?, ?, 0, 0, 0, NULL)
+            """,
+            (name, category),
+        )
     conn.commit()
+    conn.close()
 
 
-# ============================================================
-# 更新 Item
-# ============================================================
 def update_item(item_id, name, category, unit, safety_stock=None, notes=""):
     conn = get_db()
     cursor = conn.cursor()
-
-    cursor.execute("""
-        UPDATE items
-        SET name=?, category=?, unit=?, safety_stock=?, notes=?
-        WHERE item_id=?
-    """, (name, category, unit, safety_stock, notes, item_id))
-
+    updated = cursor.execute(
+        """
+        UPDATE raw_materials
+        SET name=?, category=?, unit=?, safe_stock=?
+        WHERE id=?
+        """,
+        (name, category, unit, safety_stock or 0, item_id),
+    )
+    if updated.rowcount == 0:
+        cursor.execute(
+            """
+            UPDATE products
+            SET name=?, category=?
+            WHERE id=?
+            """,
+            (name, category, item_id),
+        )
     conn.commit()
+    conn.close()
 
 
-# ============================================================
-# 刪除 Item
-# ============================================================
 def delete_item(item_id):
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM items WHERE item_id=?", (item_id,))
+    cursor.execute("DELETE FROM raw_materials WHERE id=?", (item_id,))
+    if cursor.rowcount == 0:
+        cursor.execute("DELETE FROM products WHERE id=?", (item_id,))
     conn.commit()
+    conn.close()

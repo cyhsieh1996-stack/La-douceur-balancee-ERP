@@ -4,6 +4,12 @@ from database.db import get_db
 def add_material(name, category, brand, vendor, unit, safe_stock):
     conn = get_db(); cursor = conn.cursor()
     try:
+        name = (name or "").strip()
+        if not name:
+            return False, "名稱不可空白"
+        cursor.execute("SELECT id FROM raw_materials WHERE LOWER(name)=LOWER(?) AND IFNULL(vendor,'')=IFNULL(?, '')", (name, vendor))
+        if cursor.fetchone():
+            return False, "已有相同原料名稱與廠商"
         cursor.execute("INSERT INTO raw_materials (name, category, brand, vendor, unit, unit_price, safe_stock, stock) VALUES (?, ?, ?, ?, ?, 0, ?, 0)", (name, category, brand, vendor, unit, safe_stock))
         conn.commit(); return True, "新增成功"
     except Exception as e: return False, str(e)
@@ -12,6 +18,12 @@ def add_material(name, category, brand, vendor, unit, safe_stock):
 def update_material(mat_id, name, category, brand, vendor, unit, safe_stock):
     conn = get_db(); cursor = conn.cursor()
     try:
+        name = (name or "").strip()
+        if not name:
+            return False, "名稱不可空白"
+        cursor.execute("SELECT id FROM raw_materials WHERE LOWER(name)=LOWER(?) AND IFNULL(vendor,'')=IFNULL(?, '') AND id != ?", (name, vendor, mat_id))
+        if cursor.fetchone():
+            return False, "已有相同原料名稱與廠商"
         cursor.execute("UPDATE raw_materials SET name=?, category=?, brand=?, vendor=?, unit=?, safe_stock=? WHERE id=?", (name, category, brand, vendor, unit, safe_stock, mat_id))
         conn.commit(); return True, "更新成功"
     except Exception as e: return False, str(e)
