@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from tkinter import messagebox
 from ui.theme import Color
 from ui.sidebar import Sidebar
 from ui.pages.dashboard_page import DashboardPage
@@ -10,6 +11,7 @@ from ui.pages.pos_import_page import PosImportPage
 from ui.pages.inventory_page import InventoryPage
 from database.db import init_db
 from logic.backup_logic import perform_backup 
+import traceback
 
 class SweetERPApp(ctk.CTk):
     def __init__(self):
@@ -44,6 +46,7 @@ class SweetERPApp(ctk.CTk):
         # 頁面快取
         self.pages = {}
         self.current_page = None
+        self.current_page_name = None
 
         # 預設顯示首頁
         self.switch_page("dashboard")
@@ -55,30 +58,51 @@ class SweetERPApp(ctk.CTk):
             print(f"備份警告: {msg}")
 
     def switch_page(self, page_name):
-        # 清除舊頁面
-        if self.current_page:
-            self.current_page.pack_forget()
+        if page_name == self.current_page_name:
+            return True
 
-        # 懶加載 (Lazy Loading)
-        if page_name not in self.pages:
-            if page_name == "dashboard":
-                self.pages[page_name] = DashboardPage(self.main_area)
-            elif page_name == "raw_materials":
-                self.pages[page_name] = RawMaterialsPage(self.main_area)
-            elif page_name == "products":
-                self.pages[page_name] = ProductsPage(self.main_area)
-            elif page_name == "inbound":
-                self.pages[page_name] = InboundPage(self.main_area)
-            elif page_name == "production":
-                self.pages[page_name] = ProductionPage(self.main_area)
-            elif page_name == "pos_import":
-                self.pages[page_name] = PosImportPage(self.main_area)
-            elif page_name == "inventory":
-                self.pages[page_name] = InventoryPage(self.main_area)
+        old_page = self.current_page
+        old_page_name = self.current_page_name
 
-        # 顯示新頁面
-        self.current_page = self.pages[page_name]
-        self.current_page.pack(fill="both", expand=True, padx=20, pady=20)
+        try:
+            # 懶加載 (Lazy Loading)
+            if page_name not in self.pages:
+                if page_name == "dashboard":
+                    self.pages[page_name] = DashboardPage(self.main_area)
+                elif page_name == "raw_materials":
+                    self.pages[page_name] = RawMaterialsPage(self.main_area)
+                elif page_name == "products":
+                    self.pages[page_name] = ProductsPage(self.main_area)
+                elif page_name == "inbound":
+                    self.pages[page_name] = InboundPage(self.main_area)
+                elif page_name == "production":
+                    self.pages[page_name] = ProductionPage(self.main_area)
+                elif page_name == "pos_import":
+                    self.pages[page_name] = PosImportPage(self.main_area)
+                elif page_name == "inventory":
+                    self.pages[page_name] = InventoryPage(self.main_area)
+                else:
+                    return False
+
+            target_page = self.pages[page_name]
+
+            # 清除舊頁面並顯示新頁面
+            if old_page:
+                old_page.pack_forget()
+            target_page.pack(fill="both", expand=True, padx=20, pady=20)
+
+            self.current_page = target_page
+            self.current_page_name = page_name
+            return True
+        except Exception as e:
+            print(f"[switch_page] failed for '{page_name}': {e}")
+            traceback.print_exc()
+            if old_page and old_page_name and self.current_page_name != old_page_name:
+                old_page.pack(fill="both", expand=True, padx=20, pady=20)
+                self.current_page = old_page
+                self.current_page_name = old_page_name
+            messagebox.showerror("頁面切換失敗", f"無法切換到頁面：{page_name}\n{e}")
+            return False
 
 if __name__ == "__main__":
     app = SweetERPApp()

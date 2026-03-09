@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from logic.raw_materials_logic import add_material, update_material, get_all_materials, delete_material, get_all_vendors, search_materials
 from ui.theme import Color, Font, Layout
 from ui.input_utils import clean_text, parse_non_negative_float
@@ -124,6 +124,15 @@ class RawMaterialsPage(ctk.CTkFrame):
         button_row.pack(fill="x", padx=16, pady=(0, 12))
         ctk.CTkButton(
             button_row,
+            text="下載範本",
+            width=100,
+            fg_color=Color.GRAY_BUTTON,
+            text_color=Color.TEXT_DARK,
+            hover_color=Color.GRAY_BUTTON_HOVER,
+            command=self.download_bulk_template,
+        ).pack(side="left")
+        ctk.CTkButton(
+            button_row,
             text="預覽",
             width=90,
             fg_color=Color.GRAY_BUTTON,
@@ -210,6 +219,25 @@ class RawMaterialsPage(ctk.CTkFrame):
                 summary += f"\n...其餘 {len(errors)-10} 筆錯誤省略"
         messagebox.showinfo("批次匯入結果", summary)
         dialog.destroy()
+
+    def download_bulk_template(self):
+        file_path = filedialog.asksaveasfilename(
+            title="下載原料批次匯入範本",
+            defaultextension=".csv",
+            filetypes=[("CSV", "*.csv")],
+            initialfile="raw_materials_bulk_template.csv",
+        )
+        if not file_path:
+            return
+        lines = [
+            "名稱,類別,廠牌,廠商,單位,安全庫存量",
+            "無鹽奶油,乳製品,Elle & Vire,永豐商行,kg,10",
+            "低筋麵粉,粉類,日清,大統食品,kg,25",
+            "砂糖,糖類,台糖,中盤供應商,kg,30",
+        ]
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        messagebox.showinfo("完成", f"範本已儲存：\n{file_path}")
 
     def create_table(self):
         columns = ("id", "name", "category", "brand", "vendor", "unit", "stock", "safe")

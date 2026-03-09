@@ -7,7 +7,10 @@ class Sidebar(ctk.CTkFrame):
     def __init__(self, master, command=None):
         super().__init__(master, width=240, corner_radius=0, fg_color=Color.SIDEBAR_BG)
         self.command = command
-        self.buttons = {} 
+        self.buttons = {}
+        self.active_page = "dashboard"
+        self.switch_in_progress = False
+        self.pending_page = None
         
         # --- LOGO 區 ---
         self.logo_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -84,9 +87,39 @@ class Sidebar(ctk.CTkFrame):
         self.buttons[page_name] = btn
 
     def handle_click(self, page_name):
-        self.update_active_button(page_name)
-        if self.command:
-            self.command(page_name)
+        if page_name == self.active_page and not self.switch_in_progress:
+            return
+        if self.switch_in_progress:
+            self.pending_page = page_name
+            return
+        self.run_switch(page_name)
+
+    def set_buttons_enabled(self, enabled: bool):
+        state = "normal" if enabled else "disabled"
+        for btn in self.buttons.values():
+            btn.configure(state=state)
+
+    def run_switch(self, page_name):
+        self.switch_in_progress = True
+        self.set_buttons_enabled(False)
+        success = True
+        try:
+            if self.command:
+                result = self.command(page_name)
+                success = True if result is None else bool(result)
+            if success:
+                self.update_active_button(page_name)
+                self.active_page = page_name
+        finally:
+            self.set_buttons_enabled(True)
+            self.switch_in_progress = False
+
+            if self.pending_page and self.pending_page != self.active_page:
+                next_page = self.pending_page
+                self.pending_page = None
+                self.after(0, lambda: self.run_switch(next_page))
+            else:
+                self.pending_page = None
 
     def update_active_button(self, page_name):
         for name, btn in self.buttons.items():
