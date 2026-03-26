@@ -212,6 +212,8 @@ web_app/frontend/node_modules/
 web_app/frontend/dist/
 web_app/frontend/.env.development.local
 web_app/frontend/tsconfig.tsbuildinfo
+!web_app/frontend/src/lib/
+!web_app/frontend/src/lib/**
 web_app/worker-api/node_modules/
 web_app/worker-api/.wrangler/
 web_app/worker-api/.dev.vars
