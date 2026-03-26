@@ -2,6 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api";
 import type { DashboardResponse } from "./types";
 
+type DashboardPageProps = {
+  onNavigate: (moduleId: "materials" | "inbound" | "production" | "inventory" | "sales") => void;
+};
+
 function formatNumber(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.?0+$/, "");
 }
@@ -13,7 +17,7 @@ function formatDate(value: string) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function DashboardPage() {
+export function DashboardPage({ onNavigate }: DashboardPageProps) {
   const query = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => apiFetch<DashboardResponse>("/api/dashboard"),
@@ -49,6 +53,9 @@ export function DashboardPage() {
               <div className="toolbar-actions">
                 <span className="pill">資料來源 {query.data.source}</span>
                 <span className="pill">低庫存 {query.data.lowStockMaterials.length} 項</span>
+                <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>
+                  前往庫存中心
+                </button>
               </div>
             </div>
 
@@ -66,7 +73,12 @@ export function DashboardPage() {
               <section className="table-card split-card">
                 <div className="split-card-header">
                   <strong>低庫存原料</strong>
-                  <span className="pill">{query.data.lowStockMaterials.length} 筆</span>
+                  <div className="toolbar-actions">
+                    <span className="pill">{query.data.lowStockMaterials.length} 筆</span>
+                    <button className="table-link" type="button" onClick={() => onNavigate("materials")}>
+                      前往原料主檔
+                    </button>
+                  </div>
                 </div>
                 {query.data.lowStockMaterials.length === 0 ? (
                   <div className="empty-state">目前沒有低庫存原料。</div>
@@ -101,7 +113,18 @@ export function DashboardPage() {
               <section className="table-card split-card">
                 <div className="split-card-header">
                   <strong>最近入庫 / 生產</strong>
-                  <span className="pill">Live</span>
+                  <div className="toolbar-actions">
+                    <span className="pill">Live</span>
+                    <button className="table-link" type="button" onClick={() => onNavigate("inbound")}>
+                      前往入庫
+                    </button>
+                    <button className="table-link" type="button" onClick={() => onNavigate("production")}>
+                      前往生產
+                    </button>
+                    <button className="table-link" type="button" onClick={() => onNavigate("sales")}>
+                      前往銷售
+                    </button>
+                  </div>
                 </div>
                 <div className="mini-section">
                   <h4>最近入庫</h4>

@@ -146,6 +146,10 @@ h1 {
   margin-top: 16px;
 }
 
+.shortcut-grid {
+  align-items: stretch;
+}
+
 .summary-grid,
 .split-grid {
   display: grid;
@@ -164,6 +168,17 @@ h1 {
 .panel {
   border-radius: 20px;
   padding: 20px;
+}
+
+.shortcut-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.shortcut-button {
+  margin-top: auto;
+  align-self: flex-start;
 }
 
 .panel h3 {
@@ -456,6 +471,10 @@ h1 {
   color: #2f6b5f;
   padding: 0;
   font-weight: 700;
+}
+
+.toolbar-actions .table-link {
+  padding: 0;
 }
 
 .table-card {

@@ -193,6 +193,12 @@ export function MaterialsPage() {
               <input type="checkbox" checked={lowStockOnly} onChange={(event) => setLowStockOnly(event.target.checked)} />
               <span>只看低庫存</span>
             </label>
+            <button className="secondary-button" type="button" onClick={() => {
+              setKeyword("");
+              setLowStockOnly(false);
+            }}>
+              清除篩選
+            </button>
           </div>
           <span className="pill">{editingId === null ? "Create Ready" : "Edit Mode"}</span>
         </div>

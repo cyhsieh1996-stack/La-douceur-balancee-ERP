@@ -238,6 +238,12 @@ export function ProductsPage() {
               <input type="checkbox" checked={withShelfLifeOnly} onChange={(event) => setWithShelfLifeOnly(event.target.checked)} />
               <span>只看有保存期限</span>
             </label>
+            <button className="secondary-button" type="button" onClick={() => {
+              setKeyword("");
+              setWithShelfLifeOnly(false);
+            }}>
+              清除篩選
+            </button>
           </div>
           <span className="pill">{selectedProduct ? "Recipe Ready" : "Create Ready"}</span>
         </div>
