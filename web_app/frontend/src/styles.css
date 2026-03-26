@@ -320,7 +320,7 @@ h1 {
 .dashboard-strip {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 16px;
   margin-top: 16px;
 }
 
@@ -346,7 +346,11 @@ h1 {
 }
 
 .dashboard-grid {
-  grid-template-columns: 0.95fr 1.05fr;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-grid > .split-card {
+  grid-column: span 2;
 }
 
 .panel {
@@ -838,6 +842,14 @@ h1 {
 
   .dashboard-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid > .split-card {
+    grid-column: auto;
   }
 
   .toolbar-card {
