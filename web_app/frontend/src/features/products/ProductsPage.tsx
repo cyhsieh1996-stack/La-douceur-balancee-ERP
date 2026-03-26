@@ -2,18 +2,12 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
-import type { MaterialsResponse } from "../materials/types";
 import type {
   CreateProductPayload,
   CreateProductResponse,
   DeleteProductResponse,
-  DeleteRecipeResponse,
   ProductRecord,
   ProductsResponse,
-  RecipeRecord,
-  RecipesResponse,
-  SaveRecipePayload,
-  SaveRecipeResponse,
   UpdateProductResponse,
 } from "./types";
 
@@ -34,24 +28,10 @@ export function ProductsPage() {
     stock: 0,
     shelfLife: null,
   });
-  const [recipeMaterialId, setRecipeMaterialId] = useState("");
-  const [recipeQtyPerUnit, setRecipeQtyPerUnit] = useState("");
-  const [recipeNote, setRecipeNote] = useState("");
 
   const query = useQuery({
     queryKey: ["products"],
     queryFn: () => apiFetch<ProductsResponse>("/api/products"),
-  });
-
-  const materialsQuery = useQuery({
-    queryKey: ["materials-for-recipes"],
-    queryFn: () => apiFetch<MaterialsResponse>("/api/materials"),
-  });
-
-  const recipesQuery = useQuery({
-    queryKey: ["product-recipes", selectedProduct?.id],
-    queryFn: () => apiFetch<RecipesResponse>(`/api/products/${selectedProduct?.id}/recipes`),
-    enabled: selectedProduct !== null,
   });
 
   const createMutation = useMutation({
@@ -86,29 +66,6 @@ export function ProductsPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["products"] });
       resetForm();
-    },
-  });
-
-  const saveRecipeMutation = useMutation({
-    mutationFn: (payload: SaveRecipePayload) =>
-      apiFetch<SaveRecipeResponse>(`/api/products/${selectedProduct?.id}/recipes`, {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["product-recipes", selectedProduct?.id] });
-      setRecipeQtyPerUnit("");
-      setRecipeNote("");
-    },
-  });
-
-  const deleteRecipeMutation = useMutation({
-    mutationFn: (recipeId: number) =>
-      apiFetch<DeleteRecipeResponse>(`/api/recipes/${recipeId}`, {
-        method: "DELETE",
-      }),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["product-recipes", selectedProduct?.id] });
     },
   });
 
@@ -148,14 +105,9 @@ export function ProductsPage() {
       stock: 0,
       shelfLife: null,
     });
-    setRecipeMaterialId("");
-    setRecipeQtyPerUnit("");
-    setRecipeNote("");
     createMutation.reset();
     updateMutation.reset();
     deleteMutation.reset();
-    saveRecipeMutation.reset();
-    deleteRecipeMutation.reset();
   }
 
   function startEditing(item: ProductRecord) {
@@ -171,8 +123,6 @@ export function ProductsPage() {
     createMutation.reset();
     updateMutation.reset();
     deleteMutation.reset();
-    saveRecipeMutation.reset();
-    deleteRecipeMutation.reset();
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -203,28 +153,11 @@ export function ProductsPage() {
     deleteMutation.mutate(selectedProduct.id);
   }
 
-  function handleSaveRecipe(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!selectedProduct) return;
-    saveRecipeMutation.reset();
-    saveRecipeMutation.mutate({
-      materialId: Number(recipeMaterialId),
-      qtyPerUnit: Number(recipeQtyPerUnit),
-      note: recipeNote.trim() || null,
-    });
-  }
-
-  function handleDeleteRecipe(recipe: RecipeRecord) {
-    if (!window.confirm(`確定要刪除 ${recipe.materialName} 這條配方嗎？`)) return;
-    deleteRecipeMutation.reset();
-    deleteRecipeMutation.mutate(recipe.id);
-  }
-
   return (
     <section className="section">
       <div className="section-title">
-        <h2>產品主檔</h2>
-        <p>維護產品售價、成本、庫存與配方。</p>
+        <h2>產品</h2>
+        <p>維護產品售價、成本、庫存與保存期限。</p>
       </div>
 
       <div className="module-flow">
@@ -232,8 +165,8 @@ export function ProductsPage() {
           <div className="module-step-label">先看什麼</div>
           <div className="filter-toolbar">
             <div className="filter-toolbar-main">
-              <strong>先找產品，再維護資料或配方</strong>
-              <p>先搜尋目標產品，選到後再進行編輯與配方調整。</p>
+              <strong>先找產品，再維護資料</strong>
+              <p>先搜尋目標產品，選到後再進行編輯。</p>
               <div className="filter-toolbar-form">
                 <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋產品名稱、類別" />
                 <label className="checkbox-field">
@@ -249,7 +182,7 @@ export function ProductsPage() {
               </div>
             </div>
             <div className="filter-toolbar-meta">
-              <strong>{selectedProduct ? "目前可編輯配方" : "目前可新增產品"}</strong>
+              <strong>{selectedProduct ? "目前可編輯產品" : "目前可新增產品"}</strong>
               <p>產品 {summary.total} 筆，有保存期限 {summary.withShelfLifeCount} 筆</p>
             </div>
           </div>
@@ -257,11 +190,11 @@ export function ProductsPage() {
 
         <div className="module-step">
           <div className="module-step-label">在哪裡操作</div>
-          <div className="form-card">
+        <div className="form-card">
         <div className="form-card-header">
           <div>
             <strong>{selectedProduct ? "編輯產品" : "新增產品"}</strong>
-            <p>選到產品後，下面會直接出現配方區，整個流程都留在同一頁處理。</p>
+            <p>產品資料與配方已分開管理。</p>
           </div>
           <div className="info-row compact">
             <span>產品數：{summary.total}</span>
@@ -369,68 +302,6 @@ export function ProductsPage() {
         {updateMutation.isSuccess ? <StatusBanner tone="success" title="儲存完成">產品變更已更新到列表。</StatusBanner> : null}
         {deleteMutation.isError ? <StatusBanner tone="error" title="刪除失敗">{String(deleteMutation.error)}</StatusBanner> : null}
           </div>
-          {selectedProduct ? (
-            <section className="form-card recipe-card">
-              <div className="form-card-header">
-                <div>
-                  <strong>編輯產品配方 / BOM</strong>
-                  <p>目前產品：{selectedProduct.name}。每生產 1 單位產品，需要消耗哪些原料與多少用量。</p>
-                </div>
-                <span className="pill">{recipesQuery.data?.items.length ?? 0} 項</span>
-              </div>
-
-              <form className="form-grid compact-form" onSubmit={handleSaveRecipe}>
-                <label className="field">
-                  <span>原料</span>
-                  <select
-                    value={recipeMaterialId}
-                    onChange={(event) => setRecipeMaterialId(event.target.value)}
-                    disabled={materialsQuery.isLoading}
-                  >
-                    <option value="">選擇原料</option>
-                    {materialsQuery.data?.items.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="field">
-                  <span>每單位用量</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    value={recipeQtyPerUnit}
-                    onChange={(event) => setRecipeQtyPerUnit(event.target.value)}
-                    placeholder="例如：0.25"
-                  />
-                </label>
-
-                <label className="field field-span-2">
-                  <span>備註</span>
-                  <input
-                    value={recipeNote}
-                    onChange={(event) => setRecipeNote(event.target.value)}
-                    placeholder="例如：可替換品牌、特殊備註"
-                  />
-                </label>
-
-                <div className="form-actions form-actions-inline-start form-actions-cluster">
-                  <button className="primary-button" type="submit" disabled={saveRecipeMutation.isPending}>
-                    {saveRecipeMutation.isPending ? "儲存中..." : "儲存配方"}
-                  </button>
-                </div>
-              </form>
-
-              {recipesQuery.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入配方資料...</StatusBanner> : null}
-              {recipesQuery.isError ? <StatusBanner tone="error" title="載入失敗">{String(recipesQuery.error)}</StatusBanner> : null}
-              {saveRecipeMutation.isError ? <StatusBanner tone="error" title="配方儲存失敗">{String(saveRecipeMutation.error)}</StatusBanner> : null}
-              {saveRecipeMutation.isSuccess ? <StatusBanner tone="success" title="配方已儲存">產品配方已更新。</StatusBanner> : null}
-              {deleteRecipeMutation.isError ? <StatusBanner tone="error" title="配方刪除失敗">{String(deleteRecipeMutation.error)}</StatusBanner> : null}
-            </section>
-          ) : null}
         </div>
 
         <div className="module-step">
@@ -480,7 +351,7 @@ export function ProductsPage() {
                           startEditing(item);
                         }}
                       >
-                        編輯 / 配方
+                        編輯產品
                       </button>
                     </td>
                   </tr>
@@ -494,45 +365,6 @@ export function ProductsPage() {
                 </table>
               </div>
 
-              {selectedProduct && recipesQuery.data ? (
-                <div className="table-card recipe-table-card">
-                  <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>原料</th>
-                    <th>每單位用量</th>
-                    <th>目前庫存</th>
-                    <th>備註</th>
-                    <th>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recipesQuery.data.items.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.materialName}</td>
-                      <td>
-                        {item.qtyPerUnit} {item.unit ?? ""}
-                      </td>
-                      <td>
-                        {item.currentStock} {item.unit ?? ""}
-                      </td>
-                      <td>{item.note || "-"}</td>
-                      <td>
-                        <button className="table-link danger-link" type="button" onClick={() => handleDeleteRecipe(item)}>
-                          刪除
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {recipesQuery.data.items.length === 0 ? (
-                    <tr>
-                      <td colSpan={5}>目前還沒有配方，先新增第一筆原料用量。</td>
-                    </tr>
-                  ) : null}
-                </tbody>
-                  </table>
-                </div>
-              ) : null}
             </>
           ) : null}
         </div>

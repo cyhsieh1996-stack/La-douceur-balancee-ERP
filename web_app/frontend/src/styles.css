@@ -766,6 +766,22 @@ h1 {
   min-width: 260px;
 }
 
+.toolbar-select {
+  min-width: 280px;
+  border: 1px solid #d7cab7;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font: inherit;
+  color: #2a2620;
+  background: rgba(255, 252, 248, 0.98);
+  outline: none;
+}
+
+.toolbar-select:focus {
+  border-color: #2f6b5f;
+  box-shadow: 0 0 0 4px rgba(47, 107, 95, 0.12);
+}
+
 .checkbox-field {
   display: inline-flex;
   align-items: center;

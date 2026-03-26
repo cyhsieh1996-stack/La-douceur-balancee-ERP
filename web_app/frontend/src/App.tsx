@@ -5,6 +5,7 @@ import { InventoryPage } from "./features/inventory/InventoryPage";
 import { MaterialsPage } from "./features/materials/MaterialsPage";
 import { ProductionPage } from "./features/production/ProductionPage";
 import { ProductsPage } from "./features/products/ProductsPage";
+import { RecipesPage } from "./features/recipes/RecipesPage";
 import { ReportsPage } from "./features/reports/ReportsPage";
 import { SalesPage } from "./features/sales/SalesPage";
 
@@ -16,6 +17,7 @@ type ModuleId =
   | "inventory"
   | "materials"
   | "products"
+  | "recipes"
   | "reports";
 
 type PrimaryView = "today" | "operations" | "masters" | "reports";
@@ -29,13 +31,14 @@ const operationsTabs = [
 
 const masterTabs = [
   { id: "materials", title: "原料" },
-  { id: "products", title: "產品與配方" },
+  { id: "products", title: "產品" },
+  { id: "recipes", title: "配方" },
 ] as const;
 
 function getPrimaryView(moduleId: ModuleId): PrimaryView {
   if (moduleId === "overview") return "today";
   if (moduleId === "reports") return "reports";
-  if (["materials", "products"].includes(moduleId)) return "masters";
+  if (["materials", "products", "recipes"].includes(moduleId)) return "masters";
   return "operations";
 }
 
@@ -149,6 +152,7 @@ export function App() {
       {activeModule === "overview" ? <DashboardPage onNavigate={setActiveModule} /> : null}
       {activeModule === "materials" ? <MaterialsPage /> : null}
       {activeModule === "products" ? <ProductsPage /> : null}
+      {activeModule === "recipes" ? <RecipesPage /> : null}
       {activeModule === "inbound" ? <InboundPage onNavigate={setActiveModule} /> : null}
       {activeModule === "production" ? <ProductionPage onNavigate={setActiveModule} /> : null}
       {activeModule === "inventory" ? <InventoryPage /> : null}
