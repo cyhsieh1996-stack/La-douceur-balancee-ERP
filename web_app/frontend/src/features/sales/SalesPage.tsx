@@ -132,13 +132,19 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
         </label>
 
         <div className="form-actions">
-          <button className="secondary-button" type="button" onClick={handlePreview} disabled={!canPreviewOrImport}>
-            預覽匯入
-          </button>
-          <button className="primary-button" type="button" onClick={handleImport} disabled={!canPreviewOrImport || importMutation.isPending}>
-            {importMutation.isPending ? "匯入中..." : "匯入銷售資料"}
-          </button>
-          {!canPreviewOrImport ? <span className="form-hint">先貼上 CSV 或 Tab 分隔內容，才能預覽或匯入。</span> : null}
+          <div className="form-actions-main">
+            <button className="secondary-button" type="button" onClick={handlePreview} disabled={!canPreviewOrImport}>
+              預覽匯入
+            </button>
+            <button className="primary-button" type="button" onClick={handleImport} disabled={!canPreviewOrImport || importMutation.isPending}>
+              {importMutation.isPending ? "匯入中..." : "匯入銷售資料"}
+            </button>
+          </div>
+          {!canPreviewOrImport ? (
+            <div className="form-actions-notes">
+              <span className="form-hint">先貼上 CSV 或 Tab 分隔內容，才能預覽或匯入。</span>
+            </div>
+          ) : null}
         </div>
 
         {previewSummary ? (

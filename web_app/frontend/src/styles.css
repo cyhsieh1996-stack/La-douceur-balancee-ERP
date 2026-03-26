@@ -631,14 +631,30 @@ h1 {
 
 .form-actions {
   display: flex;
-  align-items: flex-end;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.form-actions-main {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+}
+
+.form-actions-notes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  min-width: 0;
 }
 
 .form-hint {
   color: #766b5f;
   font-size: 0.92rem;
+  text-align: left;
 }
 
 .form-hint.danger {
@@ -929,6 +945,17 @@ h1 {
   .form-card-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .form-actions-main,
+  .form-actions-notes {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .info-row {

@@ -183,11 +183,17 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
           </label>
 
           <div className="form-actions">
-            <button className="primary-button" type="submit" disabled={!canSubmit || shortageCount > 0 || createMutation.isPending}>
-              {createMutation.isPending ? "生產登錄中..." : "確認生產"}
-            </button>
-            {!canSubmit ? <span className="form-hint">請先選產品並輸入大於 0 的生產數量。</span> : null}
-            {canSubmit && shortageCount > 0 ? <span className="form-hint danger">目前有缺料，請先補貨再登錄生產。</span> : null}
+            <div className="form-actions-main">
+              <button className="primary-button" type="submit" disabled={!canSubmit || shortageCount > 0 || createMutation.isPending}>
+                {createMutation.isPending ? "生產登錄中..." : "確認生產"}
+              </button>
+            </div>
+            {!canSubmit || (canSubmit && shortageCount > 0) ? (
+              <div className="form-actions-notes">
+                {!canSubmit ? <span className="form-hint">請先選產品並輸入大於 0 的生產數量。</span> : null}
+                {canSubmit && shortageCount > 0 ? <span className="form-hint danger">目前有缺料，請先補貨再登錄生產。</span> : null}
+              </div>
+            ) : null}
           </div>
         </form>
 

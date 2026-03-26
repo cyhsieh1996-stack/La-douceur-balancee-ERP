@@ -177,10 +177,16 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
           </label>
 
           <div className="form-actions">
-            <button className="primary-button" type="submit" disabled={!canSubmit || createMutation.isPending}>
-              {createMutation.isPending ? "入庫中..." : "確認入庫"}
-            </button>
-            {!canSubmit ? <span className="form-hint">請先選原料並輸入大於 0 的入庫數量。</span> : null}
+            <div className="form-actions-main">
+              <button className="primary-button" type="submit" disabled={!canSubmit || createMutation.isPending}>
+                {createMutation.isPending ? "入庫中..." : "確認入庫"}
+              </button>
+            </div>
+            {!canSubmit ? (
+              <div className="form-actions-notes">
+                <span className="form-hint">請先選原料並輸入大於 0 的入庫數量。</span>
+              </div>
+            ) : null}
           </div>
         </form>
 
