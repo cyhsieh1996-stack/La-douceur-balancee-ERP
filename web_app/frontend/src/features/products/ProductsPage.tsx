@@ -227,7 +227,7 @@ export function ProductsPage() {
             <input
               type="number"
               min="0"
-              step="0.01"
+              step="1"
               value={form.price ?? 0}
               onChange={(event) => updateField("price", Number(event.target.value))}
             />
@@ -238,7 +238,7 @@ export function ProductsPage() {
             <input
               type="number"
               min="0"
-              step="0.01"
+              step="1"
               value={form.cost ?? 0}
               onChange={(event) => updateField("cost", Number(event.target.value))}
             />
@@ -249,7 +249,7 @@ export function ProductsPage() {
             <input
               type="number"
               min="0"
-              step="0.001"
+              step="1"
               value={form.stock ?? 0}
               onChange={(event) => updateField("stock", Number(event.target.value))}
             />

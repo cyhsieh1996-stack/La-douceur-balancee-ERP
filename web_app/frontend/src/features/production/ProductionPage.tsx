@@ -183,7 +183,7 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
                 <input
                   type="number"
                   min="0"
-                  step="0.001"
+                  step="1"
                   value={qty}
                   onChange={(event) => setQty(event.target.value)}
                   placeholder="例如：12"

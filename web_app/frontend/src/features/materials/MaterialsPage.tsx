@@ -280,7 +280,7 @@ export function MaterialsPage() {
             <input
               type="number"
               min="0"
-              step="0.001"
+              step="1"
               value={form.unitPrice ?? 0}
               onChange={(event) => updateField("unitPrice", Number(event.target.value))}
             />
@@ -291,7 +291,7 @@ export function MaterialsPage() {
             <input
               type="number"
               min="0"
-              step="0.001"
+              step="1"
               value={form.stock ?? 0}
               onChange={(event) => updateField("stock", Number(event.target.value))}
             />
@@ -302,7 +302,7 @@ export function MaterialsPage() {
             <input
               type="number"
               min="0"
-              step="0.001"
+              step="1"
               value={form.safeStock ?? 0}
               onChange={(event) => updateField("safeStock", Number(event.target.value))}
             />

@@ -240,7 +240,7 @@ export function InventoryPage() {
                   <input
                     type="number"
                     min="0"
-                    step="0.001"
+                    step="1"
                     value={actualStock}
                     onChange={(event) => setActualStock(event.target.value)}
                     placeholder="輸入盤點後數量"
