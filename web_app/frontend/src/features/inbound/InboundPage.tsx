@@ -115,6 +115,20 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
               <span>最近紀錄 {inboundQuery.data?.items.length ?? 0} 筆</span>
             </div>
           </div>
+          <div className="ops-summary-bar">
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">目前原料</span>
+              <strong>{selectedMaterial?.name ?? "尚未選擇"}</strong>
+            </div>
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">目前庫存</span>
+              <strong>{selectedMaterial ? `${formatNumber(selectedMaterial.stock)} ${selectedMaterial.unit ?? ""}`.trim() : "-"}</strong>
+            </div>
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">參考單價</span>
+              <strong>{selectedMaterial ? `$${formatMoney(selectedMaterial.unitPrice)}` : "-"}</strong>
+            </div>
+          </div>
         </div>
         <div className="module-step">
           <div className="module-step-label">在哪裡操作</div>

@@ -131,6 +131,20 @@ export function RecipesPage() {
               <p>{selectedProduct ? "已選擇產品" : "尚未選擇產品"}</p>
             </div>
           </div>
+          <div className="ops-summary-bar">
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">目前產品</span>
+              <strong>{selectedProduct?.name ?? "尚未選擇"}</strong>
+            </div>
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">配方項數</span>
+              <strong>{selectedProduct ? (recipesQuery.data?.items.length ?? 0) : "-"}</strong>
+            </div>
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">目前原料</span>
+              <strong>{selectedMaterial?.name ?? "-"}</strong>
+            </div>
+          </div>
         </div>
 
         <div className="module-step">

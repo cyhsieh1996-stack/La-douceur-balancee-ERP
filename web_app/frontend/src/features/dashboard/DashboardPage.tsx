@@ -103,14 +103,27 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
               <div className="module-step">
                 <div className="module-step-label">在哪裡操作</div>
-                <div className="action-strip">
-                  <div className="action-strip-copy">先依今天狀況決定要進哪個流程。</div>
-                  <div className="action-strip-links">
-                    <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>去庫存中心</button>
-                    <button className="secondary-button" type="button" onClick={() => onNavigate("inbound")}>去原料入庫</button>
-                    <button className="secondary-button" type="button" onClick={() => onNavigate("production")}>去產品生產</button>
-                    <button className="secondary-button" type="button" onClick={() => onNavigate("sales")}>去 POS 匯入</button>
-                  </div>
+                <div className="action-choice-grid">
+                  <button className="action-choice-card" type="button" onClick={() => onNavigate("inventory")}>
+                    <span className="action-choice-kicker">先確認</span>
+                    <strong>庫存中心</strong>
+                    <span className="action-choice-meta">先看缺貨與待補貨</span>
+                  </button>
+                  <button className="action-choice-card" type="button" onClick={() => onNavigate("inbound")}>
+                    <span className="action-choice-kicker">補貨作業</span>
+                    <strong>原料入庫</strong>
+                    <span className="action-choice-meta">更新原料庫存與單價</span>
+                  </button>
+                  <button className="action-choice-card" type="button" onClick={() => onNavigate("production")}>
+                    <span className="action-choice-kicker">生產作業</span>
+                    <strong>產品生產</strong>
+                    <span className="action-choice-meta">登錄批次並扣料</span>
+                  </button>
+                  <button className="action-choice-card" type="button" onClick={() => onNavigate("sales")}>
+                    <span className="action-choice-kicker">收尾更新</span>
+                    <strong>POS 匯入</strong>
+                    <span className="action-choice-meta">同步今天銷售資料</span>
+                  </button>
                 </div>
               </div>
 

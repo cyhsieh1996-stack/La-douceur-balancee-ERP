@@ -133,6 +133,20 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
               <span>最近紀錄 {productionQuery.data?.items.length ?? 0} 筆</span>
             </div>
           </div>
+          <div className="ops-summary-bar">
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">目前產品</span>
+              <strong>{selectedProduct?.name ?? "尚未選擇"}</strong>
+            </div>
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">產品庫存</span>
+              <strong>{selectedProduct ? formatNumber(selectedProduct.stock) : "-"}</strong>
+            </div>
+            <div className="ops-summary-item">
+              <span className="ops-summary-label">缺料項數</span>
+              <strong>{canSubmit ? shortageCount : "-"}</strong>
+            </div>
+          </div>
         </div>
 
         <div className="module-step">

@@ -243,6 +243,52 @@ h1 {
   gap: 12px;
 }
 
+.action-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.action-choice-card {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-height: 118px;
+  padding: 18px 18px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(196, 174, 146, 0.64);
+  background: rgba(255, 252, 248, 0.96);
+  box-shadow: 0 10px 20px rgba(56, 47, 33, 0.04);
+  text-align: left;
+  color: #3f372f;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.action-choice-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(152, 187, 170, 0.82);
+  box-shadow: 0 14px 24px rgba(56, 47, 33, 0.06);
+}
+
+.action-choice-card strong {
+  font-size: 1.08rem;
+  color: #24473e;
+}
+
+.action-choice-kicker {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7a7063;
+}
+
+.action-choice-meta {
+  color: #72675a;
+  font-size: 0.9rem;
+}
+
 .primary-nav,
 .secondary-nav {
   display: flex;
@@ -339,6 +385,38 @@ h1 {
 .module-step:nth-child(3) .dashboard-focus-card,
 .module-step:nth-child(3) .dashboard-activity-card {
   border-color: rgba(210, 195, 170, 0.82);
+}
+
+.ops-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ops-summary-item {
+  min-height: 88px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(196, 174, 146, 0.58);
+  background: rgba(255, 252, 248, 0.94);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.ops-summary-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #786d60;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ops-summary-item strong {
+  display: block;
+  color: #2b413c;
+  font-size: 1.05rem;
+  line-height: 1.3;
 }
 
 .module-tabs {
@@ -1241,6 +1319,11 @@ h1 {
   .filter-toolbar-meta {
     justify-items: start;
     text-align: left;
+  }
+
+  .action-choice-grid,
+  .ops-summary-bar {
+    grid-template-columns: 1fr;
   }
 
   .form-card-header {
