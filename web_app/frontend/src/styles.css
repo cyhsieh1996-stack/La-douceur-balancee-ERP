@@ -169,22 +169,44 @@ h1 {
 
 .module-flow {
   display: grid;
-  gap: 14px;
-  margin-top: 16px;
+  gap: 18px;
+  margin-top: 18px;
 }
 
 .module-step {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  padding: 16px 18px 18px;
+  border-radius: 28px;
+  border: 1px solid rgba(210, 196, 174, 0.68);
+  box-shadow: 0 12px 28px rgba(56, 47, 33, 0.035);
+}
+
+.module-step:nth-child(1) {
+  background: linear-gradient(180deg, rgba(233, 241, 236, 0.88), rgba(246, 250, 247, 0.78));
+}
+
+.module-step:nth-child(2) {
+  background: linear-gradient(180deg, rgba(255, 253, 249, 0.95), rgba(252, 248, 242, 0.9));
+}
+
+.module-step:nth-child(3) {
+  background: linear-gradient(180deg, rgba(247, 241, 231, 0.92), rgba(253, 250, 245, 0.88));
 }
 
 .module-step-label {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #5d544a;
-  font-size: 0.92rem;
-  font-weight: 700;
+  width: fit-content;
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: #544b42;
+  background: rgba(255, 252, 247, 0.82);
+  border: 1px solid rgba(206, 192, 170, 0.72);
+  font-size: 0.9rem;
+  font-weight: 800;
 }
 
 .module-step-label::before {
@@ -240,14 +262,18 @@ h1 {
 .subnav-group {
   display: grid;
   justify-content: start;
-  gap: 4px;
-  margin-top: 10px;
-  padding-left: 4px;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 22px;
+  background: rgba(246, 241, 233, 0.82);
+  border: 1px solid rgba(214, 201, 181, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 .subnav-label {
-  color: #8a7f72;
-  font-size: 0.78rem;
+  color: #7c705f;
+  font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -272,9 +298,9 @@ h1 {
 .secondary-nav-tab {
   padding: 8px 14px;
   border: 1px solid rgba(215, 202, 183, 0.82);
-  background: rgba(255, 252, 248, 0.52);
+  background: rgba(255, 252, 248, 0.92);
   color: #6a6055;
-  font-size: 0.96rem;
+  font-size: 0.95rem;
 }
 
 .primary-nav-tab:hover,
@@ -288,6 +314,29 @@ h1 {
   background: #274c43;
   color: #fff;
   border-color: #274c43;
+}
+
+.module-step .workflow-strip,
+.module-step .filter-toolbar,
+.module-step .action-strip,
+.module-step .dashboard-strip {
+  background: rgba(255, 252, 248, 0.86);
+}
+
+.module-step:nth-child(1) .workflow-strip,
+.module-step:nth-child(1) .filter-toolbar,
+.module-step:nth-child(1) .action-strip,
+.module-step:nth-child(1) .dashboard-strip {
+  border-color: rgba(184, 205, 193, 0.78);
+  background: rgba(249, 252, 250, 0.9);
+}
+
+.module-step:nth-child(3) .table-card,
+.module-step:nth-child(3) .split-card,
+.module-step:nth-child(3) .panel,
+.module-step:nth-child(3) .dashboard-focus-card,
+.module-step:nth-child(3) .dashboard-activity-card {
+  border-color: rgba(210, 195, 170, 0.82);
 }
 
 .module-tabs {
