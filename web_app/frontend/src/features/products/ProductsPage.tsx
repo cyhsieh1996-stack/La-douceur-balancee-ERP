@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { MaterialsResponse } from "../materials/types";
 import type {
@@ -355,21 +356,15 @@ export function ProductsPage() {
           </div>
         </form>
 
-        {createMutation.isError ? (
-          <div className="empty-state error">新增失敗：{String(createMutation.error)}</div>
-        ) : null}
-        {createMutation.isSuccess ? <div className="empty-state success">新增成功，列表已更新。</div> : null}
-        {updateMutation.isError ? (
-          <div className="empty-state error">儲存失敗：{String(updateMutation.error)}</div>
-        ) : null}
-        {updateMutation.isSuccess ? <div className="empty-state success">已儲存變更，列表已更新。</div> : null}
-        {deleteMutation.isError ? (
-          <div className="empty-state error">刪除失敗：{String(deleteMutation.error)}</div>
-        ) : null}
+        {createMutation.isError ? <StatusBanner tone="error" title="新增失敗">{String(createMutation.error)}</StatusBanner> : null}
+        {createMutation.isSuccess ? <StatusBanner tone="success" title="新增完成">產品列表已更新。</StatusBanner> : null}
+        {updateMutation.isError ? <StatusBanner tone="error" title="儲存失敗">{String(updateMutation.error)}</StatusBanner> : null}
+        {updateMutation.isSuccess ? <StatusBanner tone="success" title="儲存完成">產品變更已更新到列表。</StatusBanner> : null}
+        {deleteMutation.isError ? <StatusBanner tone="error" title="刪除失敗">{String(deleteMutation.error)}</StatusBanner> : null}
       </div>
 
-      {query.isLoading ? <div className="empty-state">正在載入產品資料...</div> : null}
-      {query.isError ? <div className="empty-state error">載入失敗：{String(query.error)}</div> : null}
+      {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入產品資料...</StatusBanner> : null}
+      {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
 
       {query.data ? (
         <>
@@ -484,15 +479,11 @@ export function ProductsPage() {
             </div>
           </form>
 
-          {recipesQuery.isLoading ? <div className="empty-state">正在載入配方資料...</div> : null}
-          {recipesQuery.isError ? <div className="empty-state error">載入失敗：{String(recipesQuery.error)}</div> : null}
-          {saveRecipeMutation.isError ? (
-            <div className="empty-state error">配方儲存失敗：{String(saveRecipeMutation.error)}</div>
-          ) : null}
-          {saveRecipeMutation.isSuccess ? <div className="empty-state success">配方已儲存。</div> : null}
-          {deleteRecipeMutation.isError ? (
-            <div className="empty-state error">配方刪除失敗：{String(deleteRecipeMutation.error)}</div>
-          ) : null}
+          {recipesQuery.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入配方資料...</StatusBanner> : null}
+          {recipesQuery.isError ? <StatusBanner tone="error" title="載入失敗">{String(recipesQuery.error)}</StatusBanner> : null}
+          {saveRecipeMutation.isError ? <StatusBanner tone="error" title="配方儲存失敗">{String(saveRecipeMutation.error)}</StatusBanner> : null}
+          {saveRecipeMutation.isSuccess ? <StatusBanner tone="success" title="配方已儲存">產品配方已更新。</StatusBanner> : null}
+          {deleteRecipeMutation.isError ? <StatusBanner tone="error" title="配方刪除失敗">{String(deleteRecipeMutation.error)}</StatusBanner> : null}
 
           {recipesQuery.data ? (
             <div className="table-card recipe-table-card">

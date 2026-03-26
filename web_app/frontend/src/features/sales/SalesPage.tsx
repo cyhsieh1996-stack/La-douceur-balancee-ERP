@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { SalesImportPayload, SalesImportResponse, SalesResponse } from "./types";
 
@@ -132,19 +133,19 @@ export function SalesPage() {
         </div>
 
         {previewSummary ? (
-          <div className="empty-state">
-            預覽：共 {previewSummary.totalRows} 筆，總金額 ${formatNumber(previewSummary.totalAmount)}
+          <StatusBanner title="預覽結果">
+            共 {previewSummary.totalRows} 筆，總金額 ${formatNumber(previewSummary.totalAmount)}
             {previewSummary.firstProduct ? `，第一筆產品：${previewSummary.firstProduct}` : ""}
-          </div>
+          </StatusBanner>
         ) : null}
-        {importMutation.isError ? <div className="empty-state error">匯入失敗：{String(importMutation.error)}</div> : null}
+        {importMutation.isError ? <StatusBanner tone="error" title="匯入失敗">{String(importMutation.error)}</StatusBanner> : null}
         {importMutation.isSuccess ? (
-          <div className="empty-state success">已成功匯入 {importMutation.data.importedCount} 筆銷售資料。</div>
+          <StatusBanner tone="success" title="匯入完成">已成功匯入 {importMutation.data.importedCount} 筆銷售資料。</StatusBanner>
         ) : null}
       </div>
 
       {query.isLoading ? <div className="empty-state">正在載入銷售紀錄...</div> : null}
-      {query.isError ? <div className="empty-state error">載入失敗：{String(query.error)}</div> : null}
+      {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
 
       {query.data ? (
         <section className="table-card split-card">

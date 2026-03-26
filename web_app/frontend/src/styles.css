@@ -547,6 +547,39 @@ h1 {
   color: #285a50;
 }
 
+.status-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid #d7cab7;
+  background: rgba(255, 253, 252, 0.92);
+  color: #5d544a;
+}
+
+.status-banner strong {
+  font-size: 0.95rem;
+}
+
+.status-banner.loading {
+  background: #f4efe5;
+  color: #5d544a;
+}
+
+.status-banner.success {
+  background: #edf6f1;
+  border-color: #bfdccf;
+  color: #285a50;
+}
+
+.status-banner.error {
+  background: #fdf0eb;
+  border-color: #e1b7ac;
+  color: #8a3f31;
+}
+
 .api-list {
   display: flex;
   flex-wrap: wrap;

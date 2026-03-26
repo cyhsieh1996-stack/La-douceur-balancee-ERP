@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { ReportsResponse } from "./types";
 
@@ -39,8 +40,8 @@ export function ReportsPage() {
         <p>先把營運上最常看的幾個指標集中起來，之後再往毛利、品類分析與時段報表延伸。</p>
       </div>
 
-      {query.isLoading ? <div className="empty-state">正在整理報表資料...</div> : null}
-      {query.isError ? <div className="empty-state error">載入失敗：{String(query.error)}</div> : null}
+      {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在整理報表資料...</StatusBanner> : null}
+      {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
 
       {query.data ? (
         <>

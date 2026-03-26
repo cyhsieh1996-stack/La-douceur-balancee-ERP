@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { DashboardResponse } from "./types";
 
@@ -40,8 +41,8 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
           <p>沿用桌面版的工作台概念，先把每天最需要看到的摘要與提醒收進來。</p>
         </div>
 
-        {query.isLoading ? <div className="empty-state">正在整理工作台資料...</div> : null}
-        {query.isError ? <div className="empty-state error">載入失敗：{String(query.error)}</div> : null}
+        {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在整理工作台資料...</StatusBanner> : null}
+        {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
 
         {query.data ? (
           <>

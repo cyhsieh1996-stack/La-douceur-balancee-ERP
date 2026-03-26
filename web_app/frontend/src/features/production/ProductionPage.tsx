@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { ProductsResponse } from "../products/types";
 import type {
@@ -181,8 +182,8 @@ export function ProductionPage() {
           </div>
         </form>
 
-        {createMutation.isError ? <div className="empty-state error">生產失敗：{String(createMutation.error)}</div> : null}
-        {createMutation.isSuccess ? <div className="empty-state success">生產成功，庫存與原料已更新。</div> : null}
+        {createMutation.isError ? <StatusBanner tone="error" title="生產失敗">{String(createMutation.error)}</StatusBanner> : null}
+        {createMutation.isSuccess ? <StatusBanner tone="success" title="生產完成">產品庫存與原料扣減都已更新。</StatusBanner> : null}
       </div>
 
       <section className="table-card split-card">
@@ -192,7 +193,7 @@ export function ProductionPage() {
         </div>
         {!canSubmit ? <div className="empty-state">先選產品並輸入生產數量，系統才會計算這批生產需要扣掉哪些原料。</div> : null}
         {previewQuery.isLoading ? <div className="empty-state">正在計算配方扣料...</div> : null}
-        {previewQuery.isError ? <div className="empty-state error">預覽失敗：{String(previewQuery.error)}</div> : null}
+        {previewQuery.isError ? <StatusBanner tone="error" title="預覽失敗">{String(previewQuery.error)}</StatusBanner> : null}
         {previewQuery.data && canSubmit ? (
           <table className="data-table">
             <thead>
@@ -233,7 +234,7 @@ export function ProductionPage() {
       </section>
 
       {productionQuery.isLoading ? <div className="empty-state">正在載入最近生產紀錄...</div> : null}
-      {productionQuery.isError ? <div className="empty-state error">載入失敗：{String(productionQuery.error)}</div> : null}
+      {productionQuery.isError ? <StatusBanner tone="error" title="載入失敗">{String(productionQuery.error)}</StatusBanner> : null}
       {productionQuery.data ? (
         <section className="table-card split-card">
           <div className="split-card-header">

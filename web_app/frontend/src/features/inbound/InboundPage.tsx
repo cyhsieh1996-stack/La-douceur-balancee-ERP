@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { MaterialsResponse } from "../materials/types";
 import type { CreateInboundPayload, CreateInboundResponse, InboundResponse } from "./types";
@@ -174,12 +175,12 @@ export function InboundPage() {
           </div>
         </form>
 
-        {createMutation.isError ? <div className="empty-state error">入庫失敗：{String(createMutation.error)}</div> : null}
-        {createMutation.isSuccess ? <div className="empty-state success">入庫成功，相關頁面資料已更新。</div> : null}
+        {createMutation.isError ? <StatusBanner tone="error" title="入庫失敗">{String(createMutation.error)}</StatusBanner> : null}
+        {createMutation.isSuccess ? <StatusBanner tone="success" title="入庫完成">原料、庫存中心與工作台摘要都已更新。</StatusBanner> : null}
       </div>
 
       {inboundQuery.isLoading ? <div className="empty-state">正在載入最近入庫紀錄...</div> : null}
-      {inboundQuery.isError ? <div className="empty-state error">載入失敗：{String(inboundQuery.error)}</div> : null}
+      {inboundQuery.isError ? <StatusBanner tone="error" title="載入失敗">{String(inboundQuery.error)}</StatusBanner> : null}
 
       {inboundQuery.data ? (
         <section className="table-card split-card">

@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type {
   CreateMaterialPayload,
@@ -327,22 +328,16 @@ export function MaterialsPage() {
           </div>
         </form>
 
-        {createMutation.isError ? (
-          <div className="empty-state error">新增失敗：{String(createMutation.error)}</div>
-        ) : null}
-        {createMutation.isSuccess ? <div className="empty-state success">新增成功，列表已更新。</div> : null}
-        {updateMutation.isError ? (
-          <div className="empty-state error">儲存失敗：{String(updateMutation.error)}</div>
-        ) : null}
-        {updateMutation.isSuccess ? <div className="empty-state success">已儲存變更，列表已更新。</div> : null}
-        {deleteMutation.isError ? (
-          <div className="empty-state error">刪除失敗：{String(deleteMutation.error)}</div>
-        ) : null}
-        {deleteMutation.isSuccess ? <div className="empty-state success">已刪除原料，列表已更新。</div> : null}
+        {createMutation.isError ? <StatusBanner tone="error" title="新增失敗">{String(createMutation.error)}</StatusBanner> : null}
+        {createMutation.isSuccess ? <StatusBanner tone="success" title="新增完成">原料列表已更新。</StatusBanner> : null}
+        {updateMutation.isError ? <StatusBanner tone="error" title="儲存失敗">{String(updateMutation.error)}</StatusBanner> : null}
+        {updateMutation.isSuccess ? <StatusBanner tone="success" title="儲存完成">原料變更已更新到列表。</StatusBanner> : null}
+        {deleteMutation.isError ? <StatusBanner tone="error" title="刪除失敗">{String(deleteMutation.error)}</StatusBanner> : null}
+        {deleteMutation.isSuccess ? <StatusBanner tone="success" title="刪除完成">原料已移除，列表已更新。</StatusBanner> : null}
       </div>
 
-      {query.isLoading ? <div className="empty-state">正在載入原料資料...</div> : null}
-      {query.isError ? <div className="empty-state error">載入失敗：{String(query.error)}</div> : null}
+      {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入原料資料...</StatusBanner> : null}
+      {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
 
       {query.data ? (
         <>

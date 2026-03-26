@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type {
   InventoryAdjustmentPayload,
@@ -93,7 +94,7 @@ export function InventoryPage() {
       </div>
 
       {query.isLoading ? <div className="empty-state">正在整理庫存資料...</div> : null}
-      {query.isError ? <div className="empty-state error">載入失敗：{String(query.error)}</div> : null}
+      {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
 
       {query.data ? (
         <>
@@ -246,10 +247,8 @@ export function InventoryPage() {
                 </div>
               </form>
               {!selectedItem ? <div className="empty-state">從左側即時庫存清單點一筆原料，就能直接帶入盤點調整。</div> : null}
-              {adjustMutation.isError ? (
-                <div className="empty-state error">調整失敗：{String(adjustMutation.error)}</div>
-              ) : null}
-              {adjustMutation.isSuccess ? <div className="empty-state success">庫存調整完成，資料已更新。</div> : null}
+              {adjustMutation.isError ? <StatusBanner tone="error" title="調整失敗">{String(adjustMutation.error)}</StatusBanner> : null}
+              {adjustMutation.isSuccess ? <StatusBanner tone="success" title="調整完成">庫存與最近異動已同步更新。</StatusBanner> : null}
             </section>
           </div>
 
