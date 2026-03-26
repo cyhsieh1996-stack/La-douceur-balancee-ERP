@@ -18,6 +18,7 @@ import {
 } from "./modules/production";
 import { createProduct, deleteProduct, listProducts, updateProduct } from "./modules/products";
 import { deleteRecipe, listRecipes, saveRecipe } from "./modules/recipes";
+import { importSalesRecords, listSalesRecords } from "./modules/sales";
 
 type Bindings = {
   APP_NAME: string;
@@ -494,6 +495,45 @@ app.post("/api/production", async (c) => {
     },
     201,
   );
+});
+
+app.get("/api/sales", async (c) => {
+  const result = await listSalesRecords(c.env, 100);
+  if (!result.ok) {
+    return c.json({ ok: false, error: result.error }, 500);
+  }
+
+  return c.json({
+    ok: true,
+    items: result.items,
+    source: "supabase",
+  });
+});
+
+app.post("/api/sales/import", async (c) => {
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) {
+    return c.json({ ok: false, error: "Invalid JSON payload" }, 400);
+  }
+
+  try {
+    const result = await importSalesRecords(c.env, payload);
+    if (!result.ok) {
+      const status = result.error === "沒有可匯入的銷售資料" ? 400 : 500;
+      return c.json({ ok: false, error: result.error }, status);
+    }
+
+    return c.json(
+      {
+        ok: true,
+        importedCount: result.importedCount,
+        source: "supabase",
+      },
+      201,
+    );
+  } catch (error) {
+    return c.json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 400);
+  }
 });
 
 app.notFound((c) => c.json({ ok: false, error: "Not Found" }, 404));

@@ -324,6 +324,24 @@ h1 {
   box-shadow: 0 0 0 4px rgba(47, 107, 95, 0.12);
 }
 
+.paste-box {
+  min-height: 180px;
+  width: 100%;
+  border: 1px solid #d7cab7;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font: inherit;
+  color: #2a2620;
+  background: rgba(255, 253, 252, 0.96);
+  resize: vertical;
+  outline: none;
+}
+
+.paste-box:focus {
+  border-color: #2f6b5f;
+  box-shadow: 0 0 0 4px rgba(47, 107, 95, 0.12);
+}
+
 .field input:focus {
   border-color: #2f6b5f;
   box-shadow: 0 0 0 4px rgba(47, 107, 95, 0.12);

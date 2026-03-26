@@ -5,6 +5,7 @@ import { InventoryPage } from "./features/inventory/InventoryPage";
 import { MaterialsPage } from "./features/materials/MaterialsPage";
 import { ProductionPage } from "./features/production/ProductionPage";
 import { ProductsPage } from "./features/products/ProductsPage";
+import { SalesPage } from "./features/sales/SalesPage";
 
 const quickActions = [
   { title: "原料主檔", desc: "維護原料、供應商與安全庫存" },
@@ -33,6 +34,7 @@ const webModules = [
   { id: "inbound", title: "進貨與入庫" },
   { id: "production", title: "生產與批號" },
   { id: "inventory", title: "庫存中心" },
+  { id: "sales", title: "POS / 銷售" },
 ];
 
 export function App() {
@@ -106,6 +108,7 @@ export function App() {
       {activeModule === "inbound" ? <InboundPage /> : null}
       {activeModule === "production" ? <ProductionPage /> : null}
       {activeModule === "inventory" ? <InventoryPage /> : null}
+      {activeModule === "sales" ? <SalesPage /> : null}
     </main>
   );
 }
