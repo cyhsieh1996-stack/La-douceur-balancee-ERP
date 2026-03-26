@@ -142,7 +142,7 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
             <input
               type="number"
               min="0"
-              step="0.001"
+              step="1"
               value={qty}
               onChange={(event) => setQty(event.target.value)}
               placeholder="例如：10"
@@ -154,7 +154,7 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
             <input
               type="number"
               min="0"
-              step="0.01"
+              step="1"
               value={unitPrice}
               onChange={(event) => setUnitPrice(event.target.value)}
               placeholder="可留空"
@@ -176,7 +176,7 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
             <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="例如：促銷進貨、緊急補貨" />
           </label>
 
-          <div className="form-actions">
+          <div className="form-actions form-actions-inline-start">
             <div className="form-actions-main">
               <button className="primary-button" type="submit" disabled={!canSubmit || createMutation.isPending}>
                 {createMutation.isPending ? "入庫中..." : "確認入庫"}

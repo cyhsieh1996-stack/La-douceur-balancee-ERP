@@ -636,6 +636,10 @@ h1 {
   gap: 14px;
 }
 
+.form-actions-inline-start {
+  grid-column: 1 / span 3;
+}
+
 .form-actions-main {
   display: flex;
   align-items: center;
@@ -950,6 +954,10 @@ h1 {
   .form-actions {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .form-actions-inline-start {
+    grid-column: auto;
   }
 
   .form-actions-main,
