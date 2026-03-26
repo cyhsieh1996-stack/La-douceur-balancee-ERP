@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { getDashboardData } from "./modules/dashboard";
+import { createInboundRecord, listInboundRecords } from "./modules/inbound";
 import { adjustInventory, getInventoryCenter } from "./modules/inventory";
 import {
   createMaterial,
@@ -363,6 +364,49 @@ app.post("/api/inventory/adjustments", async (c) => {
     adjustment: result.adjustment,
     source: "supabase",
   });
+});
+
+app.get("/api/inbound", async (c) => {
+  const result = await listInboundRecords(c.env, 20);
+  if (!result.ok) {
+    return c.json({ ok: false, error: result.error }, 500);
+  }
+
+  return c.json({
+    ok: true,
+    items: result.items,
+    source: "supabase",
+  });
+});
+
+app.post("/api/inbound", async (c) => {
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) {
+    return c.json({ ok: false, error: "Invalid JSON payload" }, 400);
+  }
+
+  const result = await createInboundRecord(c.env, payload);
+  if (!result.ok) {
+    const status =
+      result.error === "原料編號無效" ||
+      result.error === "入庫數量必須大於 0" ||
+      result.error === "進貨單價不得小於 0"
+        ? 400
+        : result.error === "找不到該原料"
+          ? 404
+          : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json(
+    {
+      ok: true,
+      item: result.item,
+      material: result.material,
+      source: "supabase",
+    },
+    201,
+  );
 });
 
 app.notFound((c) => c.json({ ok: false, error: "Not Found" }, 404));

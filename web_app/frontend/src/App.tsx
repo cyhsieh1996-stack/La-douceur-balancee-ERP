@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { InboundPage } from "./features/inbound/InboundPage";
 import { InventoryPage } from "./features/inventory/InventoryPage";
 import { MaterialsPage } from "./features/materials/MaterialsPage";
 import { ProductsPage } from "./features/products/ProductsPage";
@@ -28,6 +29,7 @@ const webModules = [
   { id: "overview", title: "今日作業" },
   { id: "materials", title: "原料主檔" },
   { id: "products", title: "產品主檔" },
+  { id: "inbound", title: "進貨與入庫" },
   { id: "inventory", title: "庫存中心" },
 ];
 
@@ -99,6 +101,7 @@ export function App() {
 
       {activeModule === "materials" ? <MaterialsPage /> : null}
       {activeModule === "products" ? <ProductsPage /> : null}
+      {activeModule === "inbound" ? <InboundPage /> : null}
       {activeModule === "inventory" ? <InventoryPage /> : null}
     </main>
   );
