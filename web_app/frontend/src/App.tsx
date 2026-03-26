@@ -47,13 +47,13 @@ export function App() {
           <p className="eyebrow">Web ERP Migration</p>
           <h1>La Douceur Balancee ERP</h1>
           <p className="hero-copy">
-            這是 Web 版第一階段骨架。接下來會逐步接上 Supabase、Cloudflare Workers 與正式頁面流程。
+            現在已經把主檔、入庫、生產、庫存與銷售流程接上。接下來會繼續把互動細節、報表與權限整理到可正式上線的程度。
           </p>
         </div>
         <div className="status-card">
           <span className="status-label">目前狀態</span>
-          <strong>前端骨架已建立</strong>
-          <p>下一步：接 Auth、原料主檔 API、Supabase schema migration。</p>
+          <strong>核心流程已打通</strong>
+          <p>下一步：收斂搜尋、空狀態、錯誤提示與報表 / 權限等商用細節。</p>
         </div>
       </section>
 

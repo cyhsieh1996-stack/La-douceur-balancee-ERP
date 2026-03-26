@@ -41,6 +41,17 @@ export function DashboardPage() {
 
         {query.data ? (
           <>
+            <div className="toolbar-card">
+              <div className="toolbar-copy">
+                <strong>工作台摘要</strong>
+                <p>把低庫存、今日進貨、生產與本月銷售集中在同一頁，方便開工先看一次全局。</p>
+              </div>
+              <div className="toolbar-actions">
+                <span className="pill">資料來源 {query.data.source}</span>
+                <span className="pill">低庫存 {query.data.lowStockMaterials.length} 項</span>
+              </div>
+            </div>
+
             <div className="summary-grid">
               {cards.map((card) => (
                 <article className="panel" key={card.label}>

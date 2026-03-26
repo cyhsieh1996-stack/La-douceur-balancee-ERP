@@ -38,6 +38,7 @@ export function SalesPage() {
       await queryClient.invalidateQueries({ queryKey: ["sales-records"] });
       await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       setRawText("");
+      setPreviewSummary(null);
     },
   });
 
@@ -81,6 +82,8 @@ export function SalesPage() {
     });
   }
 
+  const canPreviewOrImport = rawText.trim() !== "";
+
   return (
     <section className="section">
       <div className="section-title">
@@ -89,11 +92,14 @@ export function SalesPage() {
       </div>
 
       <div className="toolbar-card">
-        <div>
+        <div className="toolbar-copy">
           <strong>目前進度</strong>
           <p>已接好 `/api/sales` 與 `/api/sales/import`，匯入後會同步更新工作台的今日銷售與月銷售。</p>
         </div>
-        <span className="pill">Sales Ready</span>
+        <div className="toolbar-actions">
+          <span className="pill">Sales Ready</span>
+          <span className="pill">最近紀錄 {query.data?.items.length ?? 0} 筆</span>
+        </div>
       </div>
 
       <div className="form-card">
@@ -116,12 +122,13 @@ export function SalesPage() {
         </label>
 
         <div className="form-actions">
-          <button className="secondary-button" type="button" onClick={handlePreview}>
+          <button className="secondary-button" type="button" onClick={handlePreview} disabled={!canPreviewOrImport}>
             預覽匯入
           </button>
-          <button className="primary-button" type="button" onClick={handleImport} disabled={importMutation.isPending}>
+          <button className="primary-button" type="button" onClick={handleImport} disabled={!canPreviewOrImport || importMutation.isPending}>
             {importMutation.isPending ? "匯入中..." : "匯入銷售資料"}
           </button>
+          {!canPreviewOrImport ? <span className="form-hint">先貼上 CSV 或 Tab 分隔內容，才能預覽或匯入。</span> : null}
         </div>
 
         {previewSummary ? (
@@ -143,7 +150,7 @@ export function SalesPage() {
         <section className="table-card split-card">
           <div className="split-card-header">
             <strong>最近銷售紀錄</strong>
-            <span className="pill">{query.data.items.length} 筆</span>
+            <span className="pill">{query.data.source} / {query.data.items.length} 筆</span>
           </div>
           <table className="data-table">
             <thead>
@@ -167,6 +174,13 @@ export function SalesPage() {
                   <td>${formatNumber(item.amount)}</td>
                 </tr>
               ))}
+              {query.data.items.length === 0 ? (
+                <tr>
+                  <td className="table-empty-cell" colSpan={6}>
+                    目前還沒有銷售紀錄，完成第一次匯入後會顯示在這裡。
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </section>

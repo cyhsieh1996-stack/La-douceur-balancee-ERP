@@ -97,6 +97,17 @@ export function InventoryPage() {
 
       {query.data ? (
         <>
+          <div className="toolbar-card">
+            <div className="toolbar-copy">
+              <strong>庫存概況</strong>
+              <p>這一頁專門處理查庫存、找低庫存、盤點調整與查看最近異動，不用再跳來跳去。</p>
+            </div>
+            <div className="toolbar-actions">
+              <span className="pill">資料來源 {query.data.source}</span>
+              <span className="pill">顯示 {query.data.items.length} 筆</span>
+            </div>
+          </div>
+
           <div className="summary-grid">
             {cards.map((card) => (
               <article className="panel" key={card.label}>
@@ -177,6 +188,13 @@ export function InventoryPage() {
                       <td>{formatNumber(item.balanceToSafe)}</td>
                     </tr>
                   ))}
+                  {query.data.items.length === 0 ? (
+                    <tr>
+                      <td className="table-empty-cell" colSpan={6}>
+                        沒有符合目前搜尋條件的原料，請調整關鍵字或取消低庫存篩選。
+                      </td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </section>
@@ -227,6 +245,7 @@ export function InventoryPage() {
                   </button>
                 </div>
               </form>
+              {!selectedItem ? <div className="empty-state">從左側即時庫存清單點一筆原料，就能直接帶入盤點調整。</div> : null}
               {adjustMutation.isError ? (
                 <div className="empty-state error">調整失敗：{String(adjustMutation.error)}</div>
               ) : null}
@@ -265,6 +284,13 @@ export function InventoryPage() {
                     <td>{item.reason || "-"}</td>
                   </tr>
                 ))}
+                {query.data.recentAdjustments.length === 0 ? (
+                  <tr>
+                    <td className="table-empty-cell" colSpan={6}>
+                      目前還沒有盤點異動紀錄，做完第一筆調整後會顯示在這裡。
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </section>

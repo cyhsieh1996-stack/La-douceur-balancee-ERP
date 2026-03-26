@@ -97,6 +97,9 @@ export function ProductionPage() {
     });
   }
 
+  const canSubmit = productId !== "" && qty !== "" && Number(qty) > 0;
+  const shortageCount = previewQuery.data?.shortages.length ?? 0;
+
   return (
     <section className="section">
       <div className="section-title">
@@ -105,11 +108,14 @@ export function ProductionPage() {
       </div>
 
       <div className="toolbar-card">
-        <div>
+        <div className="toolbar-copy">
           <strong>目前進度</strong>
           <p>已接好 `/api/production`，現在可生成批號、預覽 BOM 扣料並正式登錄生產。</p>
         </div>
-        <span className="pill">Production Ready</span>
+        <div className="toolbar-actions">
+          <span className="pill">Production Ready</span>
+          <span className="pill">最近紀錄 {productionQuery.data?.items.length ?? 0} 筆</span>
+        </div>
       </div>
 
       <div className="form-card">
@@ -167,9 +173,11 @@ export function ProductionPage() {
           </label>
 
           <div className="form-actions">
-            <button className="primary-button" type="submit" disabled={createMutation.isPending}>
+            <button className="primary-button" type="submit" disabled={!canSubmit || shortageCount > 0 || createMutation.isPending}>
               {createMutation.isPending ? "生產登錄中..." : "確認生產"}
             </button>
+            {!canSubmit ? <span className="form-hint">請先選產品並輸入大於 0 的生產數量。</span> : null}
+            {canSubmit && shortageCount > 0 ? <span className="form-hint danger">目前有缺料，請先補貨再登錄生產。</span> : null}
           </div>
         </form>
 
@@ -180,11 +188,12 @@ export function ProductionPage() {
       <section className="table-card split-card">
         <div className="split-card-header">
           <strong>配方扣料預覽</strong>
-          <span className="pill">{previewQuery.data?.items.length ?? 0} 項</span>
+          <span className="pill">{previewQuery.data?.items.length ?? 0} 項 / 缺料 {shortageCount}</span>
         </div>
+        {!canSubmit ? <div className="empty-state">先選產品並輸入生產數量，系統才會計算這批生產需要扣掉哪些原料。</div> : null}
         {previewQuery.isLoading ? <div className="empty-state">正在計算配方扣料...</div> : null}
         {previewQuery.isError ? <div className="empty-state error">預覽失敗：{String(previewQuery.error)}</div> : null}
-        {previewQuery.data ? (
+        {previewQuery.data && canSubmit ? (
           <table className="data-table">
             <thead>
               <tr>
@@ -215,7 +224,7 @@ export function ProductionPage() {
               ))}
               {previewQuery.data.items.length === 0 ? (
                 <tr>
-                  <td colSpan={5}>這個產品目前尚未設定配方，生產時只會增加產品庫存。</td>
+                  <td className="table-empty-cell" colSpan={5}>這個產品目前尚未設定配方，生產時只會增加產品庫存。</td>
                 </tr>
               ) : null}
             </tbody>
@@ -229,7 +238,7 @@ export function ProductionPage() {
         <section className="table-card split-card">
           <div className="split-card-header">
             <strong>最近生產紀錄</strong>
-            <span className="pill">{productionQuery.data.items.length} 筆</span>
+            <span className="pill">{productionQuery.data.source} / {productionQuery.data.items.length} 筆</span>
           </div>
           <table className="data-table">
             <thead>
@@ -251,6 +260,13 @@ export function ProductionPage() {
                   <td>{formatDate(item.expiryDate)}</td>
                 </tr>
               ))}
+              {productionQuery.data.items.length === 0 ? (
+                <tr>
+                  <td className="table-empty-cell" colSpan={5}>
+                    目前還沒有生產紀錄，第一筆生產成功後會出現在這裡。
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </section>

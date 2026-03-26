@@ -380,6 +380,16 @@ h1 {
   gap: 10px;
 }
 
+.form-hint {
+  color: #766b5f;
+  font-size: 0.92rem;
+}
+
+.form-hint.danger {
+  color: #8a3f31;
+  font-weight: 600;
+}
+
 .primary-button {
   border: 1px solid #274c43;
   background: #274c43;
@@ -487,6 +497,11 @@ h1 {
   font-size: 0.92rem;
 }
 
+.table-empty-cell {
+  color: #766b5f;
+  text-align: center;
+}
+
 .data-table tbody tr[data-state="warning"] {
   background: #fff2d8;
 }
@@ -536,6 +551,10 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .module-tabs {
+    flex-wrap: wrap;
+  }
+
   .split-grid {
     grid-template-columns: 1fr;
   }
@@ -552,6 +571,11 @@ h1 {
 
   .form-card-header {
     flex-direction: column;
+  }
+
+  .info-row {
+    width: 100%;
+    flex-wrap: wrap;
   }
 
   .info-row.compact {

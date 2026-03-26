@@ -80,6 +80,8 @@ export function InboundPage() {
     });
   }
 
+  const canSubmit = materialId !== "" && qty !== "" && Number(qty) > 0;
+
   return (
     <section className="section">
       <div className="section-title">
@@ -88,11 +90,14 @@ export function InboundPage() {
       </div>
 
       <div className="toolbar-card">
-        <div>
+        <div className="toolbar-copy">
           <strong>目前進度</strong>
           <p>已接好 `/api/inbound`，現在可新增入庫，並同步刷新原料、庫存中心與工作台摘要。</p>
         </div>
-        <span className="pill">Inbound Ready</span>
+        <div className="toolbar-actions">
+          <span className="pill">Inbound Ready</span>
+          <span className="pill">最近紀錄 {inboundQuery.data?.items.length ?? 0} 筆</span>
+        </div>
       </div>
 
       <div className="form-card">
@@ -162,9 +167,10 @@ export function InboundPage() {
           </label>
 
           <div className="form-actions">
-            <button className="primary-button" type="submit" disabled={createMutation.isPending}>
+            <button className="primary-button" type="submit" disabled={!canSubmit || createMutation.isPending}>
               {createMutation.isPending ? "入庫中..." : "確認入庫"}
             </button>
+            {!canSubmit ? <span className="form-hint">請先選原料並輸入大於 0 的入庫數量。</span> : null}
           </div>
         </form>
 
@@ -179,7 +185,7 @@ export function InboundPage() {
         <section className="table-card split-card">
           <div className="split-card-header">
             <strong>最近入庫紀錄</strong>
-            <span className="pill">{inboundQuery.data.items.length} 筆</span>
+            <span className="pill">{inboundQuery.data.source} / {inboundQuery.data.items.length} 筆</span>
           </div>
           <table className="data-table">
             <thead>
@@ -205,6 +211,13 @@ export function InboundPage() {
                   <td>{formatDate(item.expiryDate)}</td>
                 </tr>
               ))}
+              {inboundQuery.data.items.length === 0 ? (
+                <tr>
+                  <td className="table-empty-cell" colSpan={6}>
+                    目前還沒有入庫資料，第一筆入庫後會出現在這裡。
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </section>
