@@ -127,8 +127,8 @@ export function RecipesPage() {
               </div>
             </div>
             <div className="filter-toolbar-meta">
-              <strong>{selectedProduct ? selectedProduct.name : "尚未選擇產品"}</strong>
-              <p>產品 {productsQuery.data?.items.length ?? 0} 筆</p>
+              <strong>產品 {productsQuery.data?.items.length ?? 0} 筆</strong>
+              <p>{selectedProduct ? "已選擇產品" : "尚未選擇產品"}</p>
             </div>
           </div>
         </div>
