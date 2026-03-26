@@ -5,6 +5,7 @@ import { InventoryPage } from "./features/inventory/InventoryPage";
 import { MaterialsPage } from "./features/materials/MaterialsPage";
 import { ProductionPage } from "./features/production/ProductionPage";
 import { ProductsPage } from "./features/products/ProductsPage";
+import { ReportsPage } from "./features/reports/ReportsPage";
 import { SalesPage } from "./features/sales/SalesPage";
 
 const quickActions = [
@@ -14,7 +15,8 @@ const quickActions = [
   { id: "production", title: "生產與批號", desc: "建立批次並依配方自動扣料" },
   { id: "inventory", title: "庫存中心", desc: "看即時庫存、低庫存與盤點異動" },
   { id: "sales", title: "POS 匯入", desc: "匯入銷售報表並更新工作台" },
-];
+  { id: "reports", title: "報表與摘要", desc: "看本月銷售、入庫支出與熱銷產品" },
+ ] as const;
 
 const apiModules = [
   "/api/dashboard",
@@ -25,6 +27,7 @@ const apiModules = [
   "/api/production",
   "/api/inventory",
   "/api/sales",
+  "/api/reports",
 ];
 
 const webModules = [
@@ -35,7 +38,8 @@ const webModules = [
   { id: "production", title: "生產與批號" },
   { id: "inventory", title: "庫存中心" },
   { id: "sales", title: "POS / 銷售" },
-];
+  { id: "reports", title: "報表 / 摘要" },
+ ] as const;
 
 type ModuleId = (typeof webModules)[number]["id"];
 
@@ -114,6 +118,7 @@ export function App() {
       {activeModule === "production" ? <ProductionPage /> : null}
       {activeModule === "inventory" ? <InventoryPage /> : null}
       {activeModule === "sales" ? <SalesPage /> : null}
+      {activeModule === "reports" ? <ReportsPage /> : null}
     </main>
   );
 }

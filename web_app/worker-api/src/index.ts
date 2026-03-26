@@ -18,6 +18,7 @@ import {
 } from "./modules/production";
 import { createProduct, deleteProduct, listProducts, updateProduct } from "./modules/products";
 import { deleteRecipe, listRecipes, saveRecipe } from "./modules/recipes";
+import { getReportsData } from "./modules/reports";
 import { importSalesRecords, listSalesRecords } from "./modules/sales";
 
 type Bindings = {
@@ -90,6 +91,19 @@ app.get("/api/debug/bindings", (c) => {
 
 app.get("/api/dashboard", (c) => {
   return getDashboardData(c.env).then((result) => {
+    if (!result.ok) {
+      return c.json({ ok: false, error: result.error }, 500);
+    }
+
+    return c.json({
+      ...result,
+      source: "supabase",
+    });
+  });
+});
+
+app.get("/api/reports", (c) => {
+  return getReportsData(c.env).then((result) => {
     if (!result.ok) {
       return c.json({ ok: false, error: result.error }, 500);
     }

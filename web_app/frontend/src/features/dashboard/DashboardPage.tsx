@@ -3,7 +3,7 @@ import { apiFetch } from "../../lib/api";
 import type { DashboardResponse } from "./types";
 
 type DashboardPageProps = {
-  onNavigate: (moduleId: "materials" | "inbound" | "production" | "inventory" | "sales") => void;
+  onNavigate: (moduleId: "materials" | "inbound" | "production" | "inventory" | "sales" | "reports") => void;
 };
 
 function formatNumber(value: number) {
@@ -53,6 +53,9 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
               <div className="toolbar-actions">
                 <span className="pill">資料來源 {query.data.source}</span>
                 <span className="pill">低庫存 {query.data.lowStockMaterials.length} 項</span>
+                <button className="secondary-button" type="button" onClick={() => onNavigate("reports")}>
+                  前往報表
+                </button>
                 <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>
                   前往庫存中心
                 </button>
