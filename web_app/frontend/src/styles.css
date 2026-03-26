@@ -262,6 +262,8 @@ h1 {
 .form-actions {
   display: flex;
   align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .primary-button {
@@ -284,6 +286,52 @@ h1 {
 .primary-button:disabled {
   opacity: 0.7;
   cursor: wait;
+}
+
+.secondary-button,
+.danger-button,
+.table-link {
+  border-radius: 14px;
+  cursor: pointer;
+  font: inherit;
+  transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
+}
+
+.secondary-button,
+.danger-button {
+  padding: 12px 18px;
+}
+
+.secondary-button {
+  border: 1px solid #d7cab7;
+  background: rgba(255, 253, 252, 0.96);
+  color: #4d443b;
+}
+
+.danger-button {
+  border: 1px solid #a14537;
+  background: #a14537;
+  color: #fff;
+}
+
+.secondary-button:hover:not(:disabled),
+.danger-button:hover:not(:disabled),
+.table-link:hover {
+  transform: translateY(-1px);
+}
+
+.secondary-button:disabled,
+.danger-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.table-link {
+  border: 0;
+  background: transparent;
+  color: #2f6b5f;
+  padding: 0;
+  font-weight: 700;
 }
 
 .table-card {
@@ -314,6 +362,11 @@ h1 {
 
 .data-table tbody tr[data-state="danger"] {
   background: #fbe3dc;
+}
+
+.data-table tbody tr[data-selected="true"] {
+  outline: 2px solid rgba(47, 107, 95, 0.4);
+  outline-offset: -2px;
 }
 
 .empty-state {

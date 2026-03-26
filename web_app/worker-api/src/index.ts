@@ -1,6 +1,12 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { createMaterial, getMaterialById, listMaterials } from "./modules/materials";
+import {
+  createMaterial,
+  deleteMaterial,
+  getMaterialById,
+  listMaterials,
+  updateMaterial,
+} from "./modules/materials";
 import { createProduct, listProducts } from "./modules/products";
 
 type Bindings = {
@@ -36,7 +42,7 @@ app.use(
 
       return "";
     },
-    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
   }),
 );
@@ -128,6 +134,49 @@ app.post("/api/materials", async (c) => {
     },
     201,
   );
+});
+
+app.put("/api/materials/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  if (!Number.isFinite(id)) {
+    return c.json({ ok: false, error: "Invalid material id" }, 400);
+  }
+
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) {
+    return c.json({ ok: false, error: "Invalid JSON payload" }, 400);
+  }
+
+  const result = await updateMaterial(c.env, id, payload);
+  if (!result.ok) {
+    const status =
+      result.error === "名稱不可空白" ? 400 : result.error === "Material not found" ? 404 : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json({
+    ok: true,
+    item: result.item,
+    source: "supabase",
+  });
+});
+
+app.delete("/api/materials/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  if (!Number.isFinite(id)) {
+    return c.json({ ok: false, error: "Invalid material id" }, 400);
+  }
+
+  const result = await deleteMaterial(c.env, id);
+  if (!result.ok) {
+    const status = result.error === "Material not found" ? 404 : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json({
+    ok: true,
+    source: "supabase",
+  });
 });
 
 app.get("/api/products", (c) => {

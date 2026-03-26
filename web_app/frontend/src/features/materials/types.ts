@@ -31,3 +31,10 @@ export type CreateMaterialResponse = {
   item: RawMaterial;
   source: "supabase";
 };
+
+export type UpdateMaterialResponse = CreateMaterialResponse;
+
+export type DeleteMaterialResponse = {
+  ok: true;
+  source: "supabase";
+};

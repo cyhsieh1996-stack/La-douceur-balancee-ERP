@@ -133,3 +133,71 @@ export async function createMaterial(env: MaterialEnv, payload: MaterialPayload)
     item: mapMaterialRow(data),
   };
 }
+
+export async function updateMaterial(env: MaterialEnv, id: number, payload: MaterialPayload) {
+  const supabase = createSupabaseAdmin(env);
+  if (!supabase) {
+    return {
+      ok: false as const,
+      error: "Supabase admin client is not configured.",
+    };
+  }
+
+  const name = (payload.name ?? "").trim();
+  if (!name) {
+    return { ok: false as const, error: "名稱不可空白" };
+  }
+
+  const { data, error } = await supabase
+    .from("raw_materials")
+    .update({
+      name,
+      category: payload.category ?? null,
+      brand: payload.brand ?? null,
+      vendor: payload.vendor ?? null,
+      unit: payload.unit ?? null,
+      unit_price: payload.unitPrice ?? 0,
+      stock: payload.stock ?? 0,
+      safe_stock: payload.safeStock ?? 0,
+    })
+    .eq("id", id)
+    .select("id, name, category, brand, vendor, unit, unit_price, stock, safe_stock")
+    .maybeSingle();
+
+  if (error) {
+    return { ok: false as const, error: error.message };
+  }
+
+  if (!data) {
+    return { ok: false as const, error: "Material not found" };
+  }
+
+  return {
+    ok: true as const,
+    item: mapMaterialRow(data),
+  };
+}
+
+export async function deleteMaterial(env: MaterialEnv, id: number) {
+  const supabase = createSupabaseAdmin(env);
+  if (!supabase) {
+    return {
+      ok: false as const,
+      error: "Supabase admin client is not configured.",
+    };
+  }
+
+  const { data, error } = await supabase.from("raw_materials").delete().eq("id", id).select("id").maybeSingle();
+
+  if (error) {
+    return { ok: false as const, error: error.message };
+  }
+
+  if (!data) {
+    return { ok: false as const, error: "Material not found" };
+  }
+
+  return {
+    ok: true as const,
+  };
+}
