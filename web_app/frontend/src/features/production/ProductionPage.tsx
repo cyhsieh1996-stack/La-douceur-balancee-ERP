@@ -205,7 +205,7 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
                 <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="例如：今日晨間批次、節日備貨" />
               </label>
 
-              <div className="form-actions">
+              <div className="form-actions form-actions-beside-note form-actions-beside-note-wide">
                 <div className="form-actions-main">
                   <button className="primary-button" type="submit" disabled={!canSubmit || shortageCount > 0 || createMutation.isPending}>
                     {createMutation.isPending ? "生產登錄中..." : "確認生產"}

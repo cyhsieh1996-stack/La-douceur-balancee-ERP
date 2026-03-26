@@ -139,7 +139,7 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
           />
         </label>
 
-        <div className="form-actions">
+        <div className="form-actions form-actions-after-paste">
           <div className="form-actions-main">
             <button className="secondary-button" type="button" onClick={handlePreview} disabled={!canPreviewOrImport}>
               預覽匯入

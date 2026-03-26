@@ -198,7 +198,7 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
             <input value={note} onChange={(event) => setNote(event.target.value)} placeholder="例如：促銷進貨、緊急補貨" />
           </label>
 
-          <div className="form-actions form-actions-inline-start">
+          <div className="form-actions form-actions-beside-note form-actions-beside-note-wide">
             <div className="form-actions-main">
               <button className="primary-button" type="submit" disabled={!canSubmit || createMutation.isPending}>
                 {createMutation.isPending ? "入庫中..." : "確認入庫"}

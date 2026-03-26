@@ -966,6 +966,21 @@ h1 {
   grid-column: 1 / span 3;
 }
 
+.form-actions-beside-note {
+  align-self: end;
+  justify-content: flex-start;
+  gap: 16px;
+  padding-top: 34px;
+}
+
+.form-actions-beside-note-wide {
+  grid-column: span 2;
+}
+
+.form-actions-after-paste {
+  margin-top: 16px;
+}
+
 .form-actions-cluster {
   justify-content: flex-start;
   flex-wrap: wrap;
@@ -981,15 +996,16 @@ h1 {
 .form-actions-notes {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  flex: 1;
-  min-width: 0;
+  justify-content: flex-start;
+  flex: 0 1 420px;
+  min-width: 260px;
 }
 
 .form-hint {
   color: #766b5f;
   font-size: 0.92rem;
   text-align: left;
+  white-space: nowrap;
 }
 
 .form-hint.danger {
@@ -1340,10 +1356,22 @@ h1 {
     grid-column: auto;
   }
 
+  .form-actions-beside-note {
+    padding-top: 0;
+  }
+
+  .form-actions-beside-note-wide {
+    grid-column: auto;
+  }
+
   .form-actions-main,
   .form-actions-notes {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .form-hint {
+    white-space: normal;
   }
 
   .info-row {
