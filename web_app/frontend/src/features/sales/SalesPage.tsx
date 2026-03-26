@@ -103,8 +103,8 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
 
       <div className="toolbar-card">
         <div className="toolbar-copy">
-          <strong>目前進度</strong>
-          <p>已接好 `/api/sales` 與 `/api/sales/import`，匯入後會同步更新工作台的今日銷售與月銷售。</p>
+          <strong>匯入提醒</strong>
+          <p>先預覽再匯入，確認筆數和金額沒問題後再寫進系統。</p>
         </div>
         <div className="toolbar-actions">
           <span className="pill">Sales Ready</span>

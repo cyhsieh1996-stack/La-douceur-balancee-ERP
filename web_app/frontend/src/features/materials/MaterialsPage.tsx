@@ -179,13 +179,13 @@ export function MaterialsPage() {
     <section className="section">
       <div className="section-title">
         <h2>原料主檔</h2>
-        <p>第一個正式可操作模組。現在已可從 Web 端新增原料並即時刷新列表。</p>
+        <p>維護原料名稱、供應商、單價與安全庫存。</p>
       </div>
 
       <div className="toolbar-card">
         <div className="toolbar-copy">
-          <strong>目前進度</strong>
-          <p>已接好 `/api/materials` 讀寫路徑，現在可新增、修改與刪除原料主檔。</p>
+          <strong>篩選與狀態</strong>
+          <p>先找出要維護的原料，再決定新增、修改或刪除。</p>
         </div>
         <div className="toolbar-actions">
           <div className="filter-form">
@@ -211,8 +211,8 @@ export function MaterialsPage() {
             <strong>{editingId === null ? "新增原料" : "編輯原料"}</strong>
             <p>
               {editingId === null
-                ? "先把第一個寫入流程做穩，後續再補搜尋與批次匯入。"
-                : "點選表格列即可帶入編輯。可以儲存變更，或直接刪除這筆原料。"}
+                ? "把原料基本資料一次填好，後續入庫與庫存都會直接沿用。"
+                : "點選表格列即可帶入編輯，也可以直接刪除這筆原料。"}
             </p>
           </div>
           <div className="info-row compact">

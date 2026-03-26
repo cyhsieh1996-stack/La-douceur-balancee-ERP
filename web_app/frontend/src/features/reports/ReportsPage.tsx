@@ -37,7 +37,7 @@ export function ReportsPage() {
     <section className="section">
       <div className="section-title">
         <h2>報表與摘要</h2>
-        <p>先把營運上最常看的幾個指標集中起來，之後再往毛利、品類分析與時段報表延伸。</p>
+        <p>集中看銷售、支出、熱銷產品與低庫存，不把分析拆散到其他頁。</p>
       </div>
 
       {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在整理報表資料...</StatusBanner> : null}

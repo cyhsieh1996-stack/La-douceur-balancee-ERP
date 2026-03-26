@@ -224,13 +224,13 @@ export function ProductsPage() {
     <section className="section">
       <div className="section-title">
         <h2>產品主檔</h2>
-        <p>第二個正式可操作模組。現在可新增產品，後續再往配方與 BOM 管理延伸。</p>
+        <p>維護產品售價、成本、庫存與配方。</p>
       </div>
 
       <div className="toolbar-card">
         <div className="toolbar-copy">
-          <strong>目前進度</strong>
-          <p>已接好 `/api/products` 與 `/api/products/:id/recipes`，現在可管理產品與配方。</p>
+          <strong>篩選與狀態</strong>
+          <p>先找到要處理的產品，再往下編輯產品資料或配方。</p>
         </div>
         <div className="toolbar-actions">
           <div className="filter-form">
@@ -254,7 +254,7 @@ export function ProductsPage() {
         <div className="form-card-header">
           <div>
             <strong>{selectedProduct ? "編輯產品" : "新增產品"}</strong>
-            <p>選到產品後，下面會直接出現配方區，沿用桌面版的產品編輯 + 配方管理節奏。</p>
+            <p>選到產品後，下面會直接出現配方區，整個流程都留在同一頁處理。</p>
           </div>
           <div className="info-row compact">
             <span>產品數：{summary.total}</span>

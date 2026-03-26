@@ -90,7 +90,7 @@ export function InventoryPage() {
     <section className="section">
       <div className="section-title">
         <h2>庫存中心</h2>
-        <p>把桌面版的即時庫存、低庫存篩選、盤點調整與異動紀錄集中到同一頁。</p>
+        <p>集中看即時庫存、低庫存提醒、盤點調整與最近異動。</p>
       </div>
 
       {query.isLoading ? <div className="empty-state">正在整理庫存資料...</div> : null}

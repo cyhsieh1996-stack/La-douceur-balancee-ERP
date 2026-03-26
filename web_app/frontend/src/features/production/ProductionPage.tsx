@@ -119,8 +119,8 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
 
       <div className="toolbar-card">
         <div className="toolbar-copy">
-          <strong>目前進度</strong>
-          <p>已接好 `/api/production`，現在可生成批號、預覽 BOM 扣料並正式登錄生產。</p>
+          <strong>今日生產</strong>
+          <p>先確認缺料，再建立批次；登錄後產品庫存和原料庫存會一起更新。</p>
         </div>
         <div className="toolbar-actions">
           <span className="pill">Production Ready</span>

@@ -101,8 +101,8 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
 
       <div className="toolbar-card">
         <div className="toolbar-copy">
-          <strong>目前進度</strong>
-          <p>已接好 `/api/inbound`，現在可新增入庫，並同步刷新原料、庫存中心與工作台摘要。</p>
+          <strong>今日入庫</strong>
+          <p>先把今天要用的原料補齊，後面生產和庫存會一起更新。</p>
         </div>
         <div className="toolbar-actions">
           <span className="pill">Inbound Ready</span>
