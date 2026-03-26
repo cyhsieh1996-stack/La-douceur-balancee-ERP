@@ -47,7 +47,7 @@ export function App() {
     switch (activePrimary) {
       case "today":
         return {
-          title: "今日作業",
+          title: "工作台",
           desc: "先看今天一定要先處理的事，再決定補貨、生產或整理銷售。",
         };
       case "operations":
@@ -85,7 +85,7 @@ export function App() {
           type="button"
           onClick={() => setActiveModule("overview")}
         >
-          今日作業
+          工作台
         </button>
         <button
           className={activePrimary === "operations" ? "primary-nav-tab active" : "primary-nav-tab"}

@@ -18,6 +18,11 @@ function formatDate(value: string) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function todayLabel() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
 export function DashboardPage({ onNavigate }: DashboardPageProps) {
   const query = useQuery({
     queryKey: ["dashboard"],
@@ -54,12 +59,20 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         .slice(0, 6)
     : [];
 
+  const focusCopy = query.data
+    ? query.data.summary.zeroStockCount > 0
+      ? `先補 ${query.data.summary.zeroStockCount} 項缺貨原料，避免今天的生產卡住。`
+      : query.data.summary.lowStockCount > 0
+        ? `先確認 ${query.data.summary.lowStockCount} 項待補貨原料，再安排今天的生產。`
+        : "今天沒有立即缺貨，可直接往入庫、生產或銷售流程前進。"
+    : "";
+
   return (
     <>
       <section className="section">
         <div className="section-title">
-          <h2>今日作業</h2>
-          <p>這裡只放今天一開工就必須知道、而且需要先處理的事情。</p>
+          <h2>開工重點</h2>
+          <p>這裡只放一開工就必須知道，而且要優先處理的事情。</p>
         </div>
 
         {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在整理工作台資料...</StatusBanner> : null}
@@ -67,6 +80,14 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
         {query.data ? (
           <>
+            <div className="dashboard-focus">
+              <div>
+                <span className="dashboard-focus-label">開工提示</span>
+                <strong>{focusCopy}</strong>
+              </div>
+              <span className="pill">{todayLabel()}</span>
+            </div>
+
             <div className="dashboard-strip">
               {cards.map((card) => (
                 <div className="dashboard-metric" key={card.label}>
