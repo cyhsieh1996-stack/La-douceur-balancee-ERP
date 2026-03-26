@@ -90,3 +90,61 @@ export async function createProduct(env: ProductEnv, payload: ProductPayload) {
     item: mapProductRow(data),
   };
 }
+
+export async function updateProduct(env: ProductEnv, id: number, payload: ProductPayload) {
+  const supabase = createSupabaseAdmin(env);
+  if (!supabase) {
+    return { ok: false as const, error: "Supabase admin client is not configured." };
+  }
+
+  const name = (payload.name ?? "").trim();
+  if (!name) {
+    return { ok: false as const, error: "產品名稱不可空白" };
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .update({
+      name,
+      category: payload.category ?? null,
+      price: payload.price ?? 0,
+      cost: payload.cost ?? 0,
+      stock: payload.stock ?? 0,
+      shelf_life: payload.shelfLife ?? null,
+    })
+    .eq("id", id)
+    .select("id, name, category, price, cost, stock, shelf_life")
+    .maybeSingle();
+
+  if (error) {
+    return { ok: false as const, error: error.message };
+  }
+
+  if (!data) {
+    return { ok: false as const, error: "Product not found" };
+  }
+
+  return {
+    ok: true as const,
+    item: mapProductRow(data),
+  };
+}
+
+export async function deleteProduct(env: ProductEnv, id: number) {
+  const supabase = createSupabaseAdmin(env);
+  if (!supabase) {
+    return { ok: false as const, error: "Supabase admin client is not configured." };
+  }
+
+  const { data, error } = await supabase.from("products").delete().eq("id", id).select("id").maybeSingle();
+
+  if (error) {
+    return { ok: false as const, error: error.message };
+  }
+
+  if (!data) {
+    return { ok: false as const, error: "Product not found" };
+  }
+
+  return { ok: true as const };
+}

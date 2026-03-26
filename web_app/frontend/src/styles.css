@@ -308,6 +308,22 @@ h1 {
   transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
+.field select {
+  width: 100%;
+  border: 1px solid #d7cab7;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font: inherit;
+  color: #2a2620;
+  background: rgba(255, 253, 252, 0.96);
+  outline: none;
+}
+
+.field select:focus {
+  border-color: #2f6b5f;
+  box-shadow: 0 0 0 4px rgba(47, 107, 95, 0.12);
+}
+
 .field input:focus {
   border-color: #2f6b5f;
   box-shadow: 0 0 0 4px rgba(47, 107, 95, 0.12);
@@ -412,6 +428,15 @@ h1 {
 
 .mini-section h4 {
   margin: 18px 0 10px;
+}
+
+.recipe-card,
+.recipe-table-card {
+  margin-top: 16px;
+}
+
+.danger-link {
+  color: #a14537;
 }
 
 .data-table {

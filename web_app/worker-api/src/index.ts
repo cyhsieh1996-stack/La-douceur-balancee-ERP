@@ -9,7 +9,8 @@ import {
   listMaterials,
   updateMaterial,
 } from "./modules/materials";
-import { createProduct, listProducts } from "./modules/products";
+import { createProduct, deleteProduct, listProducts, updateProduct } from "./modules/products";
+import { deleteRecipe, listRecipes, saveRecipe } from "./modules/recipes";
 
 type Bindings = {
   APP_NAME: string;
@@ -218,6 +219,110 @@ app.post("/api/products", async (c) => {
     },
     201,
   );
+});
+
+app.put("/api/products/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  if (!Number.isFinite(id)) {
+    return c.json({ ok: false, error: "Invalid product id" }, 400);
+  }
+
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) {
+    return c.json({ ok: false, error: "Invalid JSON payload" }, 400);
+  }
+
+  const result = await updateProduct(c.env, id, payload);
+  if (!result.ok) {
+    const status =
+      result.error === "產品名稱不可空白" ? 400 : result.error === "Product not found" ? 404 : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json({
+    ok: true,
+    item: result.item,
+    source: "supabase",
+  });
+});
+
+app.delete("/api/products/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  if (!Number.isFinite(id)) {
+    return c.json({ ok: false, error: "Invalid product id" }, 400);
+  }
+
+  const result = await deleteProduct(c.env, id);
+  if (!result.ok) {
+    const status = result.error === "Product not found" ? 404 : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json({
+    ok: true,
+    source: "supabase",
+  });
+});
+
+app.get("/api/products/:id/recipes", async (c) => {
+  const productId = Number(c.req.param("id"));
+  if (!Number.isFinite(productId)) {
+    return c.json({ ok: false, error: "Invalid product id" }, 400);
+  }
+
+  const result = await listRecipes(c.env, productId);
+  if (!result.ok) {
+    return c.json({ ok: false, error: result.error }, 500);
+  }
+
+  return c.json({
+    ok: true,
+    items: result.items,
+    source: "supabase",
+  });
+});
+
+app.post("/api/products/:id/recipes", async (c) => {
+  const productId = Number(c.req.param("id"));
+  if (!Number.isFinite(productId)) {
+    return c.json({ ok: false, error: "Invalid product id" }, 400);
+  }
+
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) {
+    return c.json({ ok: false, error: "Invalid JSON payload" }, 400);
+  }
+
+  const result = await saveRecipe(c.env, productId, payload);
+  if (!result.ok) {
+    const status =
+      result.error === "原料編號無效" || result.error === "每單位用量必須大於 0" ? 400 : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json({
+    ok: true,
+    item: result.item,
+    source: "supabase",
+  });
+});
+
+app.delete("/api/recipes/:id", async (c) => {
+  const recipeId = Number(c.req.param("id"));
+  if (!Number.isFinite(recipeId)) {
+    return c.json({ ok: false, error: "Invalid recipe id" }, 400);
+  }
+
+  const result = await deleteRecipe(c.env, recipeId);
+  if (!result.ok) {
+    const status = result.error === "Recipe not found" ? 404 : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json({
+    ok: true,
+    source: "supabase",
+  });
 });
 
 app.get("/api/inventory", async (c) => {

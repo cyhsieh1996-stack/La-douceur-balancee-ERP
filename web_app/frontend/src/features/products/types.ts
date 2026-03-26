@@ -27,3 +27,44 @@ export type CreateProductResponse = {
   item: ProductRecord;
   source: "supabase";
 };
+
+export type UpdateProductResponse = CreateProductResponse;
+
+export type DeleteProductResponse = {
+  ok: true;
+  source: "supabase";
+};
+
+export type RecipeRecord = {
+  id: number;
+  productId: number;
+  materialId: number;
+  materialName: string;
+  unit: string | null;
+  currentStock: number;
+  qtyPerUnit: number;
+  note: string | null;
+};
+
+export type RecipesResponse = {
+  ok: true;
+  items: RecipeRecord[];
+  source: "supabase";
+};
+
+export type SaveRecipePayload = {
+  materialId: number;
+  qtyPerUnit: number;
+  note?: string | null;
+};
+
+export type SaveRecipeResponse = {
+  ok: true;
+  item: RecipeRecord;
+  source: "supabase";
+};
+
+export type DeleteRecipeResponse = {
+  ok: true;
+  source: "supabase";
+};

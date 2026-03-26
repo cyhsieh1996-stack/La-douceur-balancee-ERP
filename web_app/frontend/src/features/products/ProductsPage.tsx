@@ -1,11 +1,19 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../../lib/api";
+import type { MaterialsResponse } from "../materials/types";
 import type {
   CreateProductPayload,
   CreateProductResponse,
+  DeleteProductResponse,
+  DeleteRecipeResponse,
   ProductRecord,
   ProductsResponse,
+  RecipeRecord,
+  RecipesResponse,
+  SaveRecipePayload,
+  SaveRecipeResponse,
+  UpdateProductResponse,
 } from "./types";
 
 function formatNumber(value: number) {
@@ -14,6 +22,7 @@ function formatNumber(value: number) {
 
 export function ProductsPage() {
   const queryClient = useQueryClient();
+  const [selectedProduct, setSelectedProduct] = useState<ProductRecord | null>(null);
   const [form, setForm] = useState<CreateProductPayload>({
     name: "",
     category: "",
@@ -22,10 +31,24 @@ export function ProductsPage() {
     stock: 0,
     shelfLife: null,
   });
+  const [recipeMaterialId, setRecipeMaterialId] = useState("");
+  const [recipeQtyPerUnit, setRecipeQtyPerUnit] = useState("");
+  const [recipeNote, setRecipeNote] = useState("");
 
   const query = useQuery({
     queryKey: ["products"],
     queryFn: () => apiFetch<ProductsResponse>("/api/products"),
+  });
+
+  const materialsQuery = useQuery({
+    queryKey: ["materials-for-recipes"],
+    queryFn: () => apiFetch<MaterialsResponse>("/api/materials"),
+  });
+
+  const recipesQuery = useQuery({
+    queryKey: ["product-recipes", selectedProduct?.id],
+    queryFn: () => apiFetch<RecipesResponse>(`/api/products/${selectedProduct?.id}/recipes`),
+    enabled: selectedProduct !== null,
   });
 
   const createMutation = useMutation({
@@ -36,14 +59,53 @@ export function ProductsPage() {
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["products"] });
-      setForm({
-        name: "",
-        category: "",
-        price: 0,
-        cost: 0,
-        stock: 0,
-        shelfLife: null,
-      });
+      resetForm();
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (payload: CreateProductPayload) =>
+      apiFetch<UpdateProductResponse>(`/api/products/${selectedProduct?.id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      resetForm();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (productId: number) =>
+      apiFetch<DeleteProductResponse>(`/api/products/${productId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      resetForm();
+    },
+  });
+
+  const saveRecipeMutation = useMutation({
+    mutationFn: (payload: SaveRecipePayload) =>
+      apiFetch<SaveRecipeResponse>(`/api/products/${selectedProduct?.id}/recipes`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["product-recipes", selectedProduct?.id] });
+      setRecipeQtyPerUnit("");
+      setRecipeNote("");
+    },
+  });
+
+  const deleteRecipeMutation = useMutation({
+    mutationFn: (recipeId: number) =>
+      apiFetch<DeleteRecipeResponse>(`/api/recipes/${recipeId}`, {
+        method: "DELETE",
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["product-recipes", selectedProduct?.id] });
     },
   });
 
@@ -59,17 +121,86 @@ export function ProductsPage() {
     setForm((current) => ({ ...current, [key]: value }));
   }
 
+  function resetForm() {
+    setSelectedProduct(null);
+    setForm({
+      name: "",
+      category: "",
+      price: 0,
+      cost: 0,
+      stock: 0,
+      shelfLife: null,
+    });
+    setRecipeMaterialId("");
+    setRecipeQtyPerUnit("");
+    setRecipeNote("");
+    createMutation.reset();
+    updateMutation.reset();
+    deleteMutation.reset();
+    saveRecipeMutation.reset();
+    deleteRecipeMutation.reset();
+  }
+
+  function startEditing(item: ProductRecord) {
+    setSelectedProduct(item);
+    setForm({
+      name: item.name,
+      category: item.category ?? "",
+      price: item.price,
+      cost: item.cost,
+      stock: item.stock,
+      shelfLife: item.shelfLife,
+    });
+    createMutation.reset();
+    updateMutation.reset();
+    deleteMutation.reset();
+    saveRecipeMutation.reset();
+    deleteRecipeMutation.reset();
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     createMutation.reset();
-    createMutation.mutate({
+    updateMutation.reset();
+    const payload = {
       name: form.name.trim(),
       category: form.category?.trim() || null,
       price: Number(form.price ?? 0),
       cost: Number(form.cost ?? 0),
       stock: Number(form.stock ?? 0),
       shelfLife: form.shelfLife === null || form.shelfLife === undefined ? null : Number(form.shelfLife),
+    };
+
+    if (selectedProduct === null) {
+      createMutation.mutate(payload);
+      return;
+    }
+
+    updateMutation.mutate(payload);
+  }
+
+  function handleDeleteProduct() {
+    if (!selectedProduct) return;
+    if (!window.confirm("確定要刪除這個產品嗎？相關配方也會一併刪除。")) return;
+    deleteMutation.reset();
+    deleteMutation.mutate(selectedProduct.id);
+  }
+
+  function handleSaveRecipe(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedProduct) return;
+    saveRecipeMutation.reset();
+    saveRecipeMutation.mutate({
+      materialId: Number(recipeMaterialId),
+      qtyPerUnit: Number(recipeQtyPerUnit),
+      note: recipeNote.trim() || null,
     });
+  }
+
+  function handleDeleteRecipe(recipe: RecipeRecord) {
+    if (!window.confirm(`確定要刪除 ${recipe.materialName} 這條配方嗎？`)) return;
+    deleteRecipeMutation.reset();
+    deleteRecipeMutation.mutate(recipe.id);
   }
 
   return (
@@ -82,16 +213,16 @@ export function ProductsPage() {
       <div className="toolbar-card">
         <div>
           <strong>目前進度</strong>
-          <p>已接好 `/api/products` 讀寫路徑，新增表單會透過 Worker 寫入 Supabase。</p>
+          <p>已接好 `/api/products` 與 `/api/products/:id/recipes`，現在可管理產品與配方。</p>
         </div>
-        <span className="pill">Create Ready</span>
+        <span className="pill">{selectedProduct ? "Recipe Ready" : "Create Ready"}</span>
       </div>
 
       <div className="form-card">
         <div className="form-card-header">
           <div>
-            <strong>新增產品</strong>
-            <p>先把產品建檔做穩，下一步就能順手接配方、保存期限規則與生產流程。</p>
+            <strong>{selectedProduct ? "編輯產品" : "新增產品"}</strong>
+            <p>選到產品後，下面會直接出現配方區，沿用桌面版的產品編輯 + 配方管理節奏。</p>
           </div>
           <div className="info-row compact">
             <span>產品數：{summary.total}</span>
@@ -167,9 +298,29 @@ export function ProductsPage() {
           </label>
 
           <div className="form-actions">
-            <button className="primary-button" type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "新增中..." : "新增產品"}
+            <button
+              className="primary-button"
+              type="submit"
+              disabled={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+            >
+              {selectedProduct
+                ? updateMutation.isPending
+                  ? "儲存中..."
+                  : "儲存修改"
+                : createMutation.isPending
+                  ? "新增中..."
+                  : "新增產品"}
             </button>
+            {selectedProduct ? (
+              <>
+                <button className="secondary-button" type="button" onClick={resetForm}>
+                  取消
+                </button>
+                <button className="danger-button" type="button" onClick={handleDeleteProduct}>
+                  {deleteMutation.isPending ? "刪除中..." : "刪除產品"}
+                </button>
+              </>
+            ) : null}
           </div>
         </form>
 
@@ -177,6 +328,13 @@ export function ProductsPage() {
           <div className="empty-state error">新增失敗：{String(createMutation.error)}</div>
         ) : null}
         {createMutation.isSuccess ? <div className="empty-state success">新增成功，列表已更新。</div> : null}
+        {updateMutation.isError ? (
+          <div className="empty-state error">儲存失敗：{String(updateMutation.error)}</div>
+        ) : null}
+        {updateMutation.isSuccess ? <div className="empty-state success">已儲存變更，列表已更新。</div> : null}
+        {deleteMutation.isError ? (
+          <div className="empty-state error">刪除失敗：{String(deleteMutation.error)}</div>
+        ) : null}
       </div>
 
       {query.isLoading ? <div className="empty-state">正在載入產品資料...</div> : null}
@@ -198,23 +356,147 @@ export function ProductsPage() {
                   <th>成本</th>
                   <th>目前庫存</th>
                   <th>保存期限</th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody>
                 {query.data.items.map((item: ProductRecord) => (
-                  <tr key={item.id}>
+                  <tr
+                    key={item.id}
+                    data-selected={selectedProduct?.id === item.id ? "true" : "false"}
+                    onClick={() => startEditing(item)}
+                  >
                     <td>{item.name}</td>
                     <td>{item.category || "-"}</td>
                     <td>{formatNumber(item.price)}</td>
                     <td>{formatNumber(item.cost)}</td>
                     <td>{formatNumber(item.stock)}</td>
                     <td>{item.shelfLife === null ? "-" : `${item.shelfLife} 天`}</td>
+                    <td>
+                      <button
+                        className="table-link"
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          startEditing(item);
+                        }}
+                      >
+                        編輯 / 配方
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </>
+      ) : null}
+
+      {selectedProduct ? (
+        <section className="form-card recipe-card">
+          <div className="form-card-header">
+            <div>
+              <strong>產品配方 / BOM</strong>
+              <p>目前產品：{selectedProduct.name}。每生產 1 單位產品，需要消耗哪些原料與多少用量。</p>
+            </div>
+            <span className="pill">{recipesQuery.data?.items.length ?? 0} 項</span>
+          </div>
+
+          <form className="form-grid compact-form" onSubmit={handleSaveRecipe}>
+            <label className="field">
+              <span>原料</span>
+              <select
+                value={recipeMaterialId}
+                onChange={(event) => setRecipeMaterialId(event.target.value)}
+                disabled={materialsQuery.isLoading}
+              >
+                <option value="">選擇原料</option>
+                {materialsQuery.data?.items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>每單位用量</span>
+              <input
+                type="number"
+                min="0"
+                step="0.001"
+                value={recipeQtyPerUnit}
+                onChange={(event) => setRecipeQtyPerUnit(event.target.value)}
+                placeholder="例如：0.25"
+              />
+            </label>
+
+            <label className="field field-span-2">
+              <span>備註</span>
+              <input
+                value={recipeNote}
+                onChange={(event) => setRecipeNote(event.target.value)}
+                placeholder="例如：可替換品牌、特殊備註"
+              />
+            </label>
+
+            <div className="form-actions">
+              <button className="primary-button" type="submit" disabled={saveRecipeMutation.isPending}>
+                {saveRecipeMutation.isPending ? "儲存中..." : "儲存配方"}
+              </button>
+            </div>
+          </form>
+
+          {recipesQuery.isLoading ? <div className="empty-state">正在載入配方資料...</div> : null}
+          {recipesQuery.isError ? <div className="empty-state error">載入失敗：{String(recipesQuery.error)}</div> : null}
+          {saveRecipeMutation.isError ? (
+            <div className="empty-state error">配方儲存失敗：{String(saveRecipeMutation.error)}</div>
+          ) : null}
+          {saveRecipeMutation.isSuccess ? <div className="empty-state success">配方已儲存。</div> : null}
+          {deleteRecipeMutation.isError ? (
+            <div className="empty-state error">配方刪除失敗：{String(deleteRecipeMutation.error)}</div>
+          ) : null}
+
+          {recipesQuery.data ? (
+            <div className="table-card recipe-table-card">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>原料</th>
+                    <th>每單位用量</th>
+                    <th>目前庫存</th>
+                    <th>備註</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recipesQuery.data.items.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.materialName}</td>
+                      <td>
+                        {item.qtyPerUnit} {item.unit ?? ""}
+                      </td>
+                      <td>
+                        {item.currentStock} {item.unit ?? ""}
+                      </td>
+                      <td>{item.note || "-"}</td>
+                      <td>
+                        <button className="table-link danger-link" type="button" onClick={() => handleDeleteRecipe(item)}>
+                          刪除
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {recipesQuery.data.items.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>目前還沒有配方，先新增第一筆原料用量。</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </section>
       ) : null}
     </section>
   );
