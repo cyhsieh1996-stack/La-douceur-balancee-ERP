@@ -23,6 +23,8 @@ function getStockState(item: RawMaterial) {
 export function MaterialsPage() {
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [keyword, setKeyword] = useState("");
+  const [lowStockOnly, setLowStockOnly] = useState(false);
   const [form, setForm] = useState<CreateMaterialPayload>({
     name: "",
     category: "",
@@ -81,6 +83,21 @@ export function MaterialsPage() {
       lowStockCount: items.filter((item) => item.safeStock > 0 && item.stock < item.safeStock).length,
     };
   }, [query.data]);
+
+  const filteredItems = useMemo(() => {
+    const items = query.data?.items ?? [];
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    return items.filter((item) => {
+      const matchesKeyword =
+        normalizedKeyword === "" ||
+        [item.name, item.category, item.brand, item.vendor]
+          .map((value) => (value ?? "").toLowerCase())
+          .some((value) => value.includes(normalizedKeyword));
+
+      const matchesLowStock = !lowStockOnly || (item.safeStock > 0 && item.stock < item.safeStock);
+      return matchesKeyword && matchesLowStock;
+    });
+  }, [keyword, lowStockOnly, query.data]);
 
   function updateField<K extends keyof CreateMaterialPayload>(key: K, value: CreateMaterialPayload[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -165,11 +182,20 @@ export function MaterialsPage() {
       </div>
 
       <div className="toolbar-card">
-        <div>
+        <div className="toolbar-copy">
           <strong>目前進度</strong>
           <p>已接好 `/api/materials` 讀寫路徑，現在可新增、修改與刪除原料主檔。</p>
         </div>
-        <span className="pill">{editingId === null ? "Create Ready" : "Edit Mode"}</span>
+        <div className="toolbar-actions">
+          <div className="filter-form">
+            <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋名稱、類別、廠牌、廠商" />
+            <label className="checkbox-field">
+              <input type="checkbox" checked={lowStockOnly} onChange={(event) => setLowStockOnly(event.target.checked)} />
+              <span>只看低庫存</span>
+            </label>
+          </div>
+          <span className="pill">{editingId === null ? "Create Ready" : "Edit Mode"}</span>
+        </div>
       </div>
 
       <div className="form-card">
@@ -316,7 +342,8 @@ export function MaterialsPage() {
         <>
           <div className="info-row">
             <span>資料來源：{query.data.source}</span>
-            <span>筆數：{query.data.items.length}</span>
+            <span>顯示筆數：{filteredItems.length}</span>
+            <span>總筆數：{query.data.items.length}</span>
           </div>
           <div className="table-card">
             <table className="data-table">
@@ -334,7 +361,7 @@ export function MaterialsPage() {
                 </tr>
               </thead>
               <tbody>
-                {query.data.items.map((item) => (
+                {filteredItems.map((item) => (
                   <tr
                     key={item.id}
                     data-state={getStockState(item)}
@@ -363,6 +390,11 @@ export function MaterialsPage() {
                     </td>
                   </tr>
                 ))}
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={9}>沒有符合條件的原料資料。</td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>

@@ -203,6 +203,18 @@ h1 {
   padding: 18px 20px;
 }
 
+.toolbar-copy {
+  flex: 1;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .form-card {
   padding: 20px;
 }
@@ -531,6 +543,11 @@ h1 {
   .toolbar-card {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .form-card-header {

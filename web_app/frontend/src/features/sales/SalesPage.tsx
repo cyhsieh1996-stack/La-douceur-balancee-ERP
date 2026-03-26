@@ -17,6 +17,11 @@ function formatDate(value: string) {
 export function SalesPage() {
   const queryClient = useQueryClient();
   const [rawText, setRawText] = useState("");
+  const [previewSummary, setPreviewSummary] = useState<{
+    totalRows: number;
+    totalAmount: number;
+    firstProduct: string | null;
+  } | null>(null);
 
   const query = useQuery({
     queryKey: ["sales-records"],
@@ -66,6 +71,16 @@ export function SalesPage() {
     importMutation.mutate({ rows });
   }
 
+  function handlePreview() {
+    importMutation.reset();
+    const rows = parseRows();
+    setPreviewSummary({
+      totalRows: rows.length,
+      totalAmount: rows.reduce((total, row) => total + row.amount, 0),
+      firstProduct: rows[0]?.productName ?? null,
+    });
+  }
+
   return (
     <section className="section">
       <div className="section-title">
@@ -101,11 +116,20 @@ export function SalesPage() {
         </label>
 
         <div className="form-actions">
+          <button className="secondary-button" type="button" onClick={handlePreview}>
+            預覽匯入
+          </button>
           <button className="primary-button" type="button" onClick={handleImport} disabled={importMutation.isPending}>
             {importMutation.isPending ? "匯入中..." : "匯入銷售資料"}
           </button>
         </div>
 
+        {previewSummary ? (
+          <div className="empty-state">
+            預覽：共 {previewSummary.totalRows} 筆，總金額 ${formatNumber(previewSummary.totalAmount)}
+            {previewSummary.firstProduct ? `，第一筆產品：${previewSummary.firstProduct}` : ""}
+          </div>
+        ) : null}
         {importMutation.isError ? <div className="empty-state error">匯入失敗：{String(importMutation.error)}</div> : null}
         {importMutation.isSuccess ? (
           <div className="empty-state success">已成功匯入 {importMutation.data.importedCount} 筆銷售資料。</div>

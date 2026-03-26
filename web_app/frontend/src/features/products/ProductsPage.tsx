@@ -23,6 +23,8 @@ function formatNumber(value: number) {
 export function ProductsPage() {
   const queryClient = useQueryClient();
   const [selectedProduct, setSelectedProduct] = useState<ProductRecord | null>(null);
+  const [keyword, setKeyword] = useState("");
+  const [withShelfLifeOnly, setWithShelfLifeOnly] = useState(false);
   const [form, setForm] = useState<CreateProductPayload>({
     name: "",
     category: "",
@@ -116,6 +118,20 @@ export function ProductsPage() {
       withShelfLifeCount: items.filter((item) => item.shelfLife !== null).length,
     };
   }, [query.data]);
+
+  const filteredItems = useMemo(() => {
+    const items = query.data?.items ?? [];
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    return items.filter((item) => {
+      const matchesKeyword =
+        normalizedKeyword === "" ||
+        [item.name, item.category]
+          .map((value) => (value ?? "").toLowerCase())
+          .some((value) => value.includes(normalizedKeyword));
+      const matchesShelfLife = !withShelfLifeOnly || item.shelfLife !== null;
+      return matchesKeyword && matchesShelfLife;
+    });
+  }, [keyword, withShelfLifeOnly, query.data]);
 
   function updateField<K extends keyof CreateProductPayload>(key: K, value: CreateProductPayload[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -211,11 +227,20 @@ export function ProductsPage() {
       </div>
 
       <div className="toolbar-card">
-        <div>
+        <div className="toolbar-copy">
           <strong>目前進度</strong>
           <p>已接好 `/api/products` 與 `/api/products/:id/recipes`，現在可管理產品與配方。</p>
         </div>
-        <span className="pill">{selectedProduct ? "Recipe Ready" : "Create Ready"}</span>
+        <div className="toolbar-actions">
+          <div className="filter-form">
+            <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋產品名稱、類別" />
+            <label className="checkbox-field">
+              <input type="checkbox" checked={withShelfLifeOnly} onChange={(event) => setWithShelfLifeOnly(event.target.checked)} />
+              <span>只看有保存期限</span>
+            </label>
+          </div>
+          <span className="pill">{selectedProduct ? "Recipe Ready" : "Create Ready"}</span>
+        </div>
       </div>
 
       <div className="form-card">
@@ -344,7 +369,8 @@ export function ProductsPage() {
         <>
           <div className="info-row">
             <span>資料來源：{query.data.source}</span>
-            <span>筆數：{query.data.items.length}</span>
+            <span>顯示筆數：{filteredItems.length}</span>
+            <span>總筆數：{query.data.items.length}</span>
           </div>
           <div className="table-card">
             <table className="data-table">
@@ -360,7 +386,7 @@ export function ProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {query.data.items.map((item: ProductRecord) => (
+                {filteredItems.map((item: ProductRecord) => (
                   <tr
                     key={item.id}
                     data-selected={selectedProduct?.id === item.id ? "true" : "false"}
@@ -386,6 +412,11 @@ export function ProductsPage() {
                     </td>
                   </tr>
                 ))}
+                {filteredItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={7}>沒有符合條件的產品資料。</td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
