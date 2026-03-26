@@ -25,7 +25,11 @@ function todayString() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
-export function InboundPage() {
+type InboundPageProps = {
+  onNavigate: (moduleId: "production" | "inventory" | "overview") => void;
+};
+
+export function InboundPage({ onNavigate }: InboundPageProps) {
   const queryClient = useQueryClient();
   const [materialId, setMaterialId] = useState("");
   const [qty, setQty] = useState("");
@@ -176,7 +180,22 @@ export function InboundPage() {
         </form>
 
         {createMutation.isError ? <StatusBanner tone="error" title="入庫失敗">{String(createMutation.error)}</StatusBanner> : null}
-        {createMutation.isSuccess ? <StatusBanner tone="success" title="入庫完成">原料、庫存中心與工作台摘要都已更新。</StatusBanner> : null}
+        {createMutation.isSuccess ? (
+          <>
+            <StatusBanner tone="success" title="入庫完成">原料、庫存中心與工作台摘要都已更新。</StatusBanner>
+            <div className="flow-actions">
+              <button className="secondary-button" type="button" onClick={() => onNavigate("production")}>
+                下一步：前往生產
+              </button>
+              <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>
+                查看庫存中心
+              </button>
+              <button className="table-link" type="button" onClick={() => onNavigate("overview")}>
+                回今日作業
+              </button>
+            </div>
+          </>
+        ) : null}
       </div>
 
       {inboundQuery.isLoading ? <div className="empty-state">正在載入最近入庫紀錄...</div> : null}

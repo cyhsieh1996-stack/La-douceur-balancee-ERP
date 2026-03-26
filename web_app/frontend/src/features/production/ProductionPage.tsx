@@ -27,7 +27,11 @@ function todayString() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
-export function ProductionPage() {
+type ProductionPageProps = {
+  onNavigate: (moduleId: "sales" | "inventory" | "overview") => void;
+};
+
+export function ProductionPage({ onNavigate }: ProductionPageProps) {
   const queryClient = useQueryClient();
   const [productId, setProductId] = useState("");
   const [qty, setQty] = useState("");
@@ -183,7 +187,22 @@ export function ProductionPage() {
         </form>
 
         {createMutation.isError ? <StatusBanner tone="error" title="生產失敗">{String(createMutation.error)}</StatusBanner> : null}
-        {createMutation.isSuccess ? <StatusBanner tone="success" title="生產完成">產品庫存與原料扣減都已更新。</StatusBanner> : null}
+        {createMutation.isSuccess ? (
+          <>
+            <StatusBanner tone="success" title="生產完成">產品庫存與原料扣減都已更新。</StatusBanner>
+            <div className="flow-actions">
+              <button className="secondary-button" type="button" onClick={() => onNavigate("sales")}>
+                下一步：前往銷售
+              </button>
+              <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>
+                查看庫存中心
+              </button>
+              <button className="table-link" type="button" onClick={() => onNavigate("overview")}>
+                回今日作業
+              </button>
+            </div>
+          </>
+        ) : null}
       </div>
 
       <section className="table-card split-card">

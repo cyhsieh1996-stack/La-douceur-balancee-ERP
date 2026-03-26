@@ -9,39 +9,43 @@ import { ReportsPage } from "./features/reports/ReportsPage";
 import { SalesPage } from "./features/sales/SalesPage";
 
 const quickActions = [
-  { id: "materials", title: "原料主檔", desc: "維護原料、供應商與安全庫存" },
-  { id: "products", title: "產品與配方", desc: "維護售價、保存期與 BOM 配方" },
   { id: "inbound", title: "進貨與入庫", desc: "建立進貨紀錄並同步更新庫存" },
   { id: "production", title: "生產與批號", desc: "建立批次並依配方自動扣料" },
-  { id: "inventory", title: "庫存中心", desc: "看即時庫存、低庫存與盤點異動" },
   { id: "sales", title: "POS 匯入", desc: "匯入銷售報表並更新工作台" },
+  { id: "inventory", title: "庫存中心", desc: "看即時庫存、低庫存與盤點異動" },
   { id: "reports", title: "報表與摘要", desc: "看本月銷售、入庫支出與熱銷產品" },
+  { id: "materials", title: "原料主檔", desc: "維護原料、供應商與安全庫存" },
+  { id: "products", title: "產品與配方", desc: "維護售價、保存期與 BOM 配方" },
 ] as const;
-
-const apiModules = [
-  "/api/dashboard",
-  "/api/materials",
-  "/api/products",
-  "/api/recipes",
-  "/api/inbound",
-  "/api/production",
-  "/api/inventory",
-  "/api/sales",
-  "/api/reports",
-];
 
 const webModules = [
   { id: "overview", title: "今日作業" },
-  { id: "materials", title: "原料主檔" },
-  { id: "products", title: "產品主檔" },
   { id: "inbound", title: "進貨與入庫" },
   { id: "production", title: "生產與批號" },
-  { id: "inventory", title: "庫存中心" },
   { id: "sales", title: "POS / 銷售" },
+  { id: "inventory", title: "庫存中心" },
   { id: "reports", title: "報表 / 摘要" },
+  { id: "materials", title: "原料主檔" },
+  { id: "products", title: "產品主檔" },
 ] as const;
 
 type ModuleId = (typeof webModules)[number]["id"];
+
+const moduleGroups: Array<{
+  label: string;
+  modules: Array<(typeof webModules)[number]>;
+}> = [
+  {
+    label: "日常作業",
+    modules: webModules.filter((module) =>
+      ["overview", "inbound", "production", "sales", "inventory", "reports"].includes(module.id),
+    ),
+  },
+  {
+    label: "主檔設定",
+    modules: webModules.filter((module) => ["materials", "products"].includes(module.id)),
+  },
+];
 
 export function App() {
   const [activeModule, setActiveModule] = useState<ModuleId>("overview");
@@ -68,18 +72,25 @@ export function App() {
         </div>
       </section>
 
-      <nav className="module-tabs" aria-label="web modules">
-        {webModules.map((module) => (
-          <button
-            key={module.id}
-            className={module.id === activeModule ? "module-tab active" : "module-tab"}
-            onClick={() => setActiveModule(module.id)}
-            type="button"
-          >
-            {module.title}
-          </button>
+      <section className="workflow-nav" aria-label="web modules">
+        {moduleGroups.map((group) => (
+          <div className="workflow-group" key={group.label}>
+            <span className="workflow-label">{group.label}</span>
+            <div className="module-tabs">
+              {group.modules.map((module) => (
+                <button
+                  key={module.id}
+                  className={module.id === activeModule ? "module-tab active" : "module-tab"}
+                  onClick={() => setActiveModule(module.id)}
+                  type="button"
+                >
+                  {module.title}
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
-      </nav>
+      </section>
 
       {activeModule === "overview" ? (
         <>
@@ -87,8 +98,8 @@ export function App() {
 
           <section className="section">
             <div className="section-title">
-              <h2>快捷作業</h2>
-              <p>從工作台直接跳到常用模組，不用先在腦中重新找路徑。</p>
+              <h2>今日建議流程</h2>
+              <p>先處理入庫與生產，再回看銷售、庫存與報表，主檔設定放在後面維護。</p>
             </div>
             <div className="grid shortcut-grid">
               {quickActions.map((item) => (
@@ -102,27 +113,15 @@ export function App() {
               ))}
             </div>
           </section>
-
-          <section className="section">
-            <div className="section-title">
-              <h2>API 模組規劃</h2>
-              <p>Cloudflare Worker 會承接交易規則，不讓前端直接改庫存。</p>
-            </div>
-            <div className="api-list">
-              {apiModules.map((module) => (
-                <code key={module}>{module}</code>
-              ))}
-            </div>
-          </section>
         </>
       ) : null}
 
       {activeModule === "materials" ? <MaterialsPage /> : null}
       {activeModule === "products" ? <ProductsPage /> : null}
-      {activeModule === "inbound" ? <InboundPage /> : null}
-      {activeModule === "production" ? <ProductionPage /> : null}
+      {activeModule === "inbound" ? <InboundPage onNavigate={setActiveModule} /> : null}
+      {activeModule === "production" ? <ProductionPage onNavigate={setActiveModule} /> : null}
       {activeModule === "inventory" ? <InventoryPage /> : null}
-      {activeModule === "sales" ? <SalesPage /> : null}
+      {activeModule === "sales" ? <SalesPage onNavigate={setActiveModule} /> : null}
       {activeModule === "reports" ? <ReportsPage /> : null}
     </main>
   );

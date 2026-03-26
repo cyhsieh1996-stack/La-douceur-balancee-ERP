@@ -15,7 +15,11 @@ function formatDate(value: string) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-export function SalesPage() {
+type SalesPageProps = {
+  onNavigate: (moduleId: "reports" | "overview" | "inventory") => void;
+};
+
+export function SalesPage({ onNavigate }: SalesPageProps) {
   const queryClient = useQueryClient();
   const [rawText, setRawText] = useState("");
   const [previewSummary, setPreviewSummary] = useState<{
@@ -140,7 +144,20 @@ export function SalesPage() {
         ) : null}
         {importMutation.isError ? <StatusBanner tone="error" title="匯入失敗">{String(importMutation.error)}</StatusBanner> : null}
         {importMutation.isSuccess ? (
-          <StatusBanner tone="success" title="匯入完成">已成功匯入 {importMutation.data.importedCount} 筆銷售資料。</StatusBanner>
+          <>
+            <StatusBanner tone="success" title="匯入完成">已成功匯入 {importMutation.data.importedCount} 筆銷售資料。</StatusBanner>
+            <div className="flow-actions">
+              <button className="secondary-button" type="button" onClick={() => onNavigate("reports")}>
+                下一步：查看報表
+              </button>
+              <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>
+                查看庫存中心
+              </button>
+              <button className="table-link" type="button" onClick={() => onNavigate("overview")}>
+                回今日作業
+              </button>
+            </div>
+          </>
         ) : null}
       </div>
 
