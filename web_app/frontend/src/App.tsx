@@ -3,6 +3,7 @@ import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { InboundPage } from "./features/inbound/InboundPage";
 import { InventoryPage } from "./features/inventory/InventoryPage";
 import { MaterialsPage } from "./features/materials/MaterialsPage";
+import { ProductionPage } from "./features/production/ProductionPage";
 import { ProductsPage } from "./features/products/ProductsPage";
 
 const quickActions = [
@@ -30,6 +31,7 @@ const webModules = [
   { id: "materials", title: "原料主檔" },
   { id: "products", title: "產品主檔" },
   { id: "inbound", title: "進貨與入庫" },
+  { id: "production", title: "生產與批號" },
   { id: "inventory", title: "庫存中心" },
 ];
 
@@ -102,6 +104,7 @@ export function App() {
       {activeModule === "materials" ? <MaterialsPage /> : null}
       {activeModule === "products" ? <ProductsPage /> : null}
       {activeModule === "inbound" ? <InboundPage /> : null}
+      {activeModule === "production" ? <ProductionPage /> : null}
       {activeModule === "inventory" ? <InventoryPage /> : null}
     </main>
   );

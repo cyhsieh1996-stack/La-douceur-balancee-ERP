@@ -10,6 +10,12 @@ import {
   listMaterials,
   updateMaterial,
 } from "./modules/materials";
+import {
+  createProductionLog,
+  generateBatchNumber,
+  getProductionPreview,
+  listProductionLogs,
+} from "./modules/production";
 import { createProduct, deleteProduct, listProducts, updateProduct } from "./modules/products";
 import { deleteRecipe, listRecipes, saveRecipe } from "./modules/recipes";
 
@@ -403,6 +409,87 @@ app.post("/api/inbound", async (c) => {
       ok: true,
       item: result.item,
       material: result.material,
+      source: "supabase",
+    },
+    201,
+  );
+});
+
+app.get("/api/production", async (c) => {
+  const result = await listProductionLogs(c.env, 20);
+  if (!result.ok) {
+    return c.json({ ok: false, error: result.error }, 500);
+  }
+
+  return c.json({
+    ok: true,
+    items: result.items,
+    source: "supabase",
+  });
+});
+
+app.get("/api/production/batch-number", async (c) => {
+  const productId = Number(c.req.query("productId"));
+  if (!Number.isFinite(productId)) {
+    return c.json({ ok: false, error: "Invalid product id" }, 400);
+  }
+
+  const result = await generateBatchNumber(c.env, productId);
+  if (!result.ok) {
+    return c.json({ ok: false, error: result.error }, 500);
+  }
+
+  return c.json({
+    ok: true,
+    batchNumber: result.batchNumber,
+    source: "supabase",
+  });
+});
+
+app.get("/api/production/preview", async (c) => {
+  const productId = Number(c.req.query("productId"));
+  const qty = Number(c.req.query("qty"));
+  if (!Number.isFinite(productId) || !Number.isFinite(qty) || qty <= 0) {
+    return c.json({ ok: false, error: "Invalid product id or qty" }, 400);
+  }
+
+  const result = await getProductionPreview(c.env, productId, qty);
+  if (!result.ok) {
+    return c.json({ ok: false, error: result.error }, 500);
+  }
+
+  return c.json({
+    ok: true,
+    items: result.items,
+    shortages: result.shortages,
+    source: "supabase",
+  });
+});
+
+app.post("/api/production", async (c) => {
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) {
+    return c.json({ ok: false, error: "Invalid JSON payload" }, 400);
+  }
+
+  const result = await createProductionLog(c.env, payload);
+  if (!result.ok) {
+    const status =
+      result.error === "產品編號無效" || result.error === "生產數量必須大於 0"
+        ? 400
+        : result.error === "找不到產品"
+          ? 404
+          : result.error.startsWith("原料不足")
+            ? 409
+            : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json(
+    {
+      ok: true,
+      item: result.item,
+      recipePreview: result.recipePreview,
       source: "supabase",
     },
     201,
