@@ -233,8 +233,24 @@ h1 {
 }
 
 .secondary-nav {
-  margin-top: 10px;
+  margin-top: 6px;
   padding: 0;
+}
+
+.subnav-group {
+  display: grid;
+  justify-content: start;
+  gap: 4px;
+  margin-top: 10px;
+  padding-left: 4px;
+}
+
+.subnav-label {
+  color: #8a7f72;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .primary-nav-tab,
@@ -254,10 +270,11 @@ h1 {
 }
 
 .secondary-nav-tab {
-  padding: 9px 14px;
-  border: 1px solid #d7cab7;
-  background: rgba(255, 252, 248, 0.72);
-  color: #5d544a;
+  padding: 8px 14px;
+  border: 1px solid rgba(215, 202, 183, 0.82);
+  background: rgba(255, 252, 248, 0.52);
+  color: #6a6055;
+  font-size: 0.96rem;
 }
 
 .primary-nav-tab:hover,

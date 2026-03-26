@@ -111,33 +111,39 @@ export function App() {
       </nav>
 
       {activePrimary === "operations" ? (
-        <nav className="secondary-nav" aria-label="operations tabs">
-          {operationsTabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={activeModule === tab.id ? "secondary-nav-tab active" : "secondary-nav-tab"}
-              type="button"
-              onClick={() => setActiveModule(tab.id)}
-            >
-              {tab.title}
-            </button>
-          ))}
-        </nav>
+        <div className="subnav-group">
+          <span className="subnav-label">作業流程內</span>
+          <nav className="secondary-nav" aria-label="operations tabs">
+            {operationsTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={activeModule === tab.id ? "secondary-nav-tab active" : "secondary-nav-tab"}
+                type="button"
+                onClick={() => setActiveModule(tab.id)}
+              >
+                {tab.title}
+              </button>
+            ))}
+          </nav>
+        </div>
       ) : null}
 
       {activePrimary === "masters" ? (
-        <nav className="secondary-nav" aria-label="master tabs">
-          {masterTabs.map((tab) => (
-            <button
-              key={tab.id}
-              className={activeModule === tab.id ? "secondary-nav-tab active" : "secondary-nav-tab"}
-              type="button"
-              onClick={() => setActiveModule(tab.id)}
-            >
-              {tab.title}
-            </button>
-          ))}
-        </nav>
+        <div className="subnav-group">
+          <span className="subnav-label">主檔設定內</span>
+          <nav className="secondary-nav" aria-label="master tabs">
+            {masterTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={activeModule === tab.id ? "secondary-nav-tab active" : "secondary-nav-tab"}
+                type="button"
+                onClick={() => setActiveModule(tab.id)}
+              >
+                {tab.title}
+              </button>
+            ))}
+          </nav>
+        </div>
       ) : null}
 
       {activeModule === "overview" ? <DashboardPage onNavigate={setActiveModule} /> : null}
