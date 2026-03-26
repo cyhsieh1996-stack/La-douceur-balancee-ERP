@@ -317,6 +317,38 @@ h1 {
   grid-template-columns: 1.2fr 1fr;
 }
 
+.dashboard-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.dashboard-metric {
+  padding: 14px 16px;
+  border: 1px solid rgba(196, 174, 146, 0.72);
+  border-radius: 18px;
+  background: rgba(255, 252, 248, 0.75);
+}
+
+.dashboard-metric span {
+  display: block;
+  color: #766b5f;
+  font-size: 0.9rem;
+}
+
+.dashboard-metric strong {
+  display: block;
+  margin-top: 6px;
+  color: #274c43;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.dashboard-grid {
+  grid-template-columns: 0.95fr 1.05fr;
+}
+
 .panel {
   border-radius: 24px;
   padding: 22px;
@@ -778,6 +810,10 @@ h1 {
 
   .split-grid {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .toolbar-card {

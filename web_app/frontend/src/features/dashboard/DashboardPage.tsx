@@ -26,11 +26,32 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
   const cards = query.data
     ? [
-        { label: "低庫存警示", value: query.data.summary.lowStockCount, hint: "需要優先補貨" },
-        { label: "今日入庫", value: query.data.summary.todayInboundCount, hint: "今日進貨筆數" },
-        { label: "今日生產", value: query.data.summary.todayProductionCount, hint: "今日生產筆數" },
-        { label: "本月銷售", value: `$${formatNumber(query.data.summary.monthSalesAmount)}`, hint: "累計銷售金額" },
+        { label: "低庫存", value: query.data.summary.lowStockCount },
+        { label: "今日入庫", value: query.data.summary.todayInboundCount },
+        { label: "今日生產", value: query.data.summary.todayProductionCount },
+        { label: "本月銷售", value: `$${formatNumber(query.data.summary.monthSalesAmount)}` },
       ]
+    : [];
+
+  const recentActivities = query.data
+    ? [
+        ...query.data.recentInbound.map((item) => ({
+          id: `inbound-${item.id}`,
+          type: "入庫",
+          date: item.date,
+          label: item.materialName,
+          meta: `${formatNumber(item.qty)} ${item.unit ?? ""}`.trim(),
+        })),
+        ...query.data.recentProduction.map((item) => ({
+          id: `production-${item.id}`,
+          type: "生產",
+          date: item.date,
+          label: item.productName,
+          meta: item.batchNumber || "-",
+        })),
+      ]
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+        .slice(0, 6)
     : [];
 
   return (
@@ -38,7 +59,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       <section className="section">
         <div className="section-title">
           <h2>今日作業</h2>
-          <p>沿用桌面版的工作台概念，先把每天最需要看到的摘要與提醒收進來。</p>
+          <p>只保留今天最需要先看的提醒與最近動作，其他維護工作交給上方分區導航。</p>
         </div>
 
         {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在整理工作台資料...</StatusBanner> : null}
@@ -46,67 +67,40 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
         {query.data ? (
           <>
-            <div className="toolbar-card">
-              <div className="toolbar-copy">
-                <strong>工作台摘要</strong>
-                <p>把低庫存、今日進貨、生產與本月銷售集中在同一頁，方便開工先看一次全局。</p>
-              </div>
-              <div className="toolbar-actions">
-                <span className="pill">資料來源 {query.data.source}</span>
-                <span className="pill">低庫存 {query.data.lowStockMaterials.length} 項</span>
-                <button className="secondary-button" type="button" onClick={() => onNavigate("reports")}>
-                  前往報表
-                </button>
-                <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>
-                  前往庫存中心
-                </button>
-              </div>
-            </div>
-
-            <div className="summary-grid">
+            <div className="dashboard-strip">
               {cards.map((card) => (
-                <article className="panel" key={card.label}>
-                  <h3>{card.label}</h3>
-                  <div className="stat-value">{card.value}</div>
-                  <p>{card.hint}</p>
-                </article>
+                <div className="dashboard-metric" key={card.label}>
+                  <span>{card.label}</span>
+                  <strong>{card.value}</strong>
+                </div>
               ))}
             </div>
 
-            <div className="split-grid">
+            <div className="split-grid dashboard-grid">
               <section className="table-card split-card">
                 <div className="split-card-header">
-                  <strong>低庫存原料</strong>
-                  <div className="toolbar-actions">
-                    <span className="pill">{query.data.lowStockMaterials.length} 筆</span>
-                    <button className="table-link" type="button" onClick={() => onNavigate("materials")}>
-                      前往原料主檔
-                    </button>
-                  </div>
+                  <strong>待處理事項</strong>
+                  <button className="table-link" type="button" onClick={() => onNavigate("inventory")}>
+                    看庫存
+                  </button>
                 </div>
                 {query.data.lowStockMaterials.length === 0 ? (
-                  <div className="empty-state">目前沒有低庫存原料。</div>
+                  <div className="empty-state">目前沒有低庫存原料，今天暫時不需要優先補貨。</div>
                 ) : (
                   <table className="data-table">
                     <thead>
                       <tr>
                         <th>原料</th>
-                        <th>目前庫存</th>
-                        <th>安全庫存</th>
-                        <th>供應商</th>
+                        <th>目前</th>
+                        <th>安全量</th>
                       </tr>
                     </thead>
                     <tbody>
                       {query.data.lowStockMaterials.map((item) => (
                         <tr key={item.id}>
                           <td>{item.name}</td>
-                          <td>
-                            {formatNumber(item.stock)} {item.unit ?? ""}
-                          </td>
-                          <td>
-                            {formatNumber(item.safeStock)} {item.unit ?? ""}
-                          </td>
-                          <td>{item.vendor || "-"}</td>
+                          <td>{formatNumber(item.stock)} {item.unit ?? ""}</td>
+                          <td>{formatNumber(item.safeStock)} {item.unit ?? ""}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -116,73 +110,35 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
               <section className="table-card split-card">
                 <div className="split-card-header">
-                  <strong>最近入庫 / 生產</strong>
-                  <div className="toolbar-actions">
-                    <span className="pill">Live</span>
-                    <button className="table-link" type="button" onClick={() => onNavigate("inbound")}>
-                      前往入庫
-                    </button>
-                    <button className="table-link" type="button" onClick={() => onNavigate("production")}>
-                      前往生產
-                    </button>
-                    <button className="table-link" type="button" onClick={() => onNavigate("sales")}>
-                      前往銷售
-                    </button>
-                  </div>
+                  <strong>最近活動</strong>
+                  <button className="table-link" type="button" onClick={() => onNavigate("reports")}>
+                    看摘要
+                  </button>
                 </div>
-                <div className="mini-section">
-                  <h4>最近入庫</h4>
-                  {query.data.recentInbound.length === 0 ? (
-                    <div className="empty-state">目前還沒有入庫資料。</div>
-                  ) : (
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>日期</th>
-                          <th>原料</th>
-                          <th>數量</th>
+                {recentActivities.length === 0 ? (
+                  <div className="empty-state">今天還沒有新的入庫或生產活動。</div>
+                ) : (
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>日期</th>
+                        <th>類型</th>
+                        <th>項目</th>
+                        <th>內容</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentActivities.map((item) => (
+                        <tr key={item.id}>
+                          <td>{formatDate(item.date)}</td>
+                          <td>{item.type}</td>
+                          <td>{item.label}</td>
+                          <td>{item.meta}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {query.data.recentInbound.map((item) => (
-                          <tr key={item.id}>
-                            <td>{formatDate(item.date)}</td>
-                            <td>{item.materialName}</td>
-                            <td>
-                              {formatNumber(item.qty)} {item.unit ?? ""}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-
-                <div className="mini-section">
-                  <h4>最近生產</h4>
-                  {query.data.recentProduction.length === 0 ? (
-                    <div className="empty-state">目前還沒有生產資料。</div>
-                  ) : (
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>日期</th>
-                          <th>產品</th>
-                          <th>批號</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {query.data.recentProduction.map((item) => (
-                          <tr key={item.id}>
-                            <td>{formatDate(item.date)}</td>
-                            <td>{item.productName}</td>
-                            <td>{item.batchNumber || "-"}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </section>
             </div>
           </>
