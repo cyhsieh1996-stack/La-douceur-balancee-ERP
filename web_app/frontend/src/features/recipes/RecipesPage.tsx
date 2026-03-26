@@ -68,6 +68,11 @@ export function RecipesPage() {
     [productsQuery.data, productId],
   );
 
+  const selectedMaterial = useMemo(
+    () => materialsQuery.data?.items.find((item) => String(item.id) === recipeMaterialId) ?? null,
+    [materialsQuery.data, recipeMaterialId],
+  );
+
   useEffect(() => {
     if (productId !== "") return;
     const firstProductId = productsQuery.data?.items[0]?.id;
@@ -159,14 +164,14 @@ export function RecipesPage() {
               </label>
 
               <label className="field">
-                <span>每單位用量</span>
+                <span>每單位用量{selectedMaterial?.unit ? `（${selectedMaterial.unit}）` : ""}</span>
                 <input
                   type="number"
                   min="0"
                   step="0.001"
                   value={recipeQtyPerUnit}
                   onChange={(event) => setRecipeQtyPerUnit(event.target.value)}
-                  placeholder="例如：0.25"
+                  placeholder={selectedMaterial?.unit ? `例如：0.25 ${selectedMaterial.unit}` : "例如：0.25"}
                   disabled={!selectedProduct}
                 />
               </label>
