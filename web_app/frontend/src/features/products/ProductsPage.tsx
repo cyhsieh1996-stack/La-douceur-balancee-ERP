@@ -336,7 +336,7 @@ export function ProductsPage() {
             />
           </label>
 
-          <div className="form-actions">
+          <div className="form-actions form-actions-inline-start form-actions-cluster">
             <button
               className="primary-button"
               type="submit"
@@ -417,7 +417,7 @@ export function ProductsPage() {
                   />
                 </label>
 
-                <div className="form-actions">
+                <div className="form-actions form-actions-inline-start form-actions-cluster">
                   <button className="primary-button" type="submit" disabled={saveRecipeMutation.isPending}>
                     {saveRecipeMutation.isPending ? "儲存中..." : "儲存配方"}
                   </button>

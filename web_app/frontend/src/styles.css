@@ -866,6 +866,11 @@ h1 {
   grid-column: 1 / span 3;
 }
 
+.form-actions-cluster {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
 .form-actions-main {
   display: flex;
   align-items: center;
@@ -897,9 +902,16 @@ h1 {
   background: linear-gradient(180deg, #2b564b 0%, #24473e 100%);
   color: #fff;
   padding: 12px 18px;
+  min-height: 52px;
+  min-width: 132px;
   border-radius: 14px;
   cursor: pointer;
   font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  white-space: nowrap;
   font-weight: 700;
   transition: transform 140ms ease, opacity 140ms ease, background 140ms ease;
 }
@@ -926,6 +938,13 @@ h1 {
 .secondary-button,
 .danger-button {
   padding: 12px 18px;
+  min-height: 52px;
+  min-width: 132px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .secondary-button {
