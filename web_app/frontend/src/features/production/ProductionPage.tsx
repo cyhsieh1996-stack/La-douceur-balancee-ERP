@@ -212,7 +212,7 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
                 <StatusBanner tone="success" title="生產完成">產品庫存與原料扣減都已更新。</StatusBanner>
                 <div className="flow-actions">
                   <button className="secondary-button" type="button" onClick={() => onNavigate("sales")}>
-                    下一步：前往銷售紀錄匯入
+                    下一步：前往 POS 匯入
                   </button>
                   <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>
                     查看庫存中心

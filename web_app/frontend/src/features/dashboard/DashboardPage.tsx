@@ -64,7 +64,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       ? `先補 ${query.data.summary.zeroStockCount} 項缺貨原料，避免今天的生產卡住。`
       : query.data.summary.lowStockCount > 0
         ? `先確認 ${query.data.summary.lowStockCount} 項待補貨原料，再安排今天的生產。`
-        : "今天沒有立即缺貨，可直接往原料入庫、產品生產或銷售紀錄匯入流程前進。"
+        : "今天沒有立即缺貨，可直接往原料入庫、產品生產或 POS 匯入流程前進。"
     : "";
 
   return (
@@ -109,7 +109,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>去庫存中心</button>
                     <button className="secondary-button" type="button" onClick={() => onNavigate("inbound")}>去原料入庫</button>
                     <button className="secondary-button" type="button" onClick={() => onNavigate("production")}>去產品生產</button>
-                    <button className="secondary-button" type="button" onClick={() => onNavigate("sales")}>去銷售紀錄匯入</button>
+                    <button className="secondary-button" type="button" onClick={() => onNavigate("sales")}>去 POS 匯入</button>
                   </div>
                 </div>
               </div>

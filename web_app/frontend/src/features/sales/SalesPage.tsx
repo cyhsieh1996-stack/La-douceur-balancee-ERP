@@ -93,7 +93,7 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
   return (
     <section className="section">
       <div className="section-title">
-        <h2>銷售紀錄匯入</h2>
+        <h2>POS 匯入</h2>
         <p>貼上 CSV 或 Tab 分隔資料，把銷售紀錄寫入系統。</p>
       </div>
 
@@ -105,7 +105,7 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
           </ExampleBanner>
           <div className="workflow-strip">
             <div className="workflow-strip-copy">
-              <strong>銷售紀錄匯入流程</strong>
+              <strong>POS 匯入流程</strong>
               <div className="workflow-steps">
                 <span className="step-chip"><span className="step-chip-index">1</span>貼上資料</span>
                 <span className="step-chip"><span className="step-chip-index">2</span>先預覽</span>
@@ -123,7 +123,7 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
           <div className="form-card">
         <div className="form-card-header">
           <div>
-            <strong>貼上銷售紀錄</strong>
+            <strong>貼上 POS 資料</strong>
             <p>每行一筆：日期, 品名, 數量, 單價, 金額, 單號。也支援 Tab 分隔。</p>
           </div>
           <span className="pill">CSV / TSV</span>
@@ -145,7 +145,7 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
               預覽匯入
             </button>
             <button className="primary-button" type="button" onClick={handleImport} disabled={!canPreviewOrImport || importMutation.isPending}>
-              {importMutation.isPending ? "匯入中..." : "匯入銷售資料"}
+              {importMutation.isPending ? "匯入中..." : "匯入 POS 資料"}
             </button>
           </div>
           {!canPreviewOrImport ? (
