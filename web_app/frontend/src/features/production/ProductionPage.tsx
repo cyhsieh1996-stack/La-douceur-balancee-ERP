@@ -117,14 +117,18 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
         例如：生產 `檸檬塔 12 個`，批號 `B326-74-01`，有效日期填 `2026-03-28`，備註可寫「晨間批次」。
       </ExampleBanner>
 
-      <div className="toolbar-card">
-        <div className="toolbar-copy">
-          <strong>今日生產</strong>
-          <p>先確認缺料，再建立批次；登錄後產品庫存和原料庫存會一起更新。</p>
+      <div className="workflow-strip">
+        <div className="workflow-strip-copy">
+          <strong>生產流程</strong>
+          <div className="workflow-steps">
+            <span className="step-chip"><span className="step-chip-index">1</span>選產品</span>
+            <span className="step-chip"><span className="step-chip-index">2</span>填數量</span>
+            <span className="step-chip"><span className="step-chip-index">3</span>看缺料</span>
+            <span className="step-chip"><span className="step-chip-index">4</span>確認登錄</span>
+          </div>
         </div>
-        <div className="toolbar-actions">
-          <span className="pill">Production Ready</span>
-          <span className="pill">最近紀錄 {productionQuery.data?.items.length ?? 0} 筆</span>
+        <div className="strip-meta">
+          <span>最近紀錄 {productionQuery.data?.items.length ?? 0} 筆</span>
         </div>
       </div>
 

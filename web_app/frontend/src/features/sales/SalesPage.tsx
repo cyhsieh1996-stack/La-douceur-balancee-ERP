@@ -101,14 +101,17 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
         例如：`2026-03-26,檸檬塔,2,160,320,POS-001` 或 `2026-03-26,草莓鮮奶油蛋糕,1,980,980,POS-002`。
       </ExampleBanner>
 
-      <div className="toolbar-card">
-        <div className="toolbar-copy">
-          <strong>匯入提醒</strong>
-          <p>先預覽再匯入，確認筆數和金額沒問題後再寫進系統。</p>
+      <div className="workflow-strip">
+        <div className="workflow-strip-copy">
+          <strong>匯入流程</strong>
+          <div className="workflow-steps">
+            <span className="step-chip"><span className="step-chip-index">1</span>貼上資料</span>
+            <span className="step-chip"><span className="step-chip-index">2</span>先預覽</span>
+            <span className="step-chip"><span className="step-chip-index">3</span>確認匯入</span>
+          </div>
         </div>
-        <div className="toolbar-actions">
-          <span className="pill">Sales Ready</span>
-          <span className="pill">最近紀錄 {query.data?.items.length ?? 0} 筆</span>
+        <div className="strip-meta">
+          <span>最近紀錄 {query.data?.items.length ?? 0} 筆</span>
         </div>
       </div>
 

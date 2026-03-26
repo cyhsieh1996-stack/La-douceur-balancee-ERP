@@ -227,13 +227,11 @@ export function ProductsPage() {
         <p>維護產品售價、成本、庫存與配方。</p>
       </div>
 
-      <div className="toolbar-card">
-        <div className="toolbar-copy">
-          <strong>篩選與狀態</strong>
-          <p>先找到要處理的產品，再往下編輯產品資料或配方。</p>
-        </div>
-        <div className="toolbar-actions">
-          <div className="filter-form">
+      <div className="filter-toolbar">
+        <div className="filter-toolbar-main">
+          <strong>先找產品，再維護資料或配方</strong>
+          <p>先搜尋目標產品，選到後再進行編輯與配方調整。</p>
+          <div className="filter-toolbar-form">
             <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋產品名稱、類別" />
             <label className="checkbox-field">
               <input type="checkbox" checked={withShelfLifeOnly} onChange={(event) => setWithShelfLifeOnly(event.target.checked)} />
@@ -246,7 +244,10 @@ export function ProductsPage() {
               清除篩選
             </button>
           </div>
-          <span className="pill">{selectedProduct ? "Recipe Ready" : "Create Ready"}</span>
+        </div>
+        <div className="filter-toolbar-meta">
+          <strong>{selectedProduct ? "目前可編輯配方" : "目前可新增產品"}</strong>
+          <p>產品 {summary.total} 筆，有保存期限 {summary.withShelfLifeCount} 筆</p>
         </div>
       </div>
 

@@ -182,13 +182,11 @@ export function MaterialsPage() {
         <p>維護原料名稱、供應商、單價與安全庫存。</p>
       </div>
 
-      <div className="toolbar-card">
-        <div className="toolbar-copy">
-          <strong>篩選與狀態</strong>
-          <p>先找出要維護的原料，再決定新增、修改或刪除。</p>
-        </div>
-        <div className="toolbar-actions">
-          <div className="filter-form">
+      <div className="filter-toolbar">
+        <div className="filter-toolbar-main">
+          <strong>先找資料，再決定操作</strong>
+          <p>先搜尋或切出低庫存，確定目標後再新增、修改或刪除。</p>
+          <div className="filter-toolbar-form">
             <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋名稱、類別、廠牌、廠商" />
             <label className="checkbox-field">
               <input type="checkbox" checked={lowStockOnly} onChange={(event) => setLowStockOnly(event.target.checked)} />
@@ -201,7 +199,10 @@ export function MaterialsPage() {
               清除篩選
             </button>
           </div>
-          <span className="pill">{editingId === null ? "Create Ready" : "Edit Mode"}</span>
+        </div>
+        <div className="filter-toolbar-meta">
+          <strong>{editingId === null ? "目前是新增模式" : "目前是編輯模式"}</strong>
+          <p>原料 {summary.total} 筆，低庫存 {summary.lowStockCount} 筆</p>
         </div>
       </div>
 

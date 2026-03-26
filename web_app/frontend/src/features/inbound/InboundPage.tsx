@@ -99,14 +99,18 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
         例如：低筋麵粉入庫 `10 kg`、單價 `52`、批號 `FLOUR-20260326`、效期填 `2026-04-30`。
       </ExampleBanner>
 
-      <div className="toolbar-card">
-        <div className="toolbar-copy">
-          <strong>今日入庫</strong>
-          <p>先把今天要用的原料補齊，後面生產和庫存會一起更新。</p>
+      <div className="workflow-strip">
+        <div className="workflow-strip-copy">
+          <strong>入庫流程</strong>
+          <div className="workflow-steps">
+            <span className="step-chip"><span className="step-chip-index">1</span>選原料</span>
+            <span className="step-chip"><span className="step-chip-index">2</span>填數量</span>
+            <span className="step-chip"><span className="step-chip-index">3</span>補批號與效期</span>
+            <span className="step-chip"><span className="step-chip-index">4</span>確認入庫</span>
+          </div>
         </div>
-        <div className="toolbar-actions">
-          <span className="pill">Inbound Ready</span>
-          <span className="pill">最近紀錄 {inboundQuery.data?.items.length ?? 0} 筆</span>
+        <div className="strip-meta">
+          <span>最近紀錄 {inboundQuery.data?.items.length ?? 0} 筆</span>
         </div>
       </div>
 

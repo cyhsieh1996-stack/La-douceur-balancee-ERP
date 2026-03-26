@@ -45,14 +45,18 @@ export function ReportsPage() {
 
       {query.data ? (
         <>
-          <div className="toolbar-card">
-            <div className="toolbar-copy">
-              <strong>經營摘要</strong>
-              <p>這裡先回答三件事：本月賣了多少、進貨花了多少、哪些產品帶來最多銷售。</p>
+          <div className="workflow-strip">
+            <div className="workflow-strip-copy">
+              <strong>先看這三件事</strong>
+              <div className="workflow-steps">
+                <span className="step-chip"><span className="step-chip-index">1</span>銷售金額</span>
+                <span className="step-chip"><span className="step-chip-index">2</span>入庫支出</span>
+                <span className="step-chip"><span className="step-chip-index">3</span>熱銷與低庫存</span>
+              </div>
             </div>
-            <div className="toolbar-actions">
-              <span className="pill">資料來源 {query.data.source}</span>
-              <span className="pill">熱銷產品 {query.data.topProducts.length} 項</span>
+            <div className="strip-meta">
+              <span>資料來源 {query.data.source}</span>
+              <span>熱銷產品 {query.data.topProducts.length} 項</span>
             </div>
           </div>
 
