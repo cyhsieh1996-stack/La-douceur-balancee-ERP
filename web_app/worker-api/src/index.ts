@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { getDashboardData } from "./modules/dashboard";
+import { adjustInventory, getInventoryCenter } from "./modules/inventory";
 import {
   createMaterial,
   deleteMaterial,
@@ -73,16 +75,15 @@ app.get("/api/debug/bindings", (c) => {
 });
 
 app.get("/api/dashboard", (c) => {
-  return c.json({
-    summary: {
-      lowStockCount: 0,
-      expiringProductsCount: 0,
-      expiringMaterialsCount: 0,
-      todayInboundCount: 0,
-      todayProductionCount: 0,
-      todaySalesCount: 0,
-    },
-    source: "stub",
+  return getDashboardData(c.env).then((result) => {
+    if (!result.ok) {
+      return c.json({ ok: false, error: result.error }, 500);
+    }
+
+    return c.json({
+      ...result,
+      source: "supabase",
+    });
   });
 });
 
@@ -212,6 +213,46 @@ app.post("/api/products", async (c) => {
     },
     201,
   );
+});
+
+app.get("/api/inventory", async (c) => {
+  const keyword = c.req.query("keyword") ?? "";
+  const lowStockOnly = c.req.query("lowStockOnly") === "true";
+  const result = await getInventoryCenter(c.env, { keyword, lowStockOnly, limit: 20 });
+
+  if (!result.ok) {
+    return c.json({ ok: false, error: result.error }, 500);
+  }
+
+  return c.json({
+    ...result,
+    source: "supabase",
+  });
+});
+
+app.post("/api/inventory/adjustments", async (c) => {
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) {
+    return c.json({ ok: false, error: "Invalid JSON payload" }, 400);
+  }
+
+  const result = await adjustInventory(c.env, payload);
+  if (!result.ok) {
+    const status =
+      result.error === "原料編號無效" || result.error === "盤點數量必須為 0 以上"
+        ? 400
+        : result.error === "找不到該原料"
+          ? 404
+          : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json({
+    ok: true,
+    item: result.item,
+    adjustment: result.adjustment,
+    source: "supabase",
+  });
 });
 
 app.notFound((c) => c.json({ ok: false, error: "Not Found" }, 404));

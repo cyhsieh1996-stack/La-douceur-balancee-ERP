@@ -1,0 +1,275 @@
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiFetch } from "../../lib/api";
+import type {
+  InventoryAdjustmentPayload,
+  InventoryAdjustmentResponse,
+  InventoryCenterResponse,
+  InventoryItem,
+} from "./types";
+
+function formatNumber(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(3).replace(/\.?0+$/, "");
+}
+
+function formatMoney(value: number) {
+  return `$${value.toFixed(2).replace(/\.?0+$/, "")}`;
+}
+
+function formatDate(value: string) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+export function InventoryPage() {
+  const queryClient = useQueryClient();
+  const [keyword, setKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [actualStock, setActualStock] = useState("");
+  const [reason, setReason] = useState("");
+
+  const query = useQuery({
+    queryKey: ["inventory-center", searchKeyword, lowStockOnly],
+    queryFn: () =>
+      apiFetch<InventoryCenterResponse>(
+        `/api/inventory?keyword=${encodeURIComponent(searchKeyword)}&lowStockOnly=${String(lowStockOnly)}`,
+      ),
+  });
+
+  const adjustMutation = useMutation({
+    mutationFn: (payload: InventoryAdjustmentPayload) =>
+      apiFetch<InventoryAdjustmentResponse>("/api/inventory/adjustments", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["inventory-center"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      setActualStock("");
+      setReason("");
+    },
+  });
+
+  const cards = useMemo(() => {
+    if (!query.data) return [];
+    return [
+      { label: "原料總數", value: query.data.summary.materialCount, hint: "主檔總筆數" },
+      { label: "低庫存", value: query.data.summary.lowStockCount, hint: "低於安全庫存" },
+      { label: "零庫存", value: query.data.summary.zeroStockCount, hint: "需要確認是否停用或補貨" },
+      { label: "估算庫存值", value: formatMoney(query.data.summary.estimatedStockValue), hint: "依單價估算" },
+    ];
+  }, [query.data]);
+
+  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSearchKeyword(keyword.trim());
+  }
+
+  function handleSelectItem(item: InventoryItem) {
+    setSelectedItem(item);
+    setActualStock(String(item.stock));
+  }
+
+  function handleAdjustmentSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedItem) return;
+    adjustMutation.reset();
+    adjustMutation.mutate({
+      materialId: selectedItem.id,
+      newStock: Number(actualStock),
+      reason: reason.trim() || null,
+    });
+  }
+
+  return (
+    <section className="section">
+      <div className="section-title">
+        <h2>庫存中心</h2>
+        <p>把桌面版的即時庫存、低庫存篩選、盤點調整與異動紀錄集中到同一頁。</p>
+      </div>
+
+      {query.isLoading ? <div className="empty-state">正在整理庫存資料...</div> : null}
+      {query.isError ? <div className="empty-state error">載入失敗：{String(query.error)}</div> : null}
+
+      {query.data ? (
+        <>
+          <div className="summary-grid">
+            {cards.map((card) => (
+              <article className="panel" key={card.label}>
+                <h3>{card.label}</h3>
+                <div className="stat-value">{card.value}</div>
+                <p>{card.hint}</p>
+              </article>
+            ))}
+          </div>
+
+          <div className="toolbar-card">
+            <form className="filter-form" onSubmit={handleSearchSubmit}>
+              <input
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+                placeholder="搜尋名稱、類別、廠商、廠牌"
+              />
+              <label className="checkbox-field">
+                <input
+                  type="checkbox"
+                  checked={lowStockOnly}
+                  onChange={(event) => setLowStockOnly(event.target.checked)}
+                />
+                <span>只看低庫存</span>
+              </label>
+              <button className="primary-button" type="submit">
+                搜尋
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => {
+                  setKeyword("");
+                  setSearchKeyword("");
+                  setLowStockOnly(false);
+                }}
+              >
+                清除
+              </button>
+            </form>
+            <span className="pill">資料筆數 {query.data.items.length}</span>
+          </div>
+
+          <div className="split-grid inventory-layout">
+            <section className="table-card split-card">
+              <div className="split-card-header">
+                <strong>即時庫存</strong>
+                <span className="pill">點選列可帶入盤點</span>
+              </div>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>原料</th>
+                    <th>類別</th>
+                    <th>廠商</th>
+                    <th>庫存</th>
+                    <th>安全庫存</th>
+                    <th>距安全量</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {query.data.items.map((item) => (
+                    <tr
+                      key={item.id}
+                      data-state={item.isLowStock ? "warning" : "normal"}
+                      data-selected={selectedItem?.id === item.id ? "true" : "false"}
+                      onClick={() => handleSelectItem(item)}
+                    >
+                      <td>{item.name}</td>
+                      <td>{item.category || "-"}</td>
+                      <td>{item.vendor || "-"}</td>
+                      <td>
+                        {formatNumber(item.stock)} {item.unit ?? ""}
+                      </td>
+                      <td>
+                        {formatNumber(item.safeStock)} {item.unit ?? ""}
+                      </td>
+                      <td>{formatNumber(item.balanceToSafe)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="form-card split-card">
+              <div className="split-card-header">
+                <strong>盤點調整</strong>
+                <span className="pill">{selectedItem ? "Ready" : "Select a row"}</span>
+              </div>
+              <form className="form-grid compact-form" onSubmit={handleAdjustmentSubmit}>
+                <label className="field">
+                  <span>原料</span>
+                  <input value={selectedItem?.name ?? ""} readOnly placeholder="從左側清單選一筆" />
+                </label>
+                <label className="field">
+                  <span>目前庫存</span>
+                  <input
+                    value={
+                      selectedItem ? `${formatNumber(selectedItem.stock)} ${selectedItem.unit ?? ""}`.trim() : ""
+                    }
+                    readOnly
+                  />
+                </label>
+                <label className="field">
+                  <span>實際盤點數量</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    value={actualStock}
+                    onChange={(event) => setActualStock(event.target.value)}
+                    placeholder="輸入盤點後數量"
+                    disabled={!selectedItem}
+                  />
+                </label>
+                <label className="field field-span-2">
+                  <span>調整原因</span>
+                  <input
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    placeholder="例如：盤點差異、破損、過期報廢"
+                    disabled={!selectedItem}
+                  />
+                </label>
+                <div className="form-actions">
+                  <button className="primary-button" type="submit" disabled={!selectedItem || adjustMutation.isPending}>
+                    {adjustMutation.isPending ? "調整中..." : "確認調整"}
+                  </button>
+                </div>
+              </form>
+              {adjustMutation.isError ? (
+                <div className="empty-state error">調整失敗：{String(adjustMutation.error)}</div>
+              ) : null}
+              {adjustMutation.isSuccess ? <div className="empty-state success">庫存調整完成，資料已更新。</div> : null}
+            </section>
+          </div>
+
+          <section className="table-card split-card">
+            <div className="split-card-header">
+              <strong>最近異動</strong>
+              <span className="pill">{query.data.recentAdjustments.length} 筆</span>
+            </div>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>日期</th>
+                  <th>原料</th>
+                  <th>原本庫存</th>
+                  <th>盤點後</th>
+                  <th>增減量</th>
+                  <th>原因</th>
+                </tr>
+              </thead>
+              <tbody>
+                {query.data.recentAdjustments.map((item) => (
+                  <tr key={item.id}>
+                    <td>{formatDate(item.date)}</td>
+                    <td>{item.materialName}</td>
+                    <td>
+                      {formatNumber(item.oldStock)} {item.unit ?? ""}
+                    </td>
+                    <td>
+                      {formatNumber(item.newStock)} {item.unit ?? ""}
+                    </td>
+                    <td>{formatNumber(item.diff)}</td>
+                    <td>{item.reason || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </>
+      ) : null}
+    </section>
+  );
+}

@@ -146,6 +146,21 @@ h1 {
   margin-top: 16px;
 }
 
+.summary-grid,
+.split-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.summary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.split-grid {
+  grid-template-columns: 1.2fr 1fr;
+}
+
 .panel {
   border-radius: 20px;
   padding: 20px;
@@ -159,6 +174,14 @@ h1 {
 .panel p {
   margin: 0;
   color: #5d544a;
+}
+
+.stat-value {
+  margin: 10px 0 8px;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 800;
+  color: #274c43;
 }
 
 .toolbar-card,
@@ -201,6 +224,18 @@ h1 {
   color: #766b5f;
 }
 
+.split-card {
+  margin-top: 16px;
+}
+
+.split-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 0;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;
@@ -223,6 +258,26 @@ h1 {
 .info-row.compact {
   margin-top: 0;
   white-space: nowrap;
+}
+
+.filter-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-form input[type="text"],
+.filter-form input:not([type]) {
+  min-width: 260px;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4d443b;
+  font-weight: 600;
 }
 
 .form-grid {
@@ -257,6 +312,19 @@ h1 {
   border-color: #2f6b5f;
   box-shadow: 0 0 0 4px rgba(47, 107, 95, 0.12);
   background: #fff;
+}
+
+.field input[readonly] {
+  background: #f6f1e8;
+  color: #766b5f;
+}
+
+.field-span-2 {
+  grid-column: span 2;
+}
+
+.compact-form {
+  margin-top: 10px;
 }
 
 .form-actions {
@@ -338,6 +406,14 @@ h1 {
   overflow: hidden;
 }
 
+.mini-section {
+  padding: 0 20px 20px;
+}
+
+.mini-section h4 {
+  margin: 18px 0 10px;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -405,6 +481,10 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .split-grid {
+    grid-template-columns: 1fr;
+  }
+
   .toolbar-card {
     flex-direction: column;
     align-items: flex-start;
@@ -416,6 +496,10 @@ h1 {
 
   .info-row.compact {
     white-space: normal;
+  }
+
+  .field-span-2 {
+    grid-column: span 1;
   }
 
   .data-table {

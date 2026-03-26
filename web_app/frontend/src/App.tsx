@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { DashboardPage } from "./features/dashboard/DashboardPage";
+import { InventoryPage } from "./features/inventory/InventoryPage";
 import { MaterialsPage } from "./features/materials/MaterialsPage";
 import { ProductsPage } from "./features/products/ProductsPage";
 
@@ -23,9 +25,10 @@ const apiModules = [
 ];
 
 const webModules = [
-  { id: "overview", title: "總覽" },
+  { id: "overview", title: "今日作業" },
   { id: "materials", title: "原料主檔" },
   { id: "products", title: "產品主檔" },
+  { id: "inventory", title: "庫存中心" },
 ];
 
 export function App() {
@@ -63,6 +66,8 @@ export function App() {
 
       {activeModule === "overview" ? (
         <>
+          <DashboardPage />
+
           <section className="section">
             <div className="section-title">
               <h2>預計頁面模組</h2>
@@ -94,6 +99,7 @@ export function App() {
 
       {activeModule === "materials" ? <MaterialsPage /> : null}
       {activeModule === "products" ? <ProductsPage /> : null}
+      {activeModule === "inventory" ? <InventoryPage /> : null}
     </main>
   );
 }
