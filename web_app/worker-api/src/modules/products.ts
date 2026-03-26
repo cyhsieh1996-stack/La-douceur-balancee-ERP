@@ -15,6 +15,15 @@ type ProductEnv = {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 };
 
+type ProductPayload = {
+  name?: string;
+  category?: string | null;
+  price?: number;
+  cost?: number;
+  stock?: number;
+  shelfLife?: number | null;
+};
+
 function mapProductRow(row: Record<string, unknown>): ProductRecord {
   return {
     id: Number(row.id),
@@ -45,5 +54,39 @@ export async function listProducts(env: ProductEnv) {
   return {
     ok: true as const,
     items: (data ?? []).map((row) => mapProductRow(row)),
+  };
+}
+
+export async function createProduct(env: ProductEnv, payload: ProductPayload) {
+  const supabase = createSupabaseAdmin(env);
+  if (!supabase) {
+    return { ok: false as const, error: "Supabase admin client is not configured." };
+  }
+
+  const name = (payload.name ?? "").trim();
+  if (!name) {
+    return { ok: false as const, error: "產品名稱不可空白" };
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .insert({
+      name,
+      category: payload.category ?? null,
+      price: payload.price ?? 0,
+      cost: payload.cost ?? 0,
+      stock: payload.stock ?? 0,
+      shelf_life: payload.shelfLife ?? null,
+    })
+    .select("id, name, category, price, cost, stock, shelf_life")
+    .single();
+
+  if (error) {
+    return { ok: false as const, error: error.message };
+  }
+
+  return {
+    ok: true as const,
+    item: mapProductRow(data),
   };
 }

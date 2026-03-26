@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createMaterial, getMaterialById, listMaterials } from "./modules/materials";
-import { listProducts } from "./modules/products";
+import { createProduct, listProducts } from "./modules/products";
 
 type Bindings = {
   APP_NAME: string;
@@ -141,6 +141,28 @@ app.get("/api/products", (c) => {
       source: "supabase",
     });
   });
+});
+
+app.post("/api/products", async (c) => {
+  const payload = await c.req.json().catch(() => null);
+  if (!payload) {
+    return c.json({ ok: false, error: "Invalid JSON payload" }, 400);
+  }
+
+  const result = await createProduct(c.env, payload);
+  if (!result.ok) {
+    const status = result.error === "產品名稱不可空白" ? 400 : 500;
+    return c.json({ ok: false, error: result.error }, status);
+  }
+
+  return c.json(
+    {
+      ok: true,
+      item: result.item,
+      source: "supabase",
+    },
+    201,
+  );
 });
 
 app.notFound((c) => c.json({ ok: false, error: "Not Found" }, 404));
