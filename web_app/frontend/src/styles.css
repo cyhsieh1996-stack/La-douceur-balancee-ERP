@@ -166,6 +166,59 @@ h1 {
   margin-top: 24px;
 }
 
+.module-flow {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.module-step {
+  display: grid;
+  gap: 10px;
+}
+
+.module-step-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #5d544a;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.module-step-label::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #2f6b5f;
+  box-shadow: 0 0 0 5px rgba(47, 107, 95, 0.12);
+}
+
+.action-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(196, 174, 146, 0.68);
+  background: rgba(250, 246, 239, 0.78);
+  box-shadow: 0 8px 22px rgba(56, 47, 33, 0.04);
+}
+
+.action-strip-copy {
+  color: #766b5f;
+  font-size: 0.93rem;
+}
+
+.action-strip-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .primary-nav,
 .secondary-nav {
   display: flex;
@@ -1056,6 +1109,11 @@ h1 {
   .workflow-strip,
   .filter-toolbar {
     grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-strip {
     flex-direction: column;
     align-items: flex-start;
   }

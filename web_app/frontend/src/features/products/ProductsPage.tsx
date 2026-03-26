@@ -227,31 +227,37 @@ export function ProductsPage() {
         <p>維護產品售價、成本、庫存與配方。</p>
       </div>
 
-      <div className="filter-toolbar">
-        <div className="filter-toolbar-main">
-          <strong>先找產品，再維護資料或配方</strong>
-          <p>先搜尋目標產品，選到後再進行編輯與配方調整。</p>
-          <div className="filter-toolbar-form">
-            <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋產品名稱、類別" />
-            <label className="checkbox-field">
-              <input type="checkbox" checked={withShelfLifeOnly} onChange={(event) => setWithShelfLifeOnly(event.target.checked)} />
-              <span>只看有保存期限</span>
-            </label>
-            <button className="secondary-button" type="button" onClick={() => {
-              setKeyword("");
-              setWithShelfLifeOnly(false);
-            }}>
-              清除篩選
-            </button>
+      <div className="module-flow">
+        <div className="module-step">
+          <div className="module-step-label">先看什麼</div>
+          <div className="filter-toolbar">
+            <div className="filter-toolbar-main">
+              <strong>先找產品，再維護資料或配方</strong>
+              <p>先搜尋目標產品，選到後再進行編輯與配方調整。</p>
+              <div className="filter-toolbar-form">
+                <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋產品名稱、類別" />
+                <label className="checkbox-field">
+                  <input type="checkbox" checked={withShelfLifeOnly} onChange={(event) => setWithShelfLifeOnly(event.target.checked)} />
+                  <span>只看有保存期限</span>
+                </label>
+                <button className="secondary-button" type="button" onClick={() => {
+                  setKeyword("");
+                  setWithShelfLifeOnly(false);
+                }}>
+                  清除篩選
+                </button>
+              </div>
+            </div>
+            <div className="filter-toolbar-meta">
+              <strong>{selectedProduct ? "目前可編輯配方" : "目前可新增產品"}</strong>
+              <p>產品 {summary.total} 筆，有保存期限 {summary.withShelfLifeCount} 筆</p>
+            </div>
           </div>
         </div>
-        <div className="filter-toolbar-meta">
-          <strong>{selectedProduct ? "目前可編輯配方" : "目前可新增產品"}</strong>
-          <p>產品 {summary.total} 筆，有保存期限 {summary.withShelfLifeCount} 筆</p>
-        </div>
-      </div>
 
-      <div className="form-card">
+        <div className="module-step">
+          <div className="module-step-label">在哪裡操作</div>
+          <div className="form-card">
         <div className="form-card-header">
           <div>
             <strong>{selectedProduct ? "編輯產品" : "新增產品"}</strong>
@@ -362,20 +368,85 @@ export function ProductsPage() {
         {updateMutation.isError ? <StatusBanner tone="error" title="儲存失敗">{String(updateMutation.error)}</StatusBanner> : null}
         {updateMutation.isSuccess ? <StatusBanner tone="success" title="儲存完成">產品變更已更新到列表。</StatusBanner> : null}
         {deleteMutation.isError ? <StatusBanner tone="error" title="刪除失敗">{String(deleteMutation.error)}</StatusBanner> : null}
-      </div>
-
-      {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入產品資料...</StatusBanner> : null}
-      {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
-
-      {query.data ? (
-        <>
-          <div className="info-row">
-            <span>資料來源：{query.data.source}</span>
-            <span>顯示筆數：{filteredItems.length}</span>
-            <span>總筆數：{query.data.items.length}</span>
           </div>
-          <div className="table-card">
-            <table className="data-table">
+          {selectedProduct ? (
+            <section className="form-card recipe-card">
+              <div className="form-card-header">
+                <div>
+                  <strong>編輯產品配方 / BOM</strong>
+                  <p>目前產品：{selectedProduct.name}。每生產 1 單位產品，需要消耗哪些原料與多少用量。</p>
+                </div>
+                <span className="pill">{recipesQuery.data?.items.length ?? 0} 項</span>
+              </div>
+
+              <form className="form-grid compact-form" onSubmit={handleSaveRecipe}>
+                <label className="field">
+                  <span>原料</span>
+                  <select
+                    value={recipeMaterialId}
+                    onChange={(event) => setRecipeMaterialId(event.target.value)}
+                    disabled={materialsQuery.isLoading}
+                  >
+                    <option value="">選擇原料</option>
+                    {materialsQuery.data?.items.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="field">
+                  <span>每單位用量</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.001"
+                    value={recipeQtyPerUnit}
+                    onChange={(event) => setRecipeQtyPerUnit(event.target.value)}
+                    placeholder="例如：0.25"
+                  />
+                </label>
+
+                <label className="field field-span-2">
+                  <span>備註</span>
+                  <input
+                    value={recipeNote}
+                    onChange={(event) => setRecipeNote(event.target.value)}
+                    placeholder="例如：可替換品牌、特殊備註"
+                  />
+                </label>
+
+                <div className="form-actions">
+                  <button className="primary-button" type="submit" disabled={saveRecipeMutation.isPending}>
+                    {saveRecipeMutation.isPending ? "儲存中..." : "儲存配方"}
+                  </button>
+                </div>
+              </form>
+
+              {recipesQuery.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入配方資料...</StatusBanner> : null}
+              {recipesQuery.isError ? <StatusBanner tone="error" title="載入失敗">{String(recipesQuery.error)}</StatusBanner> : null}
+              {saveRecipeMutation.isError ? <StatusBanner tone="error" title="配方儲存失敗">{String(saveRecipeMutation.error)}</StatusBanner> : null}
+              {saveRecipeMutation.isSuccess ? <StatusBanner tone="success" title="配方已儲存">產品配方已更新。</StatusBanner> : null}
+              {deleteRecipeMutation.isError ? <StatusBanner tone="error" title="配方刪除失敗">{String(deleteRecipeMutation.error)}</StatusBanner> : null}
+            </section>
+          ) : null}
+        </div>
+
+        <div className="module-step">
+          <div className="module-step-label">結果在哪裡看</div>
+          {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入產品資料...</StatusBanner> : null}
+          {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
+
+          {query.data ? (
+            <>
+              <div className="info-row">
+                <span>資料來源：{query.data.source}</span>
+                <span>顯示筆數：{filteredItems.length}</span>
+                <span>總筆數：{query.data.items.length}</span>
+              </div>
+              <div className="table-card">
+                <table className="data-table">
               <thead>
                 <tr>
                   <th>產品名稱</th>
@@ -420,75 +491,12 @@ export function ProductsPage() {
                   </tr>
                 ) : null}
               </tbody>
-            </table>
-          </div>
-        </>
-      ) : null}
+                </table>
+              </div>
 
-      {selectedProduct ? (
-        <section className="form-card recipe-card">
-          <div className="form-card-header">
-            <div>
-              <strong>產品配方 / BOM</strong>
-              <p>目前產品：{selectedProduct.name}。每生產 1 單位產品，需要消耗哪些原料與多少用量。</p>
-            </div>
-            <span className="pill">{recipesQuery.data?.items.length ?? 0} 項</span>
-          </div>
-
-          <form className="form-grid compact-form" onSubmit={handleSaveRecipe}>
-            <label className="field">
-              <span>原料</span>
-              <select
-                value={recipeMaterialId}
-                onChange={(event) => setRecipeMaterialId(event.target.value)}
-                disabled={materialsQuery.isLoading}
-              >
-                <option value="">選擇原料</option>
-                {materialsQuery.data?.items.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>每單位用量</span>
-              <input
-                type="number"
-                min="0"
-                step="0.001"
-                value={recipeQtyPerUnit}
-                onChange={(event) => setRecipeQtyPerUnit(event.target.value)}
-                placeholder="例如：0.25"
-              />
-            </label>
-
-            <label className="field field-span-2">
-              <span>備註</span>
-              <input
-                value={recipeNote}
-                onChange={(event) => setRecipeNote(event.target.value)}
-                placeholder="例如：可替換品牌、特殊備註"
-              />
-            </label>
-
-            <div className="form-actions">
-              <button className="primary-button" type="submit" disabled={saveRecipeMutation.isPending}>
-                {saveRecipeMutation.isPending ? "儲存中..." : "儲存配方"}
-              </button>
-            </div>
-          </form>
-
-          {recipesQuery.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入配方資料...</StatusBanner> : null}
-          {recipesQuery.isError ? <StatusBanner tone="error" title="載入失敗">{String(recipesQuery.error)}</StatusBanner> : null}
-          {saveRecipeMutation.isError ? <StatusBanner tone="error" title="配方儲存失敗">{String(saveRecipeMutation.error)}</StatusBanner> : null}
-          {saveRecipeMutation.isSuccess ? <StatusBanner tone="success" title="配方已儲存">產品配方已更新。</StatusBanner> : null}
-          {deleteRecipeMutation.isError ? <StatusBanner tone="error" title="配方刪除失敗">{String(deleteRecipeMutation.error)}</StatusBanner> : null}
-
-          {recipesQuery.data ? (
-            <div className="table-card recipe-table-card">
-              <table className="data-table">
+              {selectedProduct && recipesQuery.data ? (
+                <div className="table-card recipe-table-card">
+                  <table className="data-table">
                 <thead>
                   <tr>
                     <th>原料</th>
@@ -522,11 +530,13 @@ export function ProductsPage() {
                     </tr>
                   ) : null}
                 </tbody>
-              </table>
-            </div>
+                  </table>
+                </div>
+              ) : null}
+            </>
           ) : null}
-        </section>
-      ) : null}
+        </div>
+      </div>
     </section>
   );
 }

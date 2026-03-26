@@ -21,10 +21,10 @@ type ModuleId =
 type PrimaryView = "today" | "operations" | "masters" | "reports";
 
 const operationsTabs = [
-  { id: "inbound", title: "入庫" },
-  { id: "production", title: "生產" },
-  { id: "sales", title: "銷售" },
-  { id: "inventory", title: "庫存" },
+  { id: "inbound", title: "原料入庫" },
+  { id: "production", title: "產品生產" },
+  { id: "sales", title: "銷售紀錄匯入" },
+  { id: "inventory", title: "庫存中心" },
 ] as const;
 
 const masterTabs = [
@@ -48,12 +48,12 @@ export function App() {
       case "today":
         return {
           title: "工作台",
-          desc: "先看今天一定要先處理的事，再決定補貨、生產或整理銷售。",
+          desc: "先看今天一定要先處理的事，再決定補貨、產品生產或整理銷售紀錄。",
         };
       case "operations":
         return {
           title: "作業流程",
-          desc: "把入庫、生產、銷售和庫存放在同一區，照工作順序往下做。",
+          desc: "把原料入庫、產品生產、銷售紀錄匯入和庫存中心放在同一區，照工作順序往下做。",
         };
       case "masters":
         return {

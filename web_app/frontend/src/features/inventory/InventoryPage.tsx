@@ -97,62 +97,78 @@ export function InventoryPage() {
       {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
 
       {query.data ? (
-        <>
-          <div className="toolbar-card">
-            <div className="toolbar-copy">
-              <strong>庫存概況</strong>
-              <p>這一頁專門處理查庫存、找低庫存、盤點調整與查看最近異動，不用再跳來跳去。</p>
+        <div className="module-flow">
+          <div className="module-step">
+            <div className="module-step-label">先看什麼</div>
+            <div className="workflow-strip">
+              <div className="workflow-strip-copy">
+                <strong>先確認庫存風險</strong>
+                <div className="workflow-steps">
+                  <span className="step-chip"><span className="step-chip-index">1</span>看低庫存</span>
+                  <span className="step-chip"><span className="step-chip-index">2</span>找零庫存</span>
+                  <span className="step-chip"><span className="step-chip-index">3</span>決定是否盤點</span>
+                </div>
+              </div>
+              <div className="strip-meta">
+                <span>資料來源 {query.data.source}</span>
+                <span>顯示 {query.data.items.length} 筆</span>
+              </div>
             </div>
-            <div className="toolbar-actions">
-              <span className="pill">資料來源 {query.data.source}</span>
-              <span className="pill">顯示 {query.data.items.length} 筆</span>
+
+            <div className="summary-grid">
+              {cards.map((card) => (
+                <article className="panel" key={card.label}>
+                  <h3>{card.label}</h3>
+                  <div className="stat-value">{card.value}</div>
+                  <p>{card.hint}</p>
+                </article>
+              ))}
             </div>
           </div>
 
-          <div className="summary-grid">
-            {cards.map((card) => (
-              <article className="panel" key={card.label}>
-                <h3>{card.label}</h3>
-                <div className="stat-value">{card.value}</div>
-                <p>{card.hint}</p>
-              </article>
-            ))}
-          </div>
+          <div className="module-step">
+            <div className="module-step-label">在哪裡操作</div>
+            <div className="filter-toolbar">
+              <div className="filter-toolbar-main">
+                <strong>先找原料，再盤點調整</strong>
+                <div className="filter-toolbar-form">
+                  <input
+                    value={keyword}
+                    onChange={(event) => setKeyword(event.target.value)}
+                    placeholder="搜尋名稱、類別、廠商、廠牌"
+                  />
+                  <label className="checkbox-field">
+                    <input
+                      type="checkbox"
+                      checked={lowStockOnly}
+                      onChange={(event) => setLowStockOnly(event.target.checked)}
+                    />
+                    <span>只看低庫存</span>
+                  </label>
+                  <button className="primary-button" type="submit" form="inventory-search-form">
+                    搜尋
+                  </button>
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => {
+                      setKeyword("");
+                      setSearchKeyword("");
+                      setLowStockOnly(false);
+                    }}
+                  >
+                    清除
+                  </button>
+                </div>
+              </div>
+              <div className="filter-toolbar-meta">
+                <strong>可直接從清單帶入盤點</strong>
+                <p>目前顯示 {query.data.items.length} 筆原料</p>
+              </div>
+            </div>
+            <form id="inventory-search-form" className="visually-hidden" onSubmit={handleSearchSubmit} />
 
-          <div className="toolbar-card">
-            <form className="filter-form" onSubmit={handleSearchSubmit}>
-              <input
-                value={keyword}
-                onChange={(event) => setKeyword(event.target.value)}
-                placeholder="搜尋名稱、類別、廠商、廠牌"
-              />
-              <label className="checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={lowStockOnly}
-                  onChange={(event) => setLowStockOnly(event.target.checked)}
-                />
-                <span>只看低庫存</span>
-              </label>
-              <button className="primary-button" type="submit">
-                搜尋
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                onClick={() => {
-                  setKeyword("");
-                  setSearchKeyword("");
-                  setLowStockOnly(false);
-                }}
-              >
-                清除
-              </button>
-            </form>
-            <span className="pill">資料筆數 {query.data.items.length}</span>
-          </div>
-
-          <div className="split-grid inventory-layout">
+            <div className="split-grid inventory-layout">
             <section className="table-card split-card">
               <div className="split-card-header">
                 <strong>即時庫存</strong>
@@ -251,8 +267,11 @@ export function InventoryPage() {
               {adjustMutation.isSuccess ? <StatusBanner tone="success" title="調整完成">庫存與最近異動已同步更新。</StatusBanner> : null}
             </section>
           </div>
+          </div>
 
-          <section className="table-card split-card">
+          <div className="module-step">
+            <div className="module-step-label">結果在哪裡看</div>
+            <section className="table-card split-card">
             <div className="split-card-header">
               <strong>最近異動</strong>
               <span className="pill">{query.data.recentAdjustments.length} 筆</span>
@@ -293,7 +312,8 @@ export function InventoryPage() {
               </tbody>
             </table>
           </section>
-        </>
+          </div>
+        </div>
       ) : null}
     </section>
   );

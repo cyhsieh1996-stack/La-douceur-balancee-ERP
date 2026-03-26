@@ -33,8 +33,8 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     ? [
         { label: "缺貨", value: query.data.summary.zeroStockCount },
         { label: "待補貨", value: query.data.summary.lowStockCount },
-        { label: "今日入庫", value: query.data.summary.todayInboundCount },
-        { label: "今日生產", value: query.data.summary.todayProductionCount },
+        { label: "今日原料入庫", value: query.data.summary.todayInboundCount },
+        { label: "今日產品生產", value: query.data.summary.todayProductionCount },
       ]
     : [];
 
@@ -64,7 +64,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       ? `先補 ${query.data.summary.zeroStockCount} 項缺貨原料，避免今天的生產卡住。`
       : query.data.summary.lowStockCount > 0
         ? `先確認 ${query.data.summary.lowStockCount} 項待補貨原料，再安排今天的生產。`
-        : "今天沒有立即缺貨，可直接往入庫、生產或銷售流程前進。"
+        : "今天沒有立即缺貨，可直接往原料入庫、產品生產或銷售紀錄匯入流程前進。"
     : "";
 
   return (
@@ -80,33 +80,52 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
         {query.data ? (
           <>
-            <div className="dashboard-focus">
-              <div>
-                <span className="dashboard-focus-label">開工提示</span>
-                <strong>{focusCopy}</strong>
-              </div>
-              <span className="pill">{todayLabel()}</span>
-            </div>
-
-            <div className="dashboard-strip">
-              {cards.map((card) => (
-                <div className="dashboard-metric" key={card.label}>
-                  <span>{card.label}</span>
-                  <strong>{card.value}</strong>
+            <div className="module-flow">
+              <div className="module-step">
+                <div className="module-step-label">先看什麼</div>
+                <div className="dashboard-focus">
+                  <div>
+                    <span className="dashboard-focus-label">開工提示</span>
+                    <strong>{focusCopy}</strong>
+                  </div>
+                  <span className="pill">{todayLabel()}</span>
                 </div>
-              ))}
-            </div>
 
-            <div className="split-grid dashboard-grid">
+                <div className="dashboard-strip">
+                  {cards.map((card) => (
+                    <div className="dashboard-metric" key={card.label}>
+                      <span>{card.label}</span>
+                      <strong>{card.value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="module-step">
+                <div className="module-step-label">在哪裡操作</div>
+                <div className="action-strip">
+                  <div className="action-strip-copy">先依今天狀況決定要進哪個流程。</div>
+                  <div className="action-strip-links">
+                    <button className="secondary-button" type="button" onClick={() => onNavigate("inventory")}>去庫存中心</button>
+                    <button className="secondary-button" type="button" onClick={() => onNavigate("inbound")}>去原料入庫</button>
+                    <button className="secondary-button" type="button" onClick={() => onNavigate("production")}>去產品生產</button>
+                    <button className="secondary-button" type="button" onClick={() => onNavigate("sales")}>去銷售紀錄匯入</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="module-step">
+                <div className="module-step-label">結果在哪裡看</div>
+                <div className="split-grid dashboard-grid">
               <section className="table-card split-card">
                 <div className="split-card-header">
                   <strong>今天先處理</strong>
                   <div className="toolbar-actions">
                     <button className="table-link" type="button" onClick={() => onNavigate("inventory")}>
-                      看庫存
+                      去庫存中心
                     </button>
                     <button className="table-link" type="button" onClick={() => onNavigate("inbound")}>
-                      去入庫
+                      去原料入庫
                     </button>
                   </div>
                 </div>
@@ -141,7 +160,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   <strong>今天已完成</strong>
                   <div className="toolbar-actions">
                     <button className="table-link" type="button" onClick={() => onNavigate("production")}>
-                      去生產
+                      去產品生產
                     </button>
                     <button className="table-link" type="button" onClick={() => onNavigate("reports")}>
                       看報表
@@ -173,6 +192,8 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   </table>
                 )}
               </section>
+                </div>
+              </div>
             </div>
           </>
         ) : null}

@@ -44,7 +44,9 @@ export function ReportsPage() {
       {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
 
       {query.data ? (
-        <>
+        <div className="module-flow">
+          <div className="module-step">
+            <div className="module-step-label">先看什麼</div>
           <div className="workflow-strip">
             <div className="workflow-strip-copy">
               <strong>先看這三件事</strong>
@@ -69,8 +71,11 @@ export function ReportsPage() {
               </article>
             ))}
           </div>
+          </div>
 
-          <div className="split-grid">
+          <div className="module-step">
+            <div className="module-step-label">結果在哪裡看</div>
+            <div className="split-grid">
             <section className="table-card split-card">
               <div className="split-card-header">
                 <strong>熱銷產品</strong>
@@ -138,9 +143,9 @@ export function ReportsPage() {
                 </tbody>
               </table>
             </section>
-          </div>
+            </div>
 
-          <section className="table-card split-card">
+            <section className="table-card split-card">
             <div className="split-card-header">
               <strong>最近營運異動</strong>
               <span className="pill">{query.data.recentTransactions.length} 筆</span>
@@ -175,7 +180,8 @@ export function ReportsPage() {
               </tbody>
             </table>
           </section>
-        </>
+          </div>
+        </div>
       ) : null}
     </section>
   );

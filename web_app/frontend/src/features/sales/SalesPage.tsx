@@ -93,32 +93,37 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
   return (
     <section className="section">
       <div className="section-title">
-        <h2>POS / 銷售匯入</h2>
-        <p>先支援貼上 CSV 或 Tab 分隔資料，把銷售資料寫入系統，後續再補檔案上傳與欄位對應精靈。</p>
+        <h2>銷售紀錄匯入</h2>
+        <p>貼上 CSV 或 Tab 分隔資料，把銷售紀錄寫入系統。</p>
       </div>
 
-      <ExampleBanner>
-        例如：`2026-03-26,檸檬塔,2,160,320,POS-001` 或 `2026-03-26,草莓鮮奶油蛋糕,1,980,980,POS-002`。
-      </ExampleBanner>
-
-      <div className="workflow-strip">
-        <div className="workflow-strip-copy">
-          <strong>匯入流程</strong>
-          <div className="workflow-steps">
-            <span className="step-chip"><span className="step-chip-index">1</span>貼上資料</span>
-            <span className="step-chip"><span className="step-chip-index">2</span>先預覽</span>
-            <span className="step-chip"><span className="step-chip-index">3</span>確認匯入</span>
+      <div className="module-flow">
+        <div className="module-step">
+          <div className="module-step-label">先看什麼</div>
+          <ExampleBanner>
+            例如：`2026-03-26,檸檬塔,2,160,320,POS-001` 或 `2026-03-26,草莓鮮奶油蛋糕,1,980,980,POS-002`。
+          </ExampleBanner>
+          <div className="workflow-strip">
+            <div className="workflow-strip-copy">
+              <strong>銷售紀錄匯入流程</strong>
+              <div className="workflow-steps">
+                <span className="step-chip"><span className="step-chip-index">1</span>貼上資料</span>
+                <span className="step-chip"><span className="step-chip-index">2</span>先預覽</span>
+                <span className="step-chip"><span className="step-chip-index">3</span>確認匯入</span>
+              </div>
+            </div>
+            <div className="strip-meta">
+              <span>最近紀錄 {query.data?.items.length ?? 0} 筆</span>
+            </div>
           </div>
         </div>
-        <div className="strip-meta">
-          <span>最近紀錄 {query.data?.items.length ?? 0} 筆</span>
-        </div>
-      </div>
 
-      <div className="form-card">
+        <div className="module-step">
+          <div className="module-step-label">在哪裡操作</div>
+          <div className="form-card">
         <div className="form-card-header">
           <div>
-            <strong>貼上銷售報表</strong>
+            <strong>貼上銷售紀錄</strong>
             <p>每行一筆：日期, 品名, 數量, 單價, 金額, 單號。也支援 Tab 分隔。</p>
           </div>
           <span className="pill">CSV / TSV</span>
@@ -168,23 +173,26 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
                 查看庫存中心
               </button>
               <button className="table-link" type="button" onClick={() => onNavigate("overview")}>
-                回今日作業
+                回工作台
               </button>
             </div>
           </>
         ) : null}
-      </div>
-
-      {query.isLoading ? <div className="empty-state">正在載入銷售紀錄...</div> : null}
-      {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
-
-      {query.data ? (
-        <section className="table-card split-card">
-          <div className="split-card-header">
-            <strong>最近銷售紀錄</strong>
-            <span className="pill">{query.data.source} / {query.data.items.length} 筆</span>
           </div>
-          <table className="data-table">
+        </div>
+
+        <div className="module-step">
+          <div className="module-step-label">結果在哪裡看</div>
+          {query.isLoading ? <div className="empty-state">正在載入銷售紀錄...</div> : null}
+          {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
+
+          {query.data ? (
+            <section className="table-card split-card">
+              <div className="split-card-header">
+                <strong>最近銷售紀錄</strong>
+                <span className="pill">{query.data.source} / {query.data.items.length} 筆</span>
+              </div>
+              <table className="data-table">
             <thead>
               <tr>
                 <th>日期</th>
@@ -214,9 +222,11 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
                 </tr>
               ) : null}
             </tbody>
-          </table>
-        </section>
-      ) : null}
+              </table>
+            </section>
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }

@@ -91,34 +91,38 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
   return (
     <section className="section">
       <div className="section-title">
-        <h2>進貨與入庫</h2>
-        <p>沿用桌面版的入庫流程，寫入紀錄後同步更新原料庫存與參考單價。</p>
+        <h2>原料入庫</h2>
+        <p>登錄原料進貨，入庫後會同步更新原料庫存與參考單價。</p>
       </div>
 
-      <ExampleBanner>
-        例如：低筋麵粉入庫 `10 kg`、單價 `52`、批號 `FLOUR-20260326`、效期填 `2026-04-30`。
-      </ExampleBanner>
-
-      <div className="workflow-strip">
-        <div className="workflow-strip-copy">
-          <strong>入庫流程</strong>
-          <div className="workflow-steps">
-            <span className="step-chip"><span className="step-chip-index">1</span>選原料</span>
-            <span className="step-chip"><span className="step-chip-index">2</span>填數量</span>
-            <span className="step-chip"><span className="step-chip-index">3</span>補批號與效期</span>
-            <span className="step-chip"><span className="step-chip-index">4</span>確認入庫</span>
+      <div className="module-flow">
+        <div className="module-step">
+          <div className="module-step-label">先看什麼</div>
+          <ExampleBanner>
+            例如：低筋麵粉入庫 `10 kg`、單價 `52`、批號 `FLOUR-20260326`、效期填 `2026-04-30`。
+          </ExampleBanner>
+          <div className="workflow-strip">
+            <div className="workflow-strip-copy">
+              <strong>原料入庫流程</strong>
+              <div className="workflow-steps">
+                <span className="step-chip"><span className="step-chip-index">1</span>選原料</span>
+                <span className="step-chip"><span className="step-chip-index">2</span>填數量</span>
+                <span className="step-chip"><span className="step-chip-index">3</span>補批號與效期</span>
+                <span className="step-chip"><span className="step-chip-index">4</span>確認入庫</span>
+              </div>
+            </div>
+            <div className="strip-meta">
+              <span>最近紀錄 {inboundQuery.data?.items.length ?? 0} 筆</span>
+            </div>
           </div>
         </div>
-        <div className="strip-meta">
-          <span>最近紀錄 {inboundQuery.data?.items.length ?? 0} 筆</span>
-        </div>
-      </div>
-
-      <div className="form-card">
+        <div className="module-step">
+          <div className="module-step-label">在哪裡操作</div>
+          <div className="form-card">
         <div className="form-card-header">
           <div>
-            <strong>新增入庫</strong>
-            <p>填寫進貨數量、單價、批號與效期，儲存後系統會直接增加原料庫存。</p>
+            <strong>填寫原料入庫資料</strong>
+            <p>填寫原料、數量、單價、批號與效期，儲存後系統會直接增加原料庫存。</p>
           </div>
           {selectedMaterial ? (
             <div className="info-row compact">
@@ -211,18 +215,21 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
             </div>
           </>
         ) : null}
-      </div>
-
-      {inboundQuery.isLoading ? <div className="empty-state">正在載入最近入庫紀錄...</div> : null}
-      {inboundQuery.isError ? <StatusBanner tone="error" title="載入失敗">{String(inboundQuery.error)}</StatusBanner> : null}
-
-      {inboundQuery.data ? (
-        <section className="table-card split-card">
-          <div className="split-card-header">
-            <strong>最近入庫紀錄</strong>
-            <span className="pill">{inboundQuery.data.source} / {inboundQuery.data.items.length} 筆</span>
           </div>
-          <table className="data-table">
+        </div>
+
+        <div className="module-step">
+          <div className="module-step-label">結果在哪裡看</div>
+          {inboundQuery.isLoading ? <div className="empty-state">正在載入最近入庫紀錄...</div> : null}
+          {inboundQuery.isError ? <StatusBanner tone="error" title="載入失敗">{String(inboundQuery.error)}</StatusBanner> : null}
+
+          {inboundQuery.data ? (
+            <section className="table-card split-card">
+              <div className="split-card-header">
+                <strong>最近原料入庫紀錄</strong>
+                <span className="pill">{inboundQuery.data.source} / {inboundQuery.data.items.length} 筆</span>
+              </div>
+              <table className="data-table">
             <thead>
               <tr>
                 <th>日期</th>
@@ -254,9 +261,11 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
                 </tr>
               ) : null}
             </tbody>
-          </table>
-        </section>
-      ) : null}
+              </table>
+            </section>
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }

@@ -182,31 +182,37 @@ export function MaterialsPage() {
         <p>維護原料名稱、供應商、單價與安全庫存。</p>
       </div>
 
-      <div className="filter-toolbar">
-        <div className="filter-toolbar-main">
-          <strong>先找資料，再決定操作</strong>
-          <p>先搜尋或切出低庫存，確定目標後再新增、修改或刪除。</p>
-          <div className="filter-toolbar-form">
-            <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋名稱、類別、廠牌、廠商" />
-            <label className="checkbox-field">
-              <input type="checkbox" checked={lowStockOnly} onChange={(event) => setLowStockOnly(event.target.checked)} />
-              <span>只看低庫存</span>
-            </label>
-            <button className="secondary-button" type="button" onClick={() => {
-              setKeyword("");
-              setLowStockOnly(false);
-            }}>
-              清除篩選
-            </button>
+      <div className="module-flow">
+        <div className="module-step">
+          <div className="module-step-label">先看什麼</div>
+          <div className="filter-toolbar">
+            <div className="filter-toolbar-main">
+              <strong>先找資料，再決定操作</strong>
+              <p>先搜尋或切出低庫存，確定目標後再新增、修改或刪除。</p>
+              <div className="filter-toolbar-form">
+                <input value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜尋名稱、類別、廠牌、廠商" />
+                <label className="checkbox-field">
+                  <input type="checkbox" checked={lowStockOnly} onChange={(event) => setLowStockOnly(event.target.checked)} />
+                  <span>只看低庫存</span>
+                </label>
+                <button className="secondary-button" type="button" onClick={() => {
+                  setKeyword("");
+                  setLowStockOnly(false);
+                }}>
+                  清除篩選
+                </button>
+              </div>
+            </div>
+            <div className="filter-toolbar-meta">
+              <strong>{editingId === null ? "目前是新增模式" : "目前是編輯模式"}</strong>
+              <p>原料 {summary.total} 筆，低庫存 {summary.lowStockCount} 筆</p>
+            </div>
           </div>
         </div>
-        <div className="filter-toolbar-meta">
-          <strong>{editingId === null ? "目前是新增模式" : "目前是編輯模式"}</strong>
-          <p>原料 {summary.total} 筆，低庫存 {summary.lowStockCount} 筆</p>
-        </div>
-      </div>
 
-      <div className="form-card">
+        <div className="module-step">
+          <div className="module-step-label">在哪裡操作</div>
+          <div className="form-card">
         <div className="form-card-header">
           <div>
             <strong>{editingId === null ? "新增原料" : "編輯原料"}</strong>
@@ -335,20 +341,23 @@ export function MaterialsPage() {
         {updateMutation.isSuccess ? <StatusBanner tone="success" title="儲存完成">原料變更已更新到列表。</StatusBanner> : null}
         {deleteMutation.isError ? <StatusBanner tone="error" title="刪除失敗">{String(deleteMutation.error)}</StatusBanner> : null}
         {deleteMutation.isSuccess ? <StatusBanner tone="success" title="刪除完成">原料已移除，列表已更新。</StatusBanner> : null}
-      </div>
-
-      {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入原料資料...</StatusBanner> : null}
-      {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
-
-      {query.data ? (
-        <>
-          <div className="info-row">
-            <span>資料來源：{query.data.source}</span>
-            <span>顯示筆數：{filteredItems.length}</span>
-            <span>總筆數：{query.data.items.length}</span>
           </div>
-          <div className="table-card">
-            <table className="data-table">
+        </div>
+
+        <div className="module-step">
+          <div className="module-step-label">結果在哪裡看</div>
+          {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在載入原料資料...</StatusBanner> : null}
+          {query.isError ? <StatusBanner tone="error" title="載入失敗">{String(query.error)}</StatusBanner> : null}
+
+          {query.data ? (
+            <>
+              <div className="info-row">
+                <span>資料來源：{query.data.source}</span>
+                <span>顯示筆數：{filteredItems.length}</span>
+                <span>總筆數：{query.data.items.length}</span>
+              </div>
+              <div className="table-card">
+                <table className="data-table">
               <thead>
                 <tr>
                   <th>原料名稱</th>
@@ -398,10 +407,12 @@ export function MaterialsPage() {
                   </tr>
                 ) : null}
               </tbody>
-            </table>
-          </div>
-        </>
-      ) : null}
+                </table>
+              </div>
+            </>
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }
