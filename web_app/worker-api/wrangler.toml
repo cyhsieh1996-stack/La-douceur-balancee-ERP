@@ -1,0 +1,8 @@
+name = "la-douceur-balancee-erp-api"
+main = "src/index.ts"
+compatibility_date = "2026-03-26"
+
+[vars]
+APP_NAME = "La Douceur Balancee ERP API"
+SUPABASE_URL = "https://reookovxqozjnefsdczd.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_lyMeUqyvo1t0otYVpQqe0Q_yribpClP"

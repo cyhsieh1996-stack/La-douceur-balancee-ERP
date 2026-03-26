@@ -201,6 +201,21 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# Project local runtime data
+desktop_app/backups/
+desktop_app/sweet_erp.db
+desktop_app/data/
+desktop_app/**/.DS_Store
+
+# Web app local/build artifacts
+web_app/frontend/node_modules/
+web_app/frontend/dist/
+web_app/frontend/.env.development.local
+web_app/frontend/tsconfig.tsbuildinfo
+web_app/worker-api/node_modules/
+web_app/worker-api/.wrangler/
+web_app/worker-api/.dev.vars
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

@@ -11,7 +11,7 @@ echo "========================================"
 echo ""
 
 # 3. 強制使用虛擬環境的 Python 執行匯入腳本
-./env/bin/python3 smart_init.py
+./env/bin/python3 ./desktop_app/smart_init.py
 
 # 4. 執行完畢後暫停，讓視窗不要馬上關閉 (方便您看成功了幾筆)
 echo ""
