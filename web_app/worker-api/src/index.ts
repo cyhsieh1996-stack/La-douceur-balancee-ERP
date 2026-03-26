@@ -30,6 +30,7 @@ app.use(
 
       const allowedOrigins = new Set([
         "https://la-douceur-balancee-erp.pages.dev",
+        "https://la-douceur-balancee-erp-web.pages.dev",
         "http://127.0.0.1:4173",
         "http://localhost:4173",
       ]);
@@ -39,6 +40,10 @@ app.use(
       }
 
       if (/^https:\/\/[a-z0-9-]+\.la-douceur-balancee-erp\.pages\.dev$/.test(origin)) {
+        return origin;
+      }
+
+      if (/^https:\/\/[a-z0-9-]+\.la-douceur-balancee-erp-web\.pages\.dev$/.test(origin)) {
         return origin;
       }
 
