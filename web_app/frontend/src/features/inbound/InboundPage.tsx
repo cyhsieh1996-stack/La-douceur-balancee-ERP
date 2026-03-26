@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ExampleBanner } from "../../components/ExampleBanner";
 import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { MaterialsResponse } from "../materials/types";
@@ -93,6 +94,10 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
         <h2>進貨與入庫</h2>
         <p>沿用桌面版的入庫流程，寫入紀錄後同步更新原料庫存與參考單價。</p>
       </div>
+
+      <ExampleBanner>
+        例如：低筋麵粉入庫 `10 kg`、單價 `52`、批號 `FLOUR-20260326`、效期填 `2026-04-30`。
+      </ExampleBanner>
 
       <div className="toolbar-card">
         <div className="toolbar-copy">
@@ -232,9 +237,9 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
                 </tr>
               ))}
               {inboundQuery.data.items.length === 0 ? (
-                <tr>
+                <tr className="table-row-example">
                   <td className="table-empty-cell" colSpan={6}>
-                    目前還沒有入庫資料，第一筆入庫後會出現在這裡。
+                    範例：2026-03-26 / 低筋麵粉 / 10 kg / $52 / FLOUR-20260326 / 2026-04-30
                   </td>
                 </tr>
               ) : null}

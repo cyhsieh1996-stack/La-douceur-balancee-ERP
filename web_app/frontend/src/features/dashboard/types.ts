@@ -1,4 +1,5 @@
 export type DashboardSummary = {
+  zeroStockCount: number;
   lowStockCount: number;
   todayInboundCount: number;
   todayProductionCount: number;

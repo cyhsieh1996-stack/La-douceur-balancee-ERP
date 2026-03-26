@@ -444,7 +444,8 @@ h1 {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 18px 20px 0;
+  min-height: 82px;
+  padding: 18px 20px;
 }
 
 .pill {
@@ -771,6 +772,29 @@ h1 {
   background: #fdf0eb;
   border-color: #e1b7ac;
   color: #8a3f31;
+}
+
+.example-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px dashed rgba(196, 174, 146, 0.9);
+  background: rgba(247, 240, 231, 0.78);
+  color: #62584d;
+  font-size: 0.93rem;
+}
+
+.example-banner strong {
+  color: #3f382f;
+  font-size: 0.9rem;
+}
+
+.table-row-example td {
+  color: #7a6f63;
+  background: rgba(247, 240, 231, 0.55);
 }
 
 .flow-actions {

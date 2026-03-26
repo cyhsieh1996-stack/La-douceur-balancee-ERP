@@ -53,6 +53,7 @@ export async function getDashboardData(env: DashboardEnv) {
   const sales = salesResult.data ?? [];
 
   const summary = {
+    zeroStockCount: materials.filter((row) => Number(row.stock ?? 0) <= 0).length,
     lowStockCount: materials.filter((row) => Number(row.safe_stock ?? 0) > 0 && Number(row.stock ?? 0) < Number(row.safe_stock ?? 0)).length,
     todayInboundCount: (inboundResult.data ?? []).filter((row) => String(row.created_at ?? "") >= today).length,
     todayProductionCount: (productionResult.data ?? []).filter((row) => String(row.created_at ?? "") >= today).length,
@@ -71,7 +72,13 @@ export async function getDashboardData(env: DashboardEnv) {
 
   const lowStockMaterials = materials
     .filter((row) => Number(row.safe_stock ?? 0) > 0 && Number(row.stock ?? 0) < Number(row.safe_stock ?? 0))
-    .sort((a, b) => Number(a.stock ?? 0) - Number(b.stock ?? 0))
+    .sort((a, b) => {
+      const aStock = Number(a.stock ?? 0);
+      const bStock = Number(b.stock ?? 0);
+      if (aStock <= 0 && bStock > 0) return -1;
+      if (bStock <= 0 && aStock > 0) return 1;
+      return aStock - bStock;
+    })
     .slice(0, 5)
     .map((row) => ({
       id: Number(row.id),

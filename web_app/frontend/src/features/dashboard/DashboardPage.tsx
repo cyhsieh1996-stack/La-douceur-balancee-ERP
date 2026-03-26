@@ -26,10 +26,10 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
   const cards = query.data
     ? [
-        { label: "低庫存", value: query.data.summary.lowStockCount },
+        { label: "缺貨", value: query.data.summary.zeroStockCount },
+        { label: "待補貨", value: query.data.summary.lowStockCount },
         { label: "今日入庫", value: query.data.summary.todayInboundCount },
         { label: "今日生產", value: query.data.summary.todayProductionCount },
-        { label: "本月銷售", value: `$${formatNumber(query.data.summary.monthSalesAmount)}` },
       ]
     : [];
 
@@ -59,7 +59,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       <section className="section">
         <div className="section-title">
           <h2>今日作業</h2>
-          <p>只保留今天最需要先看的提醒與最近動作，其他維護工作交給上方分區導航。</p>
+          <p>這裡只放今天一開工就必須知道、而且需要先處理的事情。</p>
         </div>
 
         {query.isLoading ? <StatusBanner tone="loading" title="載入中">正在整理工作台資料...</StatusBanner> : null}
@@ -79,10 +79,15 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
             <div className="split-grid dashboard-grid">
               <section className="table-card split-card">
                 <div className="split-card-header">
-                  <strong>待處理事項</strong>
-                  <button className="table-link" type="button" onClick={() => onNavigate("inventory")}>
-                    看庫存
-                  </button>
+                  <strong>今天先處理</strong>
+                  <div className="toolbar-actions">
+                    <button className="table-link" type="button" onClick={() => onNavigate("inventory")}>
+                      看庫存
+                    </button>
+                    <button className="table-link" type="button" onClick={() => onNavigate("inbound")}>
+                      去入庫
+                    </button>
+                  </div>
                 </div>
                 {query.data.lowStockMaterials.length === 0 ? (
                   <div className="empty-state">目前沒有低庫存原料，今天暫時不需要優先補貨。</div>
@@ -93,6 +98,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                         <th>原料</th>
                         <th>目前</th>
                         <th>安全量</th>
+                        <th>狀態</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -101,6 +107,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                           <td>{item.name}</td>
                           <td>{formatNumber(item.stock)} {item.unit ?? ""}</td>
                           <td>{formatNumber(item.safeStock)} {item.unit ?? ""}</td>
+                          <td>{item.stock <= 0 ? "缺貨" : "待補貨"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -110,10 +117,15 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
               <section className="table-card split-card">
                 <div className="split-card-header">
-                  <strong>最近活動</strong>
-                  <button className="table-link" type="button" onClick={() => onNavigate("reports")}>
-                    看摘要
-                  </button>
+                  <strong>今天已完成</strong>
+                  <div className="toolbar-actions">
+                    <button className="table-link" type="button" onClick={() => onNavigate("production")}>
+                      去生產
+                    </button>
+                    <button className="table-link" type="button" onClick={() => onNavigate("reports")}>
+                      看報表
+                    </button>
+                  </div>
                 </div>
                 {recentActivities.length === 0 ? (
                   <div className="empty-state">今天還沒有新的入庫或生產活動。</div>

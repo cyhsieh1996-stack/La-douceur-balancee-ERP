@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ExampleBanner } from "../../components/ExampleBanner";
 import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { ProductsResponse } from "../products/types";
@@ -111,6 +112,10 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
         <h2>生產與批號</h2>
         <p>建立生產批次，預覽原料扣減情況，並在送出後同步增加產品庫存、扣除原料庫存。</p>
       </div>
+
+      <ExampleBanner>
+        例如：生產 `檸檬塔 12 個`，批號 `B326-74-01`，有效日期填 `2026-03-28`，備註可寫「晨間批次」。
+      </ExampleBanner>
 
       <div className="toolbar-card">
         <div className="toolbar-copy">
@@ -243,7 +248,7 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
                 </tr>
               ))}
               {previewQuery.data.items.length === 0 ? (
-                <tr>
+                <tr className="table-row-example">
                   <td className="table-empty-cell" colSpan={5}>這個產品目前尚未設定配方，生產時只會增加產品庫存。</td>
                 </tr>
               ) : null}
@@ -281,9 +286,9 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
                 </tr>
               ))}
               {productionQuery.data.items.length === 0 ? (
-                <tr>
+                <tr className="table-row-example">
                   <td className="table-empty-cell" colSpan={5}>
-                    目前還沒有生產紀錄，第一筆生產成功後會出現在這裡。
+                    範例：2026-03-26 / 檸檬塔 / 12 / B326-74-01 / 2026-03-28
                   </td>
                 </tr>
               ) : null}

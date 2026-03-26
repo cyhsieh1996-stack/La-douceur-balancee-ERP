@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ExampleBanner } from "../../components/ExampleBanner";
 import { StatusBanner } from "../../components/StatusBanner";
 import { apiFetch } from "../../lib/api";
 import type { SalesImportPayload, SalesImportResponse, SalesResponse } from "./types";
@@ -95,6 +96,10 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
         <h2>POS / 銷售匯入</h2>
         <p>先支援貼上 CSV 或 Tab 分隔資料，把銷售資料寫入系統，後續再補檔案上傳與欄位對應精靈。</p>
       </div>
+
+      <ExampleBanner>
+        例如：`2026-03-26,檸檬塔,2,160,320,POS-001` 或 `2026-03-26,草莓鮮奶油蛋糕,1,980,980,POS-002`。
+      </ExampleBanner>
 
       <div className="toolbar-card">
         <div className="toolbar-copy">
@@ -193,9 +198,9 @@ export function SalesPage({ onNavigate }: SalesPageProps) {
                 </tr>
               ))}
               {query.data.items.length === 0 ? (
-                <tr>
+                <tr className="table-row-example">
                   <td className="table-empty-cell" colSpan={6}>
-                    目前還沒有銷售紀錄，完成第一次匯入後會顯示在這裡。
+                    範例：2026-03-26 / POS-001 / 檸檬塔 / 2 / $160 / $320
                   </td>
                 </tr>
               ) : null}
