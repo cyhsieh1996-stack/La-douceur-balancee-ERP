@@ -16,7 +16,7 @@ const quickActions = [
   { id: "inventory", title: "庫存中心", desc: "看即時庫存、低庫存與盤點異動" },
   { id: "sales", title: "POS 匯入", desc: "匯入銷售報表並更新工作台" },
   { id: "reports", title: "報表與摘要", desc: "看本月銷售、入庫支出與熱銷產品" },
- ] as const;
+] as const;
 
 const apiModules = [
   "/api/dashboard",
@@ -39,7 +39,7 @@ const webModules = [
   { id: "inventory", title: "庫存中心" },
   { id: "sales", title: "POS / 銷售" },
   { id: "reports", title: "報表 / 摘要" },
- ] as const;
+] as const;
 
 type ModuleId = (typeof webModules)[number]["id"];
 
@@ -49,12 +49,17 @@ export function App() {
   return (
     <main className="app-shell">
       <section className="hero-card">
-        <div>
+        <div className="hero-copy-block">
           <p className="eyebrow">Web ERP Migration</p>
           <h1>La Douceur Balancee ERP</h1>
           <p className="hero-copy">
             現在已經把主檔、入庫、生產、庫存與銷售流程接上。接下來會繼續把互動細節、報表與權限整理到可正式上線的程度。
           </p>
+          <div className="hero-meta">
+            <span className="hero-badge">Cloudflare Pages</span>
+            <span className="hero-badge">Workers API</span>
+            <span className="hero-badge">Supabase</span>
+          </div>
         </div>
         <div className="status-card">
           <span className="status-label">目前狀態</span>
