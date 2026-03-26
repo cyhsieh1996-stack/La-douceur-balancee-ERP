@@ -54,6 +54,7 @@ body {
   max-width: 36rem;
   color: #6b6157;
   font-size: 0.98rem;
+  display: none;
 }
 
 .hero-card,
@@ -356,6 +357,7 @@ h1 {
   margin: 4px 0 0;
   max-width: 42rem;
   color: #766b5f;
+  display: none;
 }
 
 .grid {
@@ -473,6 +475,7 @@ h1 {
 .panel p {
   margin: 0;
   color: #5d544a;
+  display: none;
 }
 
 .stat-value {
@@ -536,11 +539,13 @@ h1 {
 .form-card-header p {
   margin: 6px 0 0;
   color: #766b5f;
+  display: none;
 }
 
 .toolbar-card p {
   margin: 6px 0 0;
   color: #766b5f;
+  display: none;
 }
 
 .workflow-strip,
@@ -638,6 +643,7 @@ h1 {
   margin: 0;
   color: #766b5f;
   font-size: 0.92rem;
+  display: none;
 }
 
 .filter-toolbar-form {
@@ -1028,6 +1034,7 @@ h1 {
   background: rgba(247, 240, 231, 0.58);
   color: #62584d;
   font-size: 0.93rem;
+  display: none;
 }
 
 .example-banner strong {
@@ -1064,6 +1071,18 @@ h1 {
   color: #3a352d;
   border: 1px solid #d7cab7;
   font-size: 0.92rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 860px) {
