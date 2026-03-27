@@ -163,6 +163,7 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
             <span>入庫數量</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={qty}
@@ -175,6 +176,7 @@ export function InboundPage({ onNavigate }: InboundPageProps) {
             <span>進貨單價</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={unitPrice}

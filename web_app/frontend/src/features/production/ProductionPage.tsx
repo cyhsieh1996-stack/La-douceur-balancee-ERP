@@ -182,6 +182,7 @@ export function ProductionPage({ onNavigate }: ProductionPageProps) {
                 <span>生產數量</span>
                 <input
                   type="number"
+                  inputMode="numeric"
                   min="0"
                   step="1"
                   value={qty}

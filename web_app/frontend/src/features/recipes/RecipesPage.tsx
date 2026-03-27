@@ -181,6 +181,7 @@ export function RecipesPage() {
                 <span>每單位用量{selectedMaterial?.unit ? `（${selectedMaterial.unit}）` : ""}</span>
                 <input
                   type="number"
+                  inputMode="decimal"
                   min="0"
                   step="0.001"
                   value={recipeQtyPerUnit}

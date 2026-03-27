@@ -226,6 +226,7 @@ export function ProductsPage() {
             <span>售價</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={form.price ?? 0}
@@ -237,6 +238,7 @@ export function ProductsPage() {
             <span>成本</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={form.cost ?? 0}
@@ -248,6 +250,7 @@ export function ProductsPage() {
             <span>起始庫存</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={form.stock ?? 0}
@@ -259,6 +262,7 @@ export function ProductsPage() {
             <span>保存期限（天）</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={form.shelfLife ?? ""}

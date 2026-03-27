@@ -239,6 +239,7 @@ export function InventoryPage() {
                   <span>實際盤點數量</span>
                   <input
                     type="number"
+                    inputMode="numeric"
                     min="0"
                     step="1"
                     value={actualStock}

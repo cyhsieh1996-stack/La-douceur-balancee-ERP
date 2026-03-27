@@ -279,6 +279,7 @@ export function MaterialsPage() {
             <span>單價</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={form.unitPrice ?? 0}
@@ -290,6 +291,7 @@ export function MaterialsPage() {
             <span>起始庫存</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={form.stock ?? 0}
@@ -301,6 +303,7 @@ export function MaterialsPage() {
             <span>安全庫存</span>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1"
               value={form.safeStock ?? 0}
