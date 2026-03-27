@@ -100,15 +100,20 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
 
         {query.data ? (
           <>
-            <div className="module-flow">
-              <div className="module-step">
-                <div className="module-step-label">先看什麼</div>
-                <div className="dashboard-focus">
+            <div className="dashboard-flow">
+              <section className="dashboard-section dashboard-section-opening">
+                <div className="dashboard-section-header">
                   <div>
-                    <span className="dashboard-focus-label">開店前確認</span>
-                    <strong>{focusCopy}</strong>
+                    <span className="dashboard-section-kicker">開店前資訊</span>
+                    <h3>開店前確認</h3>
                   </div>
                   <span className="pill">{todayLabel()}</span>
+                </div>
+
+                <div className="dashboard-focus">
+                  <div>
+                    <strong>{focusCopy}</strong>
+                  </div>
                 </div>
 
                 <div className="dashboard-strip">
@@ -119,10 +124,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     </div>
                   ))}
                 </div>
-              </div>
 
-              <div className="module-step">
-                <div className="module-step-label">在哪裡操作</div>
                 <div className="action-choice-grid">
                   <button className="action-choice-card" type="button" onClick={() => onNavigate("inventory")}>
                     <span className="action-choice-kicker">先確認</span>
@@ -139,70 +141,63 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     <strong>產品生產</strong>
                     <span className="action-choice-meta">登錄批次並扣料</span>
                   </button>
-                  <button className="action-choice-card" type="button" onClick={() => onNavigate("sales")}>
-                    <span className="action-choice-kicker">收尾更新</span>
-                    <strong>POS 匯入</strong>
-                    <span className="action-choice-meta">同步今天銷售資料</span>
-                  </button>
                 </div>
-              </div>
 
-              <div className="module-step">
-                <div className="module-step-label">開店前確認 / 閉店結報</div>
-                <div className="split-grid dashboard-grid">
-              <section className="table-card split-card">
-                <div className="split-card-header">
-                  <strong>開店前確認</strong>
-                  <div className="toolbar-actions">
-                    <button className="table-link" type="button" onClick={() => onNavigate("inventory")}>
-                      去庫存中心
-                    </button>
-                    <button className="table-link" type="button" onClick={() => onNavigate("inbound")}>
-                      去原料入庫
-                    </button>
+                <section className="table-card split-card">
+                  <div className="split-card-header">
+                    <strong>待處理原料</strong>
+                    <div className="toolbar-actions">
+                      <button className="table-link" type="button" onClick={() => onNavigate("inventory")}>
+                        去庫存中心
+                      </button>
+                      <button className="table-link" type="button" onClick={() => onNavigate("inbound")}>
+                        去原料入庫
+                      </button>
+                    </div>
                   </div>
-                </div>
-                {query.data.lowStockMaterials.length === 0 ? (
-                  <div className="empty-state dashboard-empty-state">目前沒有低庫存原料，今天開店前暫時不需要優先補貨。</div>
-                ) : (
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>原料</th>
-                        <th>目前</th>
-                        <th>安全量</th>
-                        <th>狀態</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {query.data.lowStockMaterials.map((item) => (
-                        <tr key={item.id}>
-                          <td>{item.name}</td>
-                          <td>{formatNumber(item.stock)} {item.unit ?? ""}</td>
-                          <td>{formatNumber(item.safeStock)} {item.unit ?? ""}</td>
-                          <td>{item.stock <= 0 ? "缺貨" : "待補貨"}</td>
+                  {query.data.lowStockMaterials.length === 0 ? (
+                    <div className="empty-state dashboard-empty-state">目前沒有低庫存原料，今天開店前暫時不需要優先補貨。</div>
+                  ) : (
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>原料</th>
+                          <th>目前</th>
+                          <th>安全量</th>
+                          <th>狀態</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                      </thead>
+                      <tbody>
+                        {query.data.lowStockMaterials.map((item) => (
+                          <tr key={item.id}>
+                            <td>{item.name}</td>
+                            <td>{formatNumber(item.stock)} {item.unit ?? ""}</td>
+                            <td>{formatNumber(item.safeStock)} {item.unit ?? ""}</td>
+                            <td>{item.stock <= 0 ? "缺貨" : "待補貨"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </section>
               </section>
 
-              <section className="table-card split-card">
-                <div className="split-card-header">
-                  <strong>閉店結報</strong>
+              <section className="dashboard-section dashboard-section-closing">
+                <div className="dashboard-section-header">
+                  <div>
+                    <span className="dashboard-section-kicker">閉店後總結</span>
+                    <h3>閉店結報</h3>
+                  </div>
                   <div className="toolbar-actions">
                     <button className="table-link" type="button" onClick={() => onNavigate("sales")}>
                       去 POS 匯入
-                    </button>
-                    <button className="table-link" type="button" onClick={() => onNavigate("production")}>
-                      去產品生產
                     </button>
                     <button className="table-link" type="button" onClick={() => onNavigate("reports")}>
                       看報表
                     </button>
                   </div>
                 </div>
+
                 <div className="dashboard-closing-strip">
                   {closingCards.map((card) => (
                     <div className="dashboard-closing-metric" key={card.label}>
@@ -211,33 +206,37 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                     </div>
                   ))}
                 </div>
-                {recentActivities.length === 0 ? (
-                  <div className="empty-state dashboard-empty-state">今天還沒有可列入結報的入庫、生產或 POS 匯入紀錄。</div>
-                ) : (
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>日期</th>
-                        <th>類型</th>
-                        <th>項目</th>
-                        <th>內容</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentActivities.map((item) => (
-                        <tr key={item.id}>
-                          <td>{formatDate(item.date)}</td>
-                          <td>{item.type}</td>
-                          <td>{item.label}</td>
-                          <td>{item.meta}</td>
+
+                <section className="table-card split-card">
+                  <div className="split-card-header">
+                    <strong>今日紀錄</strong>
+                  </div>
+                  {recentActivities.length === 0 ? (
+                    <div className="empty-state dashboard-empty-state">今天還沒有可列入結報的入庫、生產或 POS 匯入紀錄。</div>
+                  ) : (
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>日期</th>
+                          <th>類型</th>
+                          <th>項目</th>
+                          <th>內容</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
+                      </thead>
+                      <tbody>
+                        {recentActivities.map((item) => (
+                          <tr key={item.id}>
+                            <td>{formatDate(item.date)}</td>
+                            <td>{item.type}</td>
+                            <td>{item.label}</td>
+                            <td>{item.meta}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </section>
               </section>
-                </div>
-              </div>
             </div>
           </>
         ) : null}
