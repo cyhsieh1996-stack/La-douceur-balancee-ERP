@@ -34,11 +34,20 @@ export type DashboardProductionItem = {
   batchNumber: string | null;
 };
 
+export type DashboardSalesItem = {
+  id: number;
+  date: string;
+  productName: string;
+  qty: number;
+  orderId: string | null;
+};
+
 export type DashboardResponse = {
   ok: true;
   summary: DashboardSummary;
   lowStockMaterials: DashboardLowStockItem[];
   recentInbound: DashboardInboundItem[];
   recentProduction: DashboardProductionItem[];
+  recentSales: DashboardSalesItem[];
   source: "supabase";
 };

@@ -133,11 +133,26 @@ export async function getDashboardData(env: DashboardEnv) {
     })
     .slice(0, 5);
 
+  const recentSales = sales
+    .filter((row) => {
+      const date = row.sale_date ?? row.created_at;
+      return formatDateKey(String(date ?? "")) === todayKey;
+    })
+    .map((row) => ({
+      id: Number(row.id),
+      date: String(row.sale_date ?? row.created_at ?? ""),
+      productName: row.product_name ? String(row.product_name) : "-",
+      qty: Number(row.qty ?? 0),
+      orderId: row.order_id ? String(row.order_id) : null,
+    }))
+    .slice(0, 5);
+
   return {
     ok: true as const,
     summary,
     lowStockMaterials,
     recentInbound,
     recentProduction,
+    recentSales,
   };
 }
