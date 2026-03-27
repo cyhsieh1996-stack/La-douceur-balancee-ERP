@@ -529,6 +529,10 @@ h1 {
   margin-top: 16px;
 }
 
+.dashboard-opening-strip {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .dashboard-flow {
   display: grid;
   gap: 22px;
@@ -1379,6 +1383,10 @@ h1 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .dashboard-opening-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dashboard-focus {
     flex-direction: column;
     align-items: flex-start;
@@ -1484,6 +1492,10 @@ h1 {
   }
 
   .dashboard-closing-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-opening-strip {
     grid-template-columns: 1fr;
   }
 }

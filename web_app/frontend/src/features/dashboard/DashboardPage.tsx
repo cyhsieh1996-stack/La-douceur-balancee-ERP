@@ -37,8 +37,6 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     ? [
         { label: "缺貨", value: query.data.summary.zeroStockCount },
         { label: "待補貨", value: query.data.summary.lowStockCount },
-        { label: "今日原料入庫", value: query.data.summary.todayInboundCount },
-        { label: "今日產品生產", value: query.data.summary.todayProductionCount },
       ]
     : [];
 
@@ -83,8 +81,8 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
     ? query.data.summary.zeroStockCount > 0
       ? `先補 ${query.data.summary.zeroStockCount} 項缺貨原料，避免今天的生產卡住。`
       : query.data.summary.lowStockCount > 0
-        ? `先確認 ${query.data.summary.lowStockCount} 項待補貨原料，再安排今天的生產。`
-        : "今天沒有立即缺貨，可直接往原料入庫或產品生產流程前進。"
+        ? `先確認 ${query.data.summary.lowStockCount} 項待補貨原料，避免開店後才發現原料不足。`
+        : "今天沒有立即缺貨，開店前原料狀態正常。"
     : "";
 
   return (
@@ -116,31 +114,13 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   </div>
                 </div>
 
-                <div className="dashboard-strip">
+                <div className="dashboard-strip dashboard-opening-strip">
                   {cards.map((card) => (
                     <div className="dashboard-metric" key={card.label}>
                       <span>{card.label}</span>
                       <strong>{card.value}</strong>
                     </div>
                   ))}
-                </div>
-
-                <div className="action-choice-grid">
-                  <button className="action-choice-card" type="button" onClick={() => onNavigate("inventory")}>
-                    <span className="action-choice-kicker">先確認</span>
-                    <strong>庫存中心</strong>
-                    <span className="action-choice-meta">先看缺貨與待補貨</span>
-                  </button>
-                  <button className="action-choice-card" type="button" onClick={() => onNavigate("inbound")}>
-                    <span className="action-choice-kicker">補貨作業</span>
-                    <strong>原料入庫</strong>
-                    <span className="action-choice-meta">更新原料庫存與單價</span>
-                  </button>
-                  <button className="action-choice-card" type="button" onClick={() => onNavigate("production")}>
-                    <span className="action-choice-kicker">生產作業</span>
-                    <strong>產品生產</strong>
-                    <span className="action-choice-meta">登錄批次並扣料</span>
-                  </button>
                 </div>
 
                 <section className="table-card split-card">
