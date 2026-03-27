@@ -35,7 +35,6 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
         { label: "待補貨", value: query.data.summary.lowStockCount },
         { label: "今日原料入庫", value: query.data.summary.todayInboundCount },
         { label: "今日產品生產", value: query.data.summary.todayProductionCount },
-        { label: "今日 POS 匯入", value: query.data.summary.todaySalesCount },
       ]
     : [];
 
@@ -72,9 +71,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       ? `先補 ${query.data.summary.zeroStockCount} 項缺貨原料，避免今天的生產卡住。`
       : query.data.summary.lowStockCount > 0
         ? `先確認 ${query.data.summary.lowStockCount} 項待補貨原料，再安排今天的生產。`
-        : query.data.summary.todaySalesCount > 0
-          ? `今天已同步 ${query.data.summary.todaySalesCount} 筆 POS 匯入，可直接確認庫存與報表是否一致。`
-        : "今天沒有立即缺貨，可直接往原料入庫、產品生產或 POS 匯入流程前進。"
+        : "今天沒有立即缺貨，可直接往原料入庫或產品生產流程前進。"
     : "";
 
   return (
