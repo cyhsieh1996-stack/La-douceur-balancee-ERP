@@ -18,6 +18,10 @@ function formatDate(value: string) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function formatMoney(value: number) {
+  return `NT$ ${formatNumber(value)}`;
+}
+
 function todayLabel() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -64,6 +68,15 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
       ]
         .sort((a, b) => String(b.date).localeCompare(String(a.date)))
         .slice(0, 6)
+    : [];
+
+  const closingCards = query.data
+    ? [
+        { label: "今日原料入庫", value: query.data.summary.todayInboundCount },
+        { label: "今日產品生產", value: query.data.summary.todayProductionCount },
+        { label: "今日 POS 匯入", value: query.data.summary.todaySalesCount },
+        { label: "本日銷售", value: formatMoney(query.data.summary.todaySalesAmount) },
+      ]
     : [];
 
   const focusCopy = query.data
@@ -179,6 +192,9 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                 <div className="split-card-header">
                   <strong>閉店結報</strong>
                   <div className="toolbar-actions">
+                    <button className="table-link" type="button" onClick={() => onNavigate("sales")}>
+                      去 POS 匯入
+                    </button>
                     <button className="table-link" type="button" onClick={() => onNavigate("production")}>
                       去產品生產
                     </button>
@@ -186,6 +202,14 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                       看報表
                     </button>
                   </div>
+                </div>
+                <div className="dashboard-closing-strip">
+                  {closingCards.map((card) => (
+                    <div className="dashboard-closing-metric" key={card.label}>
+                      <span>{card.label}</span>
+                      <strong>{card.value}</strong>
+                    </div>
+                  ))}
                 </div>
                 {recentActivities.length === 0 ? (
                   <div className="empty-state dashboard-empty-state">今天還沒有可列入結報的入庫、生產或 POS 匯入紀錄。</div>

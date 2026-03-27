@@ -55,7 +55,7 @@ export async function getDashboardData(env: DashboardEnv) {
       .select("id, qty, batch_number, created_at, products(name)")
       .order("created_at", { ascending: false })
       .limit(5),
-    supabase.from("sales_records").select("id, amount, sale_date, created_at"),
+    supabase.from("sales_records").select("id, product_name, qty, amount, sale_date, order_id, created_at"),
   ]);
 
   for (const result of [materialsResult, productsResult, inboundResult, productionResult, salesResult]) {
@@ -76,6 +76,11 @@ export async function getDashboardData(env: DashboardEnv) {
       const dateValue = formatDateKey(String(row.sale_date ?? row.created_at ?? ""));
       return dateValue === todayKey;
     }).length,
+    todaySalesAmount: sales.reduce((total, row) => {
+      const dateValue = formatDateKey(String(row.sale_date ?? row.created_at ?? ""));
+      if (dateValue !== todayKey) return total;
+      return total + Number(row.amount ?? 0);
+    }, 0),
     monthSalesAmount: sales.reduce((total, row) => {
       const date = row.sale_date ?? row.created_at;
       const dateValue = date ? formatDateKey(String(date)).slice(0, 7) : "";

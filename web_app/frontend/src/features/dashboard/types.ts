@@ -4,6 +4,7 @@ export type DashboardSummary = {
   todayInboundCount: number;
   todayProductionCount: number;
   todaySalesCount: number;
+  todaySalesAmount: number;
   monthSalesAmount: number;
   materialsCount: number;
   productsCount: number;
