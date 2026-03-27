@@ -143,7 +143,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   </div>
                 </div>
                 {query.data.lowStockMaterials.length === 0 ? (
-                  <div className="empty-state">目前沒有低庫存原料，今天暫時不需要優先補貨。</div>
+                  <div className="empty-state dashboard-empty-state">目前沒有低庫存原料，今天暫時不需要優先補貨。</div>
                 ) : (
                   <table className="data-table">
                     <thead>
@@ -181,7 +181,7 @@ export function DashboardPage({ onNavigate }: DashboardPageProps) {
                   </div>
                 </div>
                 {recentActivities.length === 0 ? (
-                  <div className="empty-state">今天還沒有新的入庫或生產活動。</div>
+                  <div className="empty-state dashboard-empty-state">今天還沒有新的入庫或生產活動。</div>
                 ) : (
                   <table className="data-table">
                     <thead>

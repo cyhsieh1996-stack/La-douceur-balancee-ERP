@@ -5,17 +5,32 @@ type DashboardEnv = {
   SUPABASE_SERVICE_ROLE_KEY?: string;
 };
 
-function startOfTodayIso() {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  return now.toISOString();
+const DASHBOARD_TIME_ZONE = "Asia/Taipei";
+
+function formatDateKey(value: string | Date | null | undefined) {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: DASHBOARD_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
-function startOfMonthIso() {
+function currentDateKey() {
+  return formatDateKey(new Date());
+}
+
+function currentMonthKey() {
   const now = new Date();
-  now.setDate(1);
-  now.setHours(0, 0, 0, 0);
-  return now.toISOString();
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: DASHBOARD_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+  }).format(now);
 }
 
 export async function getDashboardData(env: DashboardEnv) {
@@ -24,8 +39,8 @@ export async function getDashboardData(env: DashboardEnv) {
     return { ok: false as const, error: "Supabase admin client is not configured." };
   }
 
-  const today = startOfTodayIso();
-  const monthStart = startOfMonthIso();
+  const todayKey = currentDateKey();
+  const monthKey = currentMonthKey();
 
   const [materialsResult, productsResult, inboundResult, productionResult, salesResult] = await Promise.all([
     supabase.from("raw_materials").select("id, name, stock, safe_stock, unit, vendor, unit_price"),
@@ -55,15 +70,16 @@ export async function getDashboardData(env: DashboardEnv) {
   const summary = {
     zeroStockCount: materials.filter((row) => Number(row.stock ?? 0) <= 0).length,
     lowStockCount: materials.filter((row) => Number(row.safe_stock ?? 0) > 0 && Number(row.stock ?? 0) < Number(row.safe_stock ?? 0)).length,
-    todayInboundCount: (inboundResult.data ?? []).filter((row) => String(row.created_at ?? "") >= today).length,
-    todayProductionCount: (productionResult.data ?? []).filter((row) => String(row.created_at ?? "") >= today).length,
+    todayInboundCount: (inboundResult.data ?? []).filter((row) => formatDateKey(String(row.created_at ?? "")) === todayKey).length,
+    todayProductionCount: (productionResult.data ?? []).filter((row) => formatDateKey(String(row.created_at ?? "")) === todayKey).length,
     todaySalesCount: sales.filter((row) => {
-      const dateValue = String(row.sale_date ?? row.created_at ?? "");
-      return dateValue >= today;
+      const dateValue = formatDateKey(String(row.sale_date ?? row.created_at ?? ""));
+      return dateValue === todayKey;
     }).length,
     monthSalesAmount: sales.reduce((total, row) => {
-      const dateValue = String(row.sale_date ?? row.created_at ?? "");
-      if (dateValue < monthStart) return total;
+      const date = row.sale_date ?? row.created_at;
+      const dateValue = date ? formatDateKey(String(date)).slice(0, 7) : "";
+      if (dateValue !== monthKey) return total;
       return total + Number(row.amount ?? 0);
     }, 0),
     materialsCount: materials.length,
@@ -89,27 +105,33 @@ export async function getDashboardData(env: DashboardEnv) {
       vendor: row.vendor ? String(row.vendor) : null,
     }));
 
-  const recentInbound = (inboundResult.data ?? []).map((row) => {
-    const material = Array.isArray(row.raw_materials) ? row.raw_materials[0] : row.raw_materials;
-    return {
-      id: Number(row.id),
-      date: String(row.created_at ?? ""),
-      materialName: material?.name ? String(material.name) : "-",
-      qty: Number(row.qty ?? 0),
-      unit: material?.unit ? String(material.unit) : null,
-    };
-  });
+  const recentInbound = (inboundResult.data ?? [])
+    .filter((row) => formatDateKey(String(row.created_at ?? "")) === todayKey)
+    .map((row) => {
+      const material = Array.isArray(row.raw_materials) ? row.raw_materials[0] : row.raw_materials;
+      return {
+        id: Number(row.id),
+        date: String(row.created_at ?? ""),
+        materialName: material?.name ? String(material.name) : "-",
+        qty: Number(row.qty ?? 0),
+        unit: material?.unit ? String(material.unit) : null,
+      };
+    })
+    .slice(0, 5);
 
-  const recentProduction = (productionResult.data ?? []).map((row) => {
-    const product = Array.isArray(row.products) ? row.products[0] : row.products;
-    return {
-      id: Number(row.id),
-      date: String(row.created_at ?? ""),
-      productName: product?.name ? String(product.name) : "-",
-      qty: Number(row.qty ?? 0),
-      batchNumber: row.batch_number ? String(row.batch_number) : null,
-    };
-  });
+  const recentProduction = (productionResult.data ?? [])
+    .filter((row) => formatDateKey(String(row.created_at ?? "")) === todayKey)
+    .map((row) => {
+      const product = Array.isArray(row.products) ? row.products[0] : row.products;
+      return {
+        id: Number(row.id),
+        date: String(row.created_at ?? ""),
+        productName: product?.name ? String(product.name) : "-",
+        qty: Number(row.qty ?? 0),
+        batchNumber: row.batch_number ? String(row.batch_number) : null,
+      };
+    })
+    .slice(0, 5);
 
   return {
     ok: true as const,

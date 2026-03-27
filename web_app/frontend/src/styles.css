@@ -1172,6 +1172,14 @@ h1 {
   color: #5d544a;
 }
 
+.dashboard-empty-state {
+  margin: 12px 18px 18px;
+  padding: 14px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(210, 196, 174, 0.72);
+  background: rgba(255, 252, 248, 0.72);
+}
+
 .empty-state.error {
   color: #8a3f31;
 }
